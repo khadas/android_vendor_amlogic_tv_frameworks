@@ -1214,7 +1214,8 @@ public class TvDataBaseManager {
     }
 
     public Program getProgram(Uri channelUri, long nowtime) {
-        List<Program> channel_programs = getPrograms(channelUri);
+        Uri uri = TvContract.buildProgramsUriForChannel(channelUri);
+        List<Program> channel_programs = getPrograms(uri);
         Program program = null;
         int j = 0;
         for (j = 0; j < channel_programs.size(); j++) {
