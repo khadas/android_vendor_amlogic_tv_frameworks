@@ -423,6 +423,8 @@ public interface TvControlCommand {
     int FACTORY_WHITE_BALANCE_GET_ALL_PRAMAS = 1121;
 
     //ATV/DTV
+    int TV_SCAN_2 = 1374;
+    int PLAY_PROGRAM_2 = 1375;
     int ATV_DTV_GET_SCAN_STATUS = 1376;
     int DTV_SET_TEXT_CODING = 1377;
     int ATV_DTV_SCAN_PAUSE = 1378;

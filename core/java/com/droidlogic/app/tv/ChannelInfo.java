@@ -8,11 +8,7 @@ import android.util.Log;
 import android.text.TextUtils;
 
 import java.util.Map;
-import java.util.HashMap;
 import java.util.Arrays;
-import java.net.URLEncoder;
-import java.net.URLDecoder;
-import java.io.UnsupportedEncodingException;
 
 public class ChannelInfo {
     private static final String TAG = "ChannelInfo";
@@ -89,7 +85,7 @@ public class ChannelInfo {
     public static final String KEY_BAND_WIDTH = "band_width";
     public static final String KEY_SYMBOL_RATE = "symbol_rate";
     public static final String KEY_MODULATION = "modulation";
-
+    public static final String KEY_FE_PARAS = "fe";
     public static final String KEY_FINE_TUNE = "fine_tune";
     public static final String KEY_IS_FAVOURITE = "is_favourite";
 
@@ -148,6 +144,7 @@ public class ChannelInfo {
     private int mSymbolRate;
     private int mModulation;
     private int mFineTune;
+    private String mFEParas;
 
     private boolean mBrowsable;
     private boolean mIsFavourite;
@@ -212,11 +209,11 @@ public class ChannelInfo {
             builder.setVideoFormat(cursor.getString(index));
         index = cursor.getColumnIndex(Channels.COLUMN_INTERNAL_PROVIDER_DATA);
         if (index >= 0) {
-            Map<String, String> parsedMap = stringToMap(cursor.getString(index));
+            Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(cursor.getString(index));
             if (parsedMap.get(KEY_AUDIO_PIDS) != null) {
-                String[] str_audioPids = parsedMap.get(KEY_AUDIO_PIDS).replace("[", "").replace("]", "").split(", ");
-                String[] str_audioFormats = parsedMap.get(KEY_AUDIO_FORMATS).replace("[", "").replace("]", "").split(", ");
-                String[] str_audioExts = parsedMap.get(KEY_AUDIO_EXTS).replace("[", "").replace("]", "").split(", ");
+                String[] str_audioPids = parsedMap.get(KEY_AUDIO_PIDS).replace("[", "").replace("]", "").split(",");
+                String[] str_audioFormats = parsedMap.get(KEY_AUDIO_FORMATS).replace("[", "").replace("]", "").split(",");
+                String[] str_audioExts = parsedMap.get(KEY_AUDIO_EXTS).replace("[", "").replace("]", "").split(",");
                 int number = (str_audioPids[0].compareTo("null") == 0)? 0 : str_audioPids.length;
                 int[] audioPids = null;
                 int[] audioFormats = null;
@@ -232,7 +229,7 @@ public class ChannelInfo {
                         audioFormats[i] = Integer.parseInt(str_audioFormats[i]);
                         audioExts[i] = Integer.parseInt(str_audioExts[i]);
                     }
-                    audioLangs = parsedMap.get(KEY_AUDIO_LANGS).replace("[", "").replace("]", "").split(", ");
+                    audioLangs = DroidLogicTvUtils.TvString.fromArrayString(parsedMap.get(KEY_AUDIO_LANGS));
                     builder.setAudioPids(audioPids);
                     builder.setAudioFormats(audioFormats);
                     builder.setAudioExts(audioExts);
@@ -254,6 +251,8 @@ public class ChannelInfo {
                 builder.setSymbolRate(Integer.parseInt(parsedMap.get(KEY_SYMBOL_RATE)));
             if (parsedMap.get(KEY_MODULATION) != null)
                 builder.setModulation(Integer.parseInt(parsedMap.get(KEY_MODULATION)));
+            if (parsedMap.get(KEY_FE_PARAS) != null)
+                builder.setFEParas(parsedMap.get(KEY_FE_PARAS));
             if (parsedMap.get(KEY_VIDEO_PID) != null)
                 builder.setVideoPid(Integer.parseInt(parsedMap.get(KEY_VIDEO_PID)));
             if (parsedMap.get(KEY_PCR_ID) != null)
@@ -277,13 +276,13 @@ public class ChannelInfo {
                 builder.setFineTune(Integer.parseInt(parsedMap.get(KEY_FINE_TUNE)));
 
             if (parsedMap.get(KEY_SUBT_PIDS) != null) {
-                String[] str_subtPids = parsedMap.get(KEY_SUBT_PIDS).replace("[", "").replace("]", "").split(", ");
+                String[] str_subtPids = parsedMap.get(KEY_SUBT_PIDS).replace("[", "").replace("]", "").split(",");
                 int subtNumber = (str_subtPids[0].compareTo("null") == 0)? 0 : str_subtPids.length;
                 if (subtNumber > 0) {
-                    String[] str_subtTypes = parsedMap.get(KEY_SUBT_TYPES).replace("[", "").replace("]", "").split(", ");
-                    String[] str_subtStypes = parsedMap.get(KEY_SUBT_STYPES).replace("[", "").replace("]", "").split(", ");
-                    String[] str_subtId1s = parsedMap.get(KEY_SUBT_ID1S).replace("[", "").replace("]", "").split(", ");
-                    String[] str_subtId2s = parsedMap.get(KEY_SUBT_ID2S).replace("[", "").replace("]", "").split(", ");
+                    String[] str_subtTypes = parsedMap.get(KEY_SUBT_TYPES).replace("[", "").replace("]", "").split(",");
+                    String[] str_subtStypes = parsedMap.get(KEY_SUBT_STYPES).replace("[", "").replace("]", "").split(",");
+                    String[] str_subtId1s = parsedMap.get(KEY_SUBT_ID1S).replace("[", "").replace("]", "").split(",");
+                    String[] str_subtId2s = parsedMap.get(KEY_SUBT_ID2S).replace("[", "").replace("]", "").split(",");
                     int[] subtTypes = new int[subtNumber];
                     int[] subtStypes = new int[subtNumber];
                     int[] subtPids = new int[subtNumber];
@@ -298,7 +297,7 @@ public class ChannelInfo {
                         subtId1s[i] = Integer.parseInt(str_subtId1s[i]);
                         subtId2s[i] = Integer.parseInt(str_subtId2s[i]);
                     }
-                    String[] subtLangs = parsedMap.get(KEY_SUBT_LANGS).replace("[", "").replace("]", "").split(", ");
+                    String[] subtLangs = DroidLogicTvUtils.TvString.fromArrayString(parsedMap.get(KEY_SUBT_LANGS));
 
                     builder.setSubtitlePids(subtPids)
                             .setSubtitleId1s(subtId1s)
@@ -313,7 +312,7 @@ public class ChannelInfo {
                 builder.setSubtitleTrackIndex(Integer.parseInt(parsedMap.get(KEY_SUBT_TRACK_INDEX)));
 
             if (parsedMap.get(KEY_MULTI_NAME) != null)
-                builder.setDisplayNameMulti(parsedMap.get(KEY_MULTI_NAME));
+                builder.setDisplayNameMulti(DroidLogicTvUtils.TvString.fromString(parsedMap.get(KEY_MULTI_NAME)));
 
             if (parsedMap.get(KEY_FREE_CA) != null)
                 builder.setFreeCa(Integer.parseInt(parsedMap.get(KEY_FREE_CA)));
@@ -464,6 +463,10 @@ public class ChannelInfo {
 
     public int getModulation() {
         return mModulation;
+    }
+
+    public String getFEParas() {
+        return mFEParas;
     }
 
     public int getFineTune() {
@@ -753,6 +756,7 @@ public class ChannelInfo {
             mChannel.mSymbolRate = -1;
             mChannel.mModulation = -1;
             mChannel.mFineTune = 0;
+            mChannel.mFEParas = "";
 
             mChannel.mBrowsable = false;
             mChannel.mIsFavourite = false;
@@ -933,6 +937,11 @@ public class ChannelInfo {
             return this;
         }
 
+        public Builder setFEParas(String p) {
+            mChannel.mFEParas = p;
+            return this;
+        }
+
         public Builder setBrowsable(boolean flag) {
             mChannel.mBrowsable = flag;
             return this;
@@ -1036,43 +1045,6 @@ public class ChannelInfo {
             return -1;
     }
 
-    public static String mapToString(Map<String, String> map) {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        for (String key : map.keySet()) {
-            if (stringBuilder.length() > 0) {
-                stringBuilder.append("&");
-            }
-            String value = map.get(key);
-            try {
-                stringBuilder.append((key != null ? URLEncoder.encode(key, "UTF-8") : ""));
-                stringBuilder.append("=");
-                stringBuilder.append(value != null ? URLEncoder.encode(value, "UTF-8") : "");
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("This method requires UTF-8 encoding support", e);
-            }
-        }
-
-        return stringBuilder.toString();
-    }
-
-    public static Map<String, String> stringToMap(String input) {
-        Map<String, String> map = new HashMap<String, String>();
-
-        String[] nameValuePairs = input.split("&");
-        for (String nameValuePair : nameValuePairs) {
-            String[] nameValue = nameValuePair.split("=");
-            try {
-                map.put(URLDecoder.decode(nameValue[0], "UTF-8"), nameValue.length > 1 ? URLDecoder.decode(
-                            nameValue[1], "UTF-8") : "");
-            } catch (UnsupportedEncodingException e) {
-                throw new RuntimeException("This method requires UTF-8 encoding support", e);
-            }
-        }
-
-        return map;
-    }
-
     public static boolean isSameChannel (ChannelInfo a, ChannelInfo b) {
         if (a == null || b== null )
             return false;
@@ -1098,8 +1070,21 @@ public class ChannelInfo {
         return false;
     }
 
+    public boolean isAnalogChannnel() {
+        return (mType.equals(TvContract.Channels.TYPE_PAL)
+            || mType.equals(TvContract.Channels.TYPE_NTSC)
+            || mType.equals(TvContract.Channels.TYPE_SECAM));
+    }
+
+    public boolean isAVChannel() {
+        return (!mServiceType.equals(TvContract.Channels.SERVICE_TYPE_OTHER));
+    }
+
     public void print () {
-        Log.d(TAG, "Id = " + mId +
+        Log.d(TAG, toString());
+    }
+    public String toString() {
+        return "Id = " + mId +
                 "\n InputId = " + mInputId +
                 "\n Type = " + mType +
                 "\n ServiceType = " + mServiceType +
@@ -1127,6 +1112,7 @@ public class ChannelInfo {
                 "\n PcrPid = " + mPcrPid +
                 "\n mFrequency = " + mFrequency +
                 "\n mFinetune = " + mFineTune +
+                "\n mFEPara = " + mFEParas +
                 "\n Browsable = " + mBrowsable +
                 "\n IsFavourite = " + mIsFavourite +
                 "\n IsPassthrough = " + mIsPassthrough +
@@ -1143,7 +1129,6 @@ public class ChannelInfo {
                 "\n SdtVersion = " + mSdtVersion +
                 "\n LCN = " + mLCN +
                 "\n LCN1 = " + mLCN1 +
-                "\n LCN2 = " + mLCN2
-               );
+                "\n LCN2 = " + mLCN2;
     }
 }

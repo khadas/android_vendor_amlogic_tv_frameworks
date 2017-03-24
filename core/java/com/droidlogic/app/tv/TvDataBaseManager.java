@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
 
+import com.droidlogic.app.tv.DroidLogicTvUtils.*;
+
 public class TvDataBaseManager {
     private static final String TAG = "TvDataBaseManager";
     private static final boolean DEBUG = true;
@@ -102,7 +104,7 @@ public class TvDataBaseManager {
                     int frequency = 0;
                     int index = cursor.getColumnIndex(Channels.COLUMN_INTERNAL_PROVIDER_DATA);
                     if (index >= 0) {
-                        Map<String, String> parsedMap = ChannelInfo.stringToMap(cursor.getString(index));
+                        Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(cursor.getString(index));
                         frequency = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_FREQUENCY));
                     }
                     if (serviceId == channel.getServiceId()
@@ -140,7 +142,7 @@ public class TvDataBaseManager {
                 +"][sid:"+channel.getServiceId()
                 +"][freq:"+channel.getFrequency()
                 +"][name:"+channel.getDisplayName()
-                +"][num:"+channel.getNumber()
+                +"][num:"+channel.getDisplayNumber()
                 +"]");
         return ret;
     }
@@ -196,7 +198,7 @@ public class TvDataBaseManager {
                 +" ATV CH: [_id:"+channel.getId()
                 +"][freq:"+channel.getFrequency()
                 +"][name:"+channel.getDisplayName()
-                +"][num:"+channel.getNumber()
+                +"][num:"+channel.getDisplayNumber()
                 +"]");
         return ret;
     }
@@ -253,7 +255,7 @@ public class TvDataBaseManager {
                 +" ATV CH: [_id:"+channel.getId()
                 +"][freq:"+channel.getFrequency()
                 +"][name:"+channel.getDisplayName()
-                +"][num:"+channel.getNumber()
+                +"][num:"+channel.getDisplayNumber()
                 +"]");
         return ret;
     }
@@ -295,14 +297,18 @@ public class TvDataBaseManager {
                 +" ATV CH: [_id:"+ ((ret == UPDATE_SUCCESS) ? toBeUpdated.getId() : channel.getId())
                 +"][freq:"+channel.getFrequency()
                 +"][name:"+channel.getDisplayName()
-                +"][num:"+channel.getNumber()
+                +"][num:"+channel.getDisplayNumber()
                 +"]");
         return ret;
     }
 
     public void insertDtvChannel(ChannelInfo channel, int channelNumber) {
+        insertDtvChannel(channel, Integer.toString(channelNumber));
+    }
+
+    public void insertDtvChannel(ChannelInfo channel, String channelNumber) {
         Uri channelsUri = TvContract.buildChannelsUriForInput(channel.getInputId());
-        channel.setDisplayNumber(Integer.toString(channelNumber));
+        channel.setDisplayNumber(channelNumber);
         Uri uri = mContentResolver.insert(TvContract.Channels.CONTENT_URI, buildDtvChannelData(channel));
         insertLogo(channel.getLogoUrl(), uri);
 
@@ -310,20 +316,24 @@ public class TvDataBaseManager {
             Log.d(TAG, "Insert DTV CH: [sid:"+channel.getServiceId()
                     +"][freq:"+channel.getFrequency()
                     +"][name:"+channel.getDisplayName()
-                    +"][num:"+channel.getNumber()
+                    +"][num:"+channel.getDisplayNumber()
                     +"]");
     }
 
     public void insertAtvChannel(ChannelInfo channel, int channelNumber) {
+        insertAtvChannel(channel, Integer.toString(channelNumber));
+    }
+
+    public void insertAtvChannel(ChannelInfo channel, String channelNumber) {
         Uri channelsUri = TvContract.buildChannelsUriForInput(channel.getInputId());
-        channel.setDisplayNumber(Integer.toString(channelNumber));
+        channel.setDisplayNumber(channelNumber);
         Uri uri = mContentResolver.insert(TvContract.Channels.CONTENT_URI, buildAtvChannelData(channel));
         insertLogo(channel.getLogoUrl(), uri);
 
         if (DEBUG)
             Log.d(TAG, "Insert ATV CH: [freq:"+channel.getFrequency()
                 +"][name:"+channel.getDisplayName()
-                +"][num:"+channel.getNumber()
+                +"][num:"+channel.getDisplayNumber()
                 +"]");
     }
 
@@ -331,7 +341,7 @@ public class TvDataBaseManager {
         ContentValues values = new ContentValues();
         values.put(Channels.COLUMN_INPUT_ID, channel.getInputId());
         values.put(Channels.COLUMN_DISPLAY_NAME, channel.getDisplayName());
-        values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.getNumber());
+        values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.getDisplayNumber());
         values.put(Channels.COLUMN_ORIGINAL_NETWORK_ID, channel.getOriginalNetworkId());
         values.put(Channels.COLUMN_TRANSPORT_STREAM_ID, channel.getTransportStreamId());
         values.put(Channels.COLUMN_SERVICE_ID, channel.getServiceId());
@@ -350,7 +360,7 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_AUDIO_PIDS, Arrays.toString(channel.getAudioPids()));
         map.put(ChannelInfo.KEY_AUDIO_FORMATS, Arrays.toString(channel.getAudioFormats()));
         map.put(ChannelInfo.KEY_AUDIO_EXTS, Arrays.toString(channel.getAudioExts()));
-        map.put(ChannelInfo.KEY_AUDIO_LANGS, Arrays.toString(channel.getAudioLangs()));
+        map.put(ChannelInfo.KEY_AUDIO_LANGS, DroidLogicTvUtils.TvString.toString(channel.getAudioLangs()));
         map.put(ChannelInfo.KEY_PCR_ID, String.valueOf(channel.getPcrPid()));
         map.put(ChannelInfo.KEY_AUDIO_TRACK_INDEX, String.valueOf(channel.getAudioTrackIndex()));
         map.put(ChannelInfo.KEY_AUDIO_COMPENSATION, String.valueOf(channel.getAudioCompensation()));
@@ -361,14 +371,16 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_SUBT_STYPES, Arrays.toString(channel.getSubtitleStypes()));
         map.put(ChannelInfo.KEY_SUBT_ID1S, Arrays.toString(channel.getSubtitleId1s()));
         map.put(ChannelInfo.KEY_SUBT_ID2S, Arrays.toString(channel.getSubtitleId2s()));
-        map.put(ChannelInfo.KEY_SUBT_LANGS, Arrays.toString(channel.getSubtitleLangs()));
+        map.put(ChannelInfo.KEY_SUBT_LANGS, DroidLogicTvUtils.TvString.toString(channel.getSubtitleLangs()));
         map.put(ChannelInfo.KEY_SUBT_TRACK_INDEX, String.valueOf(channel.getSubtitleTrackIndex()));
-        map.put(ChannelInfo.KEY_MULTI_NAME, channel.getDisplayNameMulti());
+        map.put(ChannelInfo.KEY_MULTI_NAME, DroidLogicTvUtils.TvString.toString(channel.getDisplayNameMulti()));
         map.put(ChannelInfo.KEY_FREE_CA, String.valueOf(channel.getFreeCa()));
         map.put(ChannelInfo.KEY_SCRAMBLED, String.valueOf(channel.getScrambled()));
         map.put(ChannelInfo.KEY_SDT_VERSION, String.valueOf(channel.getSdtVersion()));
-        String output = ChannelInfo.mapToString(map);
+        map.put(ChannelInfo.KEY_FE_PARAS, channel.getFEParas());
+        String output = DroidLogicTvUtils.mapToJson(map);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
+
         values.put(ChannelInfo.COLUMN_LCN, channel.getLCN());
         values.put(ChannelInfo.COLUMN_LCN1, channel.getLCN1());
         values.put(ChannelInfo.COLUMN_LCN2, channel.getLCN2());
@@ -379,13 +391,13 @@ public class TvDataBaseManager {
     private ContentValues  buildAtvChannelData (ChannelInfo channel){
         ContentValues values = new ContentValues();
         values.put(Channels.COLUMN_INPUT_ID, channel.getInputId());
-        values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.getNumber());
+        values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.getDisplayNumber());
         values.put(Channels.COLUMN_DISPLAY_NAME, channel.getDisplayName());
         values.put(Channels.COLUMN_TYPE, Channels.TYPE_PAL);// TODO: channel.type -> COLUMN_TYPE (PAL/NTSC/SECAM)?
         values.put(Channels.COLUMN_BROWSABLE, channel.isBrowsable() ? 1 : 0);
         values.put(Channels.COLUMN_SERVICE_TYPE, channel.getServiceType());
 
-        String output = ChannelInfo.mapToString(buildAtvChannelMap(channel));
+        String output = DroidLogicTvUtils.mapToJson(buildAtvChannelMap(channel));
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
         return values;
@@ -401,12 +413,13 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_FINE_TUNE, String.valueOf(channel.getFineTune()));
         map.put(ChannelInfo.KEY_AUDIO_COMPENSATION, String.valueOf(channel.getAudioCompensation()));
         map.put(ChannelInfo.KEY_IS_FAVOURITE, String.valueOf(channel.isFavourite() ? 1 : 0));
-        map.put(ChannelInfo.KEY_MULTI_NAME, channel.getDisplayNameMulti());
+        map.put(ChannelInfo.KEY_MULTI_NAME, DroidLogicTvUtils.TvString.toString(channel.getDisplayNameMulti()));
 
         return map;
     }
 
     private void declineChannelNum( ChannelInfo channel) {
+        /*
         Uri channelsUri = TvContract.buildChannelsUriForInput(channel.getInputId());
         String[] projection = {Channels._ID, Channels.COLUMN_DISPLAY_NUMBER};
         String condition = Channels.COLUMN_SERVICE_TYPE + " = " + channel.getServiceType() +
@@ -429,6 +442,7 @@ public class TvDataBaseManager {
                 cursor.close();
             }
         }
+        */
     }
 
     public void setChannelName (ChannelInfo channel, String targetName) {
@@ -558,6 +572,7 @@ public class TvDataBaseManager {
 
 
     public void swapChannel (ChannelInfo sourceChannel, ChannelInfo targetChannel) {
+        /*
         if (sourceChannel == null || targetChannel == null
             || sourceChannel.getNumber() == targetChannel.getNumber())
             return;
@@ -570,9 +585,11 @@ public class TvDataBaseManager {
         Uri targetUri = TvContract.buildChannelUri(targetChannel.getId());
         updateValues.put(Channels.COLUMN_DISPLAY_NUMBER, sourceChannel.getNumber());
         mContentResolver.update(targetUri, updateValues, null, null);
+        */
     }
 
     public void moveChannel (ChannelInfo sourceChannel, ChannelInfo targetChannel) {
+        /*
         if ( sourceChannel == null ||  sourceChannel == null
                 || targetChannel.getNumber() == sourceChannel.getNumber())
             return;
@@ -615,6 +632,7 @@ public class TvDataBaseManager {
                 cursor.close();
             }
         }
+        */
     }
 
     public void skipChannel (ChannelInfo channel) {
@@ -661,7 +679,7 @@ public class TvDataBaseManager {
     public void updateOrinsertDtvChannelWithNumber(ChannelInfo channel) {
         int updateRet = updateDtvChannel(channel);
         if (updateRet != UPDATE_SUCCESS) {
-            insertDtvChannel(channel, channel.getNumber());
+            insertDtvChannel(channel, channel.getDisplayNumber());
         }
     }
 
@@ -669,7 +687,7 @@ public class TvDataBaseManager {
     public void updateOrinsertAtvChannel(ChannelInfo channel) {
         int updateRet = updateAtvChannel(channel);
         if (updateRet != UPDATE_SUCCESS) {
-            insertAtvChannel(channel, channel.getNumber());
+            insertAtvChannel(channel, channel.getDisplayNumber());
         }
     }
 
@@ -678,21 +696,21 @@ public class TvDataBaseManager {
     public void updateOrinsertAtvChannelFuzzy(ChannelInfo channel) {
         int updateRet = updateAtvChannelFuzzy(channel);
         if (updateRet != UPDATE_SUCCESS) {
-            insertAtvChannel(channel, channel.getNumber());
+            insertAtvChannel(channel, channel.getDisplayNumber());
         }
     }
 
     public void updateOrinsertAtvChannelWithNumber(ChannelInfo channel) {
         int updateRet = updateAtvChannel(channel);
         if (updateRet != UPDATE_SUCCESS) {
-            insertAtvChannel(channel, channel.getNumber());
+            insertAtvChannel(channel, channel.getDisplayNumber());
         }
     }
 
     public void updateOrinsertAtvChannel(ChannelInfo toBeUpdated, ChannelInfo channel) {
         int updateRet = updateAtvChannel(toBeUpdated, channel);
         if (updateRet != UPDATE_SUCCESS) {
-            insertAtvChannel(channel, channel.getNumber());
+            insertAtvChannel(channel, channel.getDisplayNumber());
         }
     }
 
@@ -771,7 +789,7 @@ public class TvDataBaseManager {
     }
 
     public Map<String, String> parseInternalProviderData(String internalData){
-        return ChannelInfo.stringToMap(internalData);
+        return DroidLogicTvUtils.jsonToMap(internalData);
     }
 
     public void insertUrl( Uri contentUri, URL sourceUrl){
@@ -844,9 +862,11 @@ public class TvDataBaseManager {
 
     public class SortComparator implements Comparator<ChannelInfo> {
         @Override
-            public int compare(ChannelInfo a, ChannelInfo b) {
-                return a.getNumber() - b.getNumber();
-            }
+        public int compare(ChannelInfo a, ChannelInfo b) {
+            if (a.getDisplayNumber() == null)
+                return -1;
+            return a.getDisplayNumber().compareTo(b.getDisplayNumber());
+        }
     }
 
     private int findPosition(String[] list, String target) {
@@ -862,7 +882,7 @@ public class TvDataBaseManager {
         if (list != null) {
             for (int i = 0; i < list.size(); i++) {
                 ChannelInfo info = list.get(i);
-                Log.d(TAG, "printList: number=" + info.getNumber() + " name=" + info.getDisplayName());
+                Log.d(TAG, "printList: number=" + info.getDisplayNumber() + " name=" + info.getDisplayName());
             }
         }
     }
@@ -903,7 +923,7 @@ public class TvDataBaseManager {
             Log.d(TAG, "update " + ((ret == UPDATE_SUCCESS) ? "found" : "notfound")
                 +"][freq:"+channel.getFrequency()
                 +"][name:"+channel.getDisplayName()
-                +"][num:"+channel.getNumber()
+                +"][num:"+channel.getDisplayNumber()
                 +"]");
 
         if (ret != UPDATE_SUCCESS) {
@@ -944,7 +964,7 @@ public class TvDataBaseManager {
                 int frequency = 0;
                 int index = cursor.getColumnIndex(Channels.COLUMN_INTERNAL_PROVIDER_DATA);
                 if (index >= 0) {
-                    Map<String, String> parsedMap = ChannelInfo.stringToMap(cursor.getString(index));
+                    Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(cursor.getString(index));
                     frequency = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_FREQUENCY));
                 }
                 if (serviceId == channel.getServiceId() && frequency == channel.getFrequency()
@@ -973,7 +993,7 @@ public class TvDataBaseManager {
                 +" DTV CH: [sid:"+channel.getServiceId()
                 +"][freq:"+channel.getFrequency()
                 +"][name:"+channel.getDisplayName()
-                +"][num:"+channel.getNumber()
+                +"][num:"+channel.getDisplayNumber()
                 +"]");
 
         if (ret != UPDATE_SUCCESS) {
@@ -993,7 +1013,7 @@ public class TvDataBaseManager {
             Log.d(TAG, "Insert DTV CH: [sid:"+channel.getServiceId()
                     +"][freq:"+channel.getFrequency()
                     +"][name:"+channel.getDisplayName()
-                    +"][num:"+channel.getNumber()
+                    +"][num:"+channel.getDisplayNumber()
                     +"]");
 
         return uri;

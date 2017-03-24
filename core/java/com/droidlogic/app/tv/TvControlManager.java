@@ -3,6 +3,7 @@ package com.droidlogic.app.tv;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -241,7 +242,7 @@ public class TvControlManager {
             scan_ev.freq = p.readInt();
             scan_ev.programName = p.readString();
             scan_ev.srvType = p.readInt();
-            scan_ev.msg = p.readString();
+            scan_ev.paras = p.readString();
             scan_ev.strength = p.readInt();
             scan_ev.quality = p.readInt();
             scan_ev.videoStd = p.readInt();
@@ -252,7 +253,7 @@ public class TvControlManager {
             scan_ev.sr = p.readInt();
             scan_ev.mod = p.readInt();
             scan_ev.bandwidth = p.readInt();
-            scan_ev.ofdm_mode = p.readInt();
+            scan_ev.reserved = p.readInt();
             scan_ev.ts_id = p.readInt();
             scan_ev.orig_net_id = p.readInt();
             scan_ev.serviceID = p.readInt();
@@ -316,6 +317,12 @@ public class TvControlManager {
                 scan_ev.lcnInfo.lcn[j] = p.readInt();
                 scan_ev.lcnInfo.valid[j] = p.readInt();
             }
+            scan_ev.majorChannelNumber = p.readInt();
+            scan_ev.minorChannelNumber = p.readInt();
+            scan_ev.sourceId = p.readInt();
+            scan_ev.accessControlled = p.readInt();
+            scan_ev.hidden = p.readInt();
+            scan_ev.hideGuide = p.readInt();
         }
 
         @Override
@@ -3721,20 +3728,18 @@ public class TvControlManager {
      }
     //MISC END
 
-    public enum ScanType {
-        SCAN_DTV_AUTO(1),
-        SCAN_DTV_MANUAL(2),
-        SCAN_DTV_ALLBAND(3);
+    public static class ScanType {
+        public static final int SCAN_DTV_AUTO = 0x1;
+        public static final int SCAN_DTV_MANUAL = 0x2;
+        public static final int SCAN_DTV_ALLBAND = 0x3;
+        public static final int SCAN_DTV_NONE = 0x7;
 
-        private int val;
+        public static final int SCAN_ATV_AUTO = 0x1;
+        public static final int SCAN_ATV_MANUAL = 0x2;
+        public static final int SCAN_ATV_FREQ = 0x3;
+        public static final int SCAN_ATV_NONE = 0x7;
 
-        ScanType(int val) {
-            this.val = val;
-        }
-
-        public int toInt() {
-            return this.val;
-        }
+        public ScanType() {}
     }
 
     public static String baseModeToType(int baseMode) {
@@ -3789,7 +3794,12 @@ public class TvControlManager {
         public TvMode(String type) {
             mType = type;
             setBase(typeToBaseMode(mType))
-                .setExt1(typeToExt1(mType));
+                .setGen(typeToGen(mType));
+        }
+        public static TvMode fromMode(int mode) {
+            TvMode m = new TvMode();
+            m.mMode = mode;
+            return m;
         }
         public int getMode() {
             return mMode;
@@ -3797,25 +3807,25 @@ public class TvControlManager {
         public int getBase() {
             return get8(0);
         }
-        public int getExt1() {
+        public int getGen() {
             return get8(1);
         }
-        public int getExt2() {
+        public int getList() {
             return get8(2);
         }
-        public int getExt3() {
+        public int getExt() {
             return get8(3);
         }
         public TvMode setBase(int base) {
             return set8(0, base);
         }
-        public TvMode setExt1(int ext) {
-            return set8(1, ext);
+        public TvMode setGen(int gen) {
+            return set8(1, gen);
         }
-        public TvMode setExt2(int ext) {
-            return set8(2, ext);
+        public TvMode setList(int list) {
+            return set8(2, list);
         }
-        public TvMode setExt3(int ext) {
+        public TvMode setExt(int ext) {
             return set8(3, ext);
         }
 
@@ -3835,22 +3845,22 @@ public class TvControlManager {
                     break;
                 case TVChannelParams.MODE_QPSK:
                     type = TvContract.Channels.TYPE_DVB_S;
-                    if (getExt1() == 1)
+                    if (getGen() == 1)
                         type = TvContract.Channels.TYPE_DVB_S2;
                     break;
                 case TVChannelParams.MODE_QAM:
                     type = TvContract.Channels.TYPE_DVB_C;
-                    if (getExt1() == 1)
+                    if (getGen() == 1)
                         type = TvContract.Channels.TYPE_DVB_C2;
                     break;
                 case TVChannelParams.MODE_OFDM:
                     type = TvContract.Channels.TYPE_DVB_T;
-                    if (getExt1() == 1)
+                    if (getGen() == 1)
                         type = TvContract.Channels.TYPE_DVB_T2;
                     break;
                 case TVChannelParams.MODE_ATSC:
                     type = TvContract.Channels.TYPE_ATSC_T;
-                    if (getExt1() == 1)
+                    if (getGen() == 1)
                         type = TvContract.Channels.TYPE_ATSC_C;
                     break;
                 case TVChannelParams.MODE_ANALOG:
@@ -3889,7 +3899,7 @@ public class TvControlManager {
             return mode;
         }
 
-        private int typeToExt1(String type) {
+        private int typeToGen(String type) {
             int ext = 0;
             if (TextUtils.equals(type, TvContract.Channels.TYPE_DVB_S2)) {
                 ext = 1;
@@ -3910,11 +3920,11 @@ public class TvControlManager {
     }
 
     public int DtvAutoScan(int mode) {
-        return DtvScan(mode, ScanType.SCAN_DTV_ALLBAND.toInt(), 0, -1, -1);
+        return DtvScan(mode, ScanType.SCAN_DTV_ALLBAND, 0, -1, -1);
     }
 
     public int DtvManualScan(int mode, int freq, int para1, int para2) {
-        return DtvScan(mode, ScanType.SCAN_DTV_MANUAL.toInt(), freq, para1, para2);
+        return DtvScan(mode, ScanType.SCAN_DTV_MANUAL, freq, para1, para2);
     }
 
     public int DtvManualScan(int mode, int freq) {
@@ -4328,7 +4338,7 @@ public class TvControlManager {
         public int freq;
         public String programName;
         public int srvType;
-        public String msg;
+        public String paras;
         public int strength;
         public int quality;
 
@@ -4343,7 +4353,7 @@ public class TvControlManager {
         public int sr;
         public int mod;
         public int bandwidth;
-        public int ofdm_mode;
+        public int reserved;
         public int ts_id;
         public int orig_net_id;
 
@@ -4373,6 +4383,13 @@ public class TvControlManager {
 
         public int sort_mode;
         public ScannerLcnInfo lcnInfo;
+
+        public int majorChannelNumber;
+        public int minorChannelNumber;
+        public int sourceId;
+        public int accessControlled;
+        public int hidden;
+        public int hideGuide;
     }
 
     public class ScannerLcnInfo {
@@ -4405,23 +4422,23 @@ public class TvControlManager {
         }
 
         public boolean isDTVManulScan() {
-            return (getATVMode() == 0x7) && (getDTVMode() == 0x2);
+            return (getDTVMode() == 0x2);
         }
 
         public boolean isDTVAutoScan() {
-            return (getATVMode() == 0x7) && (getDTVMode() == 0x1);
+            return (getDTVMode() == 0x1);
         }
 
         public boolean isATVScan() {
-            return (getATVMode() != 0x7) && (getDTVMode() == 0x7);
+            return (getATVMode() != 0x7);
         }
 
         public boolean isATVManualScan() {
-            return (getATVMode() == 0x2) && (getDTVMode() == 0x7);
+            return (getATVMode() == 0x2);
         }
 
         public boolean isATVAutoScan() {
-            return (getATVMode() == 0x1) && (getDTVMode() == 0x7);
+            return (getATVMode() == 0x1);
         }
     }
 
@@ -4437,6 +4454,15 @@ public class TvControlManager {
 
         public boolean isLCNSort() {
             return (getDTVSortMode() == 0x2);
+        }
+        public int getStandard() {
+            return (sortMode>>16)&0xFF;
+        }
+        public boolean isATSCStandard() {
+            return (getStandard() == 0x1);
+        }
+        public boolean isDVBStandard() {
+            return (getStandard() == 0);
         }
     }
 
@@ -4834,8 +4860,287 @@ public class TvControlManager {
         return PlayDTVProgram(mode, freq, para1, para2, vid, vfmt, aid, afmt, pcr, audioCompetation, adPrepare);
     }
 
+    public static class Paras {
+        private Map<String, String> mParas;
+
+        public Paras() {
+            mParas = new HashMap<String, String>();
+        }
+        public Paras(String paras) {
+            mParas = DroidLogicTvUtils.jsonToMap(paras);
+        }
+        public String getString(String key) {
+            return mParas.get(key);
+        }
+        public int getInt(String key, int def) {
+            try {
+                int v = Integer.parseInt(mParas.get(key));
+                return v;
+            } catch (Exception e) {
+                return def;
+            }
+        }
+        public void set(String key, String str) {
+            mParas.put(key, str);
+        }
+        public void set(String key, int i) {
+            mParas.put(key, String.valueOf(i));
+        }
+
+        public String toString(String name) {
+            return DroidLogicTvUtils.mapToJson(name, mParas);
+        }
+        public String toString() {
+            return toString(null);
+        }
+    }
+
+    public static class FEParas extends Paras {
+        private static final String K_MODE = "mode";
+        private static final String K_FREQ = "freq";
+        private static final String K_FREQ2 = "freq2";
+        private static final String K_BW = "bw";
+        private static final String K_SR = "sr";
+        private static final String K_MOD = "mod";
+        private static final String K_PLP = "plp";
+        private static final String K_LAYR = "layr";
+        private static final String K_VSTD = "vtd";
+        private static final String K_ASTD = "atd";
+        private static final String K_AFC = "afc";
+
+        public FEParas() { super(); }
+        public FEParas(String paras) { super(paras); }
+
+        public String toNamedString() {
+            return toString("fe");
+        }
+
+        public TvMode getMode() {
+            return TvMode.fromMode(getInt(K_MODE, 0));
+        }
+        public int getFrequency() {
+            return getInt(K_FREQ, 0);
+        }
+        public int getFrequency2() {
+            return getInt(K_FREQ2, 0);
+        }
+        public int getBandwidth() {
+            return getInt(K_BW, 0);
+        }
+        public int getSymbolrate() {
+            return getInt(K_SR, 0);
+        }
+        public int getModulation() {
+            return getInt(K_MOD, 0);
+        }
+        public int getPlp() {
+            return getInt(K_PLP, 0);
+        }
+        public int getLayer() {
+            return getInt(K_LAYR, 0);
+        }
+        public int getVideoStd() {
+            return getInt(K_VSTD, 0);
+        }
+        public int getAudioStd() {
+            return getInt(K_ASTD, 0);
+        }
+        public int getAfc() {
+            return getInt(K_AFC, 0);
+        }
+        public FEParas setMode(TvMode mode) {
+            set(K_MODE, mode.getMode());
+            return this;
+        }
+        public FEParas setFrequency(int frequency) {
+            set(K_FREQ, frequency);
+            return this;
+        }
+        public FEParas setFrequency2(int frequency) {
+            set(K_FREQ2, frequency);
+            return this;
+        }
+        public FEParas setBandwidth(int bandwidth) {
+            set(K_BW, bandwidth);
+            return this;
+        }
+        public FEParas setSymbolrate(int symbolrate) {
+            set(K_SR, symbolrate);
+            return this;
+        }
+        public FEParas setModulation(int modulation) {
+            set(K_MOD, modulation);
+            return this;
+        }
+        public FEParas setPlp(int plp) {
+            set(K_PLP, plp);
+            return this;
+        }
+        public FEParas setLayer(int layer) {
+            set(K_LAYR, layer);
+            return this;
+        }
+        public FEParas setVideoStd(int std) {
+            set(K_VSTD, std);
+            return this;
+        }
+        public FEParas setAudioStd(int std) {
+            set(K_ASTD, std);
+            return this;
+        }
+        public FEParas setAfc(int afc) {
+            set(K_AFC, afc);
+            return this;
+        }
+    }
+
+    public int PlayDTVProgram(FEParas fe, int vid, int vfmt, int aid, int afmt, int pcr, int audioCompetation) {
+        libtv_log_open();
+        Parcel cmd = Parcel.obtain();
+        Parcel r = Parcel.obtain();
+        int tmpRet ;
+        cmd.writeInt(PLAY_PROGRAM_2);
+        cmd.writeString(fe.toString());
+        cmd.writeInt(vid);
+        cmd.writeInt(vfmt);
+        cmd.writeInt(aid);
+        cmd.writeInt(afmt);
+        cmd.writeInt(pcr);
+        cmd.writeInt(audioCompetation);
+        sendCmdToTv(cmd, r);
+        tmpRet = r.readInt();
+        cmd.recycle();
+        r.recycle();
+        return tmpRet;
+    }
+    public int PlayDTVProgram(FEParas fe, int vid, int vfmt, int aid, int afmt, int pcr, int audioCompetation, boolean adPrepare) {
+        SystemProperties.set ("media.audio.enable_asso", (adPrepare)? "1" : "0");
+        return PlayDTVProgram(fe, vid, vfmt, aid, afmt, pcr, audioCompetation);
+    }
+    public int PlayDTVProgram(FEParas fe, int vid, int vfmt, int aid, int afmt, int pcr, int audioCompetation, boolean adPrepare, int adMixingLevel) {
+        SystemProperties.set ("media.audio.mix_asso", String.valueOf(adMixingLevel));
+        return PlayDTVProgram(fe, vid, vfmt, aid, afmt, pcr, audioCompetation, adPrepare);
+    }
+
     public int StopPlayProgram() {
         return sendCmd(STOP_PROGRAM_PLAY);
+    }
+
+
+    public static class ScanParas extends Paras {
+        private static final String K_MODE = "m";
+        private static final String K_ATVMODE = "am";
+        private static final String K_DTVMODE = "dm";
+        private static final String K_ATVFREQ1 = "af1";
+        private static final String K_ATVFREQ2 = "af2";
+        private static final String K_DTVFREQ1 = "df1";
+        private static final String K_DTVFREQ2 = "df2";
+        private static final String K_PROC = "prc";
+        private static final String K_DTVSTD = "dstd";
+
+        public static int MODE_ATV_DTV = 0;
+        public static int MODE_DTV_ATV = 1;
+        public static int MODE_ADTV = 2;
+
+        public static int ATVMODE_AUTO = 1;
+        public static int ATVMODE_MANUAL = 2;
+        public static int ATVMODE_FREQUENCY = 3;
+        public static int ATVMODE_NONE = 7;
+
+        public static int DTVMODE_AUTO = 1;
+        public static int DTVMODE_MANUAL = 2;
+        public static int DTVMODE_ALLBAND = 3;
+        public static int DTVMODE_NONE = 7;
+
+        public static int DTVSTD_DVB = 0;
+        public static int DTVSTD_ATSC = 1;
+        public static int DTVSTD_ISDB = 2;
+
+        public ScanParas() { super(); }
+        public ScanParas(String paras) { super(paras); }
+
+        public String toNamedString() {
+            return toString("scan");
+        }
+
+        public int getMode() {
+            return getInt(K_MODE, 0);
+        }
+        public int getAtvMode() {
+            return getInt(K_ATVMODE, 0);
+        }
+        public int getDtvMode() {
+            return getInt(K_DTVMODE, 0);
+        }
+        public int getAtvFrequency1() {
+            return getInt(K_ATVFREQ1, 0);
+        }
+        public int getAtvFrequency2() {
+            return getInt(K_ATVFREQ2, 0);
+        }
+        public int getDtvFrequency1() {
+            return getInt(K_DTVFREQ1, 0);
+        }
+        public int getDtvFrequency2() {
+            return getInt(K_DTVFREQ2, 0);
+        }
+        public int getProc() {
+            return getInt(K_PROC, 0);
+        }
+        public int getDtvStandard() {
+            return getInt(K_DTVSTD, -1);
+        }
+        public ScanParas setMode(int mode) {
+            set(K_MODE, mode);
+            return this;
+        }
+        public ScanParas setAtvMode(int atvMode) {
+            set(K_ATVMODE, atvMode);
+            return this;
+        }
+        public ScanParas setDtvMode(int dtvMode) {
+            set(K_DTVMODE, dtvMode);
+            return this;
+        }
+        public ScanParas setAtvFrequency1(int freq) {
+            set(K_ATVFREQ1, freq);
+            return this;
+        }
+        public ScanParas setAtvFrequency2(int freq) {
+            set(K_ATVFREQ2, freq);
+            return this;
+        }
+        public ScanParas setDtvFrequency1(int freq) {
+            set(K_DTVFREQ1, freq);
+            return this;
+        }
+        public ScanParas setDtvFrequency2(int freq) {
+            set(K_DTVFREQ2, freq);
+            return this;
+        }
+        public ScanParas setProc(int proc) {
+            set(K_PROC, proc);
+            return this;
+        }
+        public ScanParas setDtvStandard(int std) {
+            set(K_DTVSTD, std);
+            return this;
+        }
+    }
+
+    public int TvScan(FEParas fe, ScanParas scan) {
+        libtv_log_open();
+        Parcel cmd = Parcel.obtain();
+        Parcel r = Parcel.obtain();
+        int tmpRet ;
+        cmd.writeInt(TV_SCAN_2);
+        cmd.writeString(fe.toString());
+        cmd.writeString(scan.toString());
+        sendCmdToTv(cmd, r);
+        tmpRet = r.readInt();
+        cmd.recycle();
+        r.recycle();
+        return tmpRet;
     }
 
     public enum tv_fe_type_e {
@@ -5901,7 +6206,8 @@ public class TvControlManager {
         SOURCE_TYPE_SVIDEO(7),
         SOURCE_TYPE_IPTV(8),
         SOURCE_TYPE_SPDIF(9),
-        SOURCE_TYPE_MAX(10);
+        SOURCE_TYPE_ADTV(10),
+        SOURCE_TYPE_MAX(11);
 
         private int val;
 

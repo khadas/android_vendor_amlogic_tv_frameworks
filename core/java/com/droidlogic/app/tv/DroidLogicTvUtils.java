@@ -1,7 +1,5 @@
 package com.droidlogic.app.tv;
 
-import java.util.List;
-
 import android.content.Context;
 import android.content.UriMatcher;
 import android.media.tv.TvContract;
@@ -13,10 +11,20 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.SparseArray;
 
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Arrays;
+import java.net.URLEncoder;
+import java.net.URLDecoder;
+import java.io.UnsupportedEncodingException;
+
+import org.json.JSONObject;
+import org.json.JSONException;
+
+import android.util.Log;
 
 public class DroidLogicTvUtils
 {
@@ -64,6 +72,7 @@ public class DroidLogicTvUtils
     public static final String SIG_INFO_C_MOD = "mod";
     public static final String SIG_INFO_C_BANDWIDTH = "bandwidth";
     public static final String SIG_INFO_C_OFM_MODE = "ofdm_mode";
+    public static final String SIG_INFO_C_PARAS = "paras";
     public static final String SIG_INFO_C_TS_ID = "ts_id";
     public static final String SIG_INFO_C_ORIG_NET_ID = "orig_net_id";
 
@@ -97,7 +106,7 @@ public class DroidLogicTvUtils
      * source input type need to switch
      */
     private static final int SOURCE_TYPE_START  = 0;
-    private static final int SOURCE_TYPE_END    = 8;
+    private static final int SOURCE_TYPE_END    = 9;
 
     public static final int SOURCE_TYPE_ATV     = SOURCE_TYPE_START;
     public static final int SOURCE_TYPE_DTV     = SOURCE_TYPE_START + 1;
@@ -107,6 +116,7 @@ public class DroidLogicTvUtils
     public static final int SOURCE_TYPE_HDMI2   = SOURCE_TYPE_START + 5;
     public static final int SOURCE_TYPE_HDMI3   = SOURCE_TYPE_START + 6;
     public static final int SOURCE_TYPE_SPDIF   = SOURCE_TYPE_START + 7;
+    public static final int SOURCE_TYPE_ADTV    = SOURCE_TYPE_START + 8;
     public static final int SOURCE_TYPE_OTHER   = SOURCE_TYPE_END;
 
     /**
@@ -120,6 +130,9 @@ public class DroidLogicTvUtils
     public static final int DEVICE_ID_HDMI3      = 7;
     public static final int DEVICE_ID_DTV        = 10;
     public static final int DEVICE_ID_SPDIF      = 14;
+
+    /*virtual device*/
+    public static final int DEVICE_ID_ADTV = 15;
 
     public static final int RESULT_OK = 1;
     public static final int RESULT_UPDATE = 2;
@@ -161,11 +174,14 @@ public class DroidLogicTvUtils
     public static final String ACTION_STOP_SCAN = "stop_scan";
     public static final String PARA_MANUAL_SCAN = "scan_freq";
     public static final String PARA_SCAN_MODE = "scan_mode";
-    public static final String PARA_SCAN_TYPE = "scan_type";
+    public static final String PARA_SCAN_TYPE_DTV = "scan_type_dtv";
+    public static final String PARA_SCAN_TYPE_ATV = "scan_type_atv";
     public static final String PARA_SCAN_PARA1 = "scan_para1";
     public static final String PARA_SCAN_PARA2 = "scan_para2";
     public static final String PARA_SCAN_PARA3 = "scan_para3";
     public static final String PARA_SCAN_PARA4 = "scan_para4";
+    public static final String PARA_SCAN_PARA5 = "scan_para5";
+    public static final String PARA_SCAN_PARA6 = "scan_para6";
 
     /*auto tracks call*/
     public static final String ACTION_DTV_AUTO_TRACKS = "dtv_auto_tracks";
@@ -315,6 +331,9 @@ public class DroidLogicTvUtils
             case DEVICE_ID_SPDIF:
                 ret = SOURCE_TYPE_SPDIF;
                 break;
+            case DEVICE_ID_ADTV:
+                ret = SOURCE_TYPE_ADTV;
+                break;
             default:
                 break;
         }
@@ -347,6 +366,71 @@ public class DroidLogicTvUtils
                 break;
         }
         return ret;
+    }
+
+    public static int getSigType(ChannelInfo info) {
+        if (info.isAnalogChannnel())
+            return SIG_INFO_TYPE_ATV;
+        return SIG_INFO_TYPE_DTV;
+    }
+
+    private static final Map<Integer, TvControlManager.SourceInput_Type> DeviceIdToTvSourceType = new HashMap<Integer, TvControlManager.SourceInput_Type>();
+    static {
+        DeviceIdToTvSourceType.put(DroidLogicTvUtils.DEVICE_ID_ATV, TvControlManager.SourceInput_Type.SOURCE_TYPE_TV);
+        DeviceIdToTvSourceType.put(DroidLogicTvUtils.DEVICE_ID_AV1, TvControlManager.SourceInput_Type.SOURCE_TYPE_AV);
+        DeviceIdToTvSourceType.put(DroidLogicTvUtils.DEVICE_ID_AV2, TvControlManager.SourceInput_Type.SOURCE_TYPE_AV);
+        DeviceIdToTvSourceType.put(DroidLogicTvUtils.DEVICE_ID_HDMI1, TvControlManager.SourceInput_Type.SOURCE_TYPE_HDMI);
+        DeviceIdToTvSourceType.put(DroidLogicTvUtils.DEVICE_ID_HDMI2, TvControlManager.SourceInput_Type.SOURCE_TYPE_HDMI);
+        DeviceIdToTvSourceType.put(DroidLogicTvUtils.DEVICE_ID_HDMI3, TvControlManager.SourceInput_Type.SOURCE_TYPE_HDMI);
+        DeviceIdToTvSourceType.put(DroidLogicTvUtils.DEVICE_ID_DTV, TvControlManager.SourceInput_Type.SOURCE_TYPE_DTV);
+        DeviceIdToTvSourceType.put(DroidLogicTvUtils.DEVICE_ID_ADTV, TvControlManager.SourceInput_Type.SOURCE_TYPE_ADTV);
+    }
+
+    public static TvControlManager.SourceInput_Type parseTvSourceTypeFromDeviceId (int deviceId) {
+        return DeviceIdToTvSourceType.get(deviceId);
+    }
+
+    private static final Map<Integer, TvControlManager.SourceInput> DeviceIdToTvSourceInput = new HashMap<Integer, TvControlManager.SourceInput>();
+    static {
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_ATV, TvControlManager.SourceInput.TV);
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_AV1, TvControlManager.SourceInput.AV1);
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_AV2, TvControlManager.SourceInput.AV2);
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI1, TvControlManager.SourceInput.HDMI1);
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI2, TvControlManager.SourceInput.HDMI2);
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI3, TvControlManager.SourceInput.HDMI3);
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_DTV, TvControlManager.SourceInput.DTV);
+    }
+
+    public static TvControlManager.SourceInput parseTvSourceInputFromDeviceId (int deviceId) {
+        return DeviceIdToTvSourceInput.get(deviceId);
+    }
+
+    private static final Map<Integer, TvControlManager.SourceInput_Type> SigTypeToTvSourceType = new HashMap<Integer, TvControlManager.SourceInput_Type>();
+    static {
+        SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_ATV, TvControlManager.SourceInput_Type.SOURCE_TYPE_TV);
+        SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_AV, TvControlManager.SourceInput_Type.SOURCE_TYPE_AV);
+        SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_HDMI, TvControlManager.SourceInput_Type.SOURCE_TYPE_HDMI);
+        SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_DTV, TvControlManager.SourceInput_Type.SOURCE_TYPE_DTV);
+        SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_SPDIF, TvControlManager.SourceInput_Type.SOURCE_TYPE_SPDIF);
+    }
+
+    public static TvControlManager.SourceInput_Type parseTvSourceTypeFromSigType (int sigType) {
+        return SigTypeToTvSourceType.get(sigType);
+    }
+
+    private static final Map<Integer, TvControlManager.SourceInput> SigTypeToTvSourceInput = new HashMap<Integer, TvControlManager.SourceInput>();
+    static {
+        SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_ATV, TvControlManager.SourceInput.TV);
+        SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_AV1, TvControlManager.SourceInput.AV1);
+        SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_AV2, TvControlManager.SourceInput.AV2);
+        SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI1, TvControlManager.SourceInput.HDMI1);
+        SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI2, TvControlManager.SourceInput.HDMI2);
+        SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI3, TvControlManager.SourceInput.HDMI3);
+        SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_DTV, TvControlManager.SourceInput.DTV);
+    }
+
+    public static TvControlManager.SourceInput parseTvSourceInputFromSigType (int sigType) {
+        return SigTypeToTvSourceInput.get(sigType);
     }
 
     private static final int AUDIO_AD_MAIN = 0x1000000;
@@ -448,4 +532,121 @@ public class DroidLogicTvUtils
         return false;
     }
 
+    public static String mapToString(Map<String, String> map) {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (String key : map.keySet()) {
+            if (stringBuilder.length() > 0) {
+                stringBuilder.append("&");
+            }
+            String value = map.get(key);
+            try {
+                stringBuilder.append((key != null ? URLEncoder.encode(key, "UTF-8") : ""));
+                stringBuilder.append("=");
+                stringBuilder.append(value != null ? URLEncoder.encode(value, "UTF-8") : "");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("This method requires UTF-8 encoding support", e);
+            }
+        }
+
+        return stringBuilder.toString();
+    }
+
+    public static Map<String, String> stringToMap(String input) {
+        Map<String, String> map = new HashMap<String, String>();
+
+        String[] nameValuePairs = input.split("&");
+        for (String nameValuePair : nameValuePairs) {
+            String[] nameValue = nameValuePair.split("=");
+            try {
+                map.put(URLDecoder.decode(nameValue[0], "UTF-8"), nameValue.length > 1 ? URLDecoder.decode(
+                            nameValue[1], "UTF-8") : "");
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException("This method requires UTF-8 encoding support", e);
+            }
+        }
+
+        return map;
+    }
+
+    public static String mapToJson(String name, Map<String, String> map) {
+        StringBuilder stringBuilder = new StringBuilder();
+        boolean has_member = false;
+
+        if (!map.isEmpty()) {
+            if ((name != null) && !name.isEmpty())
+                stringBuilder.append("\"").append(name).append("\":");
+
+            stringBuilder.append("{");
+            for (String key : map.keySet()) {
+                if (has_member)
+                    stringBuilder.append(",");
+
+                String value = map.get(key);
+                stringBuilder.append("\"")
+                    .append((key != null ? key : ""))
+                    .append("\":")
+                    .append(value != null ? value : "");
+                has_member = true;
+            }
+            stringBuilder.append("}");
+        }
+        return stringBuilder.toString();
+    }
+    public static String mapToJson(Map<String, String> map) {
+        return mapToJson(null, map);
+    }
+    public static Map<String, String> jsonToMap(String jsonString) {
+        Map<String, String> map = new HashMap<String, String>();
+        JSONObject jsonObject;
+
+        try {
+            jsonObject = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            throw new RuntimeException("Json parse fail: ["+jsonString+"]", e);
+        }
+
+        Iterator it = jsonObject.keys();
+        while (it.hasNext()) {
+            String k = (String)it.next();
+            String v;
+            try {
+                map.put(k, jsonObject.get(k).toString());
+            } catch (JSONException e) {
+            }
+        }
+        return map;
+    }
+
+    public static class TvString {
+        public static String toString(String[] array) {
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            sb.append("[");
+            if (array != null && array.length != 0) {
+                for (String s : array) {
+                    if (!first)
+                        sb.append(",");
+                    sb.append("\"").append(s).append("\"");
+                    first = false;
+                }
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        public static String toString(String s) {
+            return "\""+((s == null)? "" : s.toString())+"\"";
+        }
+        public static String fromString(String s) {
+            return (s == null)? null : s.replace("\"", "");
+        }
+        public static String[] fromArrayString(String s) {
+            return (s == null)? null : s.replace("[", "").replace("]", "").replace("\"", "").split(",");
+        }
+    }
+
+    public static TvInputInfo getTvInputInfo(Context context, String inputId) {
+        TvInputManager tim = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
+        return tim.getTvInputInfo(inputId);
+    }
 }

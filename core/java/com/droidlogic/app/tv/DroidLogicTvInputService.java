@@ -110,10 +110,16 @@ public class DroidLogicTvInputService extends TvInputService implements
      */
     @Override
     public Session onCreateSession(String inputId) {
+        registerInput(inputId);
+        return null;
+    }
+
+    public void registerInput(String inputId) {
+        Log.d(TAG, "register Input:"+inputId);
         mContext = getApplicationContext();
         mCurrentInputId = inputId;
-        mSessionHandler = new SurfaceHandler();
-        return null;
+        if (mSessionHandler == null)
+            mSessionHandler = new SurfaceHandler();
     }
 
     protected void initInputService(int sourceType, String className) {
@@ -152,6 +158,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         mSession = session;
         mCurrentSessionId = session.mId;
         Log.d(TAG, "inputId["+mCurrentInputId+"]");
+        Log.d(TAG, "xsession["+session+"]");
 
         SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
         int channel_number_start = mSystemControlManager.getPropertyInt("tv.channel.number.start", 1);
