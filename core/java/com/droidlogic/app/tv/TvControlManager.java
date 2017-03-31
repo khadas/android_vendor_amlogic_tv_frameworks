@@ -3794,7 +3794,8 @@ public class TvControlManager {
         public TvMode(String type) {
             mType = type;
             setBase(typeToBaseMode(mType))
-                .setGen(typeToGen(mType));
+                .setGen(typeToGen(mType))
+                .setList(typeToList(mType));
         }
         public static TvMode fromMode(int mode) {
             TvMode m = new TvMode();
@@ -3909,6 +3910,18 @@ public class TvControlManager {
                 ext = 1;
             } else if (TextUtils.equals(type, TvContract.Channels.TYPE_ATSC_C)) {
                 ext = 1;
+            }
+            return ext;
+        }
+
+        private int typeToList(String type) {
+            int ext = 0;
+            if (TextUtils.equals(type, TvContract.Channels.TYPE_ATSC_T)) {
+                ext = 0;
+            } else if (TextUtils.equals(type, TvContract.Channels.TYPE_ATSC_C)) {
+                ext = 1;
+            } else if (TextUtils.equals(type, TvContract.Channels.TYPE_ATSC_M_H)) {
+                ext = 0;//fix me
             }
             return ext;
         }

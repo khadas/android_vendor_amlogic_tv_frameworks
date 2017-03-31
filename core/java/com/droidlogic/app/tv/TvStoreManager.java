@@ -250,6 +250,9 @@ public abstract class TvStoreManager {
                 type = TvContract.Channels.TYPE_PAL;
                 break;
         }
+
+        TvControlManager.FEParas fep = new TvControlManager.FEParas(event.paras);
+
         return new ChannelInfo.Builder()
                .setInputId(mInputId == null ? "NULL" : mInputId)
                .setType(type)
@@ -278,7 +281,7 @@ public abstract class TvStoreManager {
                .setBandwidth(0)
                .setSymbolRate(0)
                .setModulation(0)
-               .setFEParas("")
+               .setFEParas(fep.toString())
                .setFineTune(0)
                .setBrowsable(true)
                .setIsFavourite(false)

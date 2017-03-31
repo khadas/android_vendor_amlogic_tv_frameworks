@@ -414,7 +414,7 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_AUDIO_COMPENSATION, String.valueOf(channel.getAudioCompensation()));
         map.put(ChannelInfo.KEY_IS_FAVOURITE, String.valueOf(channel.isFavourite() ? 1 : 0));
         map.put(ChannelInfo.KEY_MULTI_NAME, DroidLogicTvUtils.TvString.toString(channel.getDisplayNameMulti()));
-
+        map.put(ChannelInfo.KEY_FE_PARAS, channel.getFEParas());
         return map;
     }
 
@@ -661,9 +661,9 @@ public class TvDataBaseManager {
         if (channel.getInputId() == null)
             return;
 
-        if (channel.getInputId().contains("ATV")) {
+        if (channel.isAnalogChannnel()) {
             updateAtvChannel(channel);
-        } else if (channel.getInputId().contains("DTV")) {
+        } else {
             updateDtvChannel(channel);
         }
     }
