@@ -23,6 +23,7 @@ enum tvcmd_e {
     SET_PREVIEW_WINDOW = 18,
     GET_SOURCE_CONNECT_STATUS = 19,
     GET_SOURCE_INPUT_LIST = 20,
+    GET_CURRENT_SOURCE_INPUT_VIRTUAL = 21,
     //Tv function END
 
     //hdmi
