@@ -234,7 +234,7 @@ public abstract class TvStoreManager {
     }
 
     private ChannelInfo createAtvChannelInfo(TvControlManager.ScannerEvent event) {
-        String ATVName = "ATV program";
+        String ATVName = event.programName;
         String type = TvContract.Channels.TYPE_PAL;
         switch (event.videoStd) {
             case TvControlManager.ATV_VIDEO_STD_PAL:
@@ -253,13 +253,18 @@ public abstract class TvStoreManager {
 
         TvControlManager.FEParas fep = new TvControlManager.FEParas(event.paras);
 
+        if (ATVName.length() == 0)
+            ATVName = "xxxATV Program";
+        if (ATVName.startsWith("xxxATV Program"))
+            ATVName = ATVName + " " + Integer.toString(mDisplayNumber);
+
         return new ChannelInfo.Builder()
                .setInputId(mInputId == null ? "NULL" : mInputId)
                .setType(type)
                .setServiceType(TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO)//default is SERVICE_TYPE_AUDIO_VIDEO
                .setServiceId(0)
                .setDisplayNumber(Integer.toString(mDisplayNumber))
-               .setDisplayName(ATVName+" "+Integer.toString(mDisplayNumber))
+               .setDisplayName(TVMultilingualText.getText(ATVName))
                .setLogoUrl(null)
                .setOriginalNetworkId(0)
                .setTransportStreamId(0)
@@ -287,7 +292,7 @@ public abstract class TvStoreManager {
                .setIsFavourite(false)
                .setPassthrough(false)
                .setLocked(false)
-               .setDisplayNameMulti("xxx" + ATVName)
+               .setDisplayNameMulti(ATVName)
                .build();
     }
 
