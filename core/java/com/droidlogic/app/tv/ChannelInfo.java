@@ -105,6 +105,7 @@ public class ChannelInfo {
     public static final String LABEL_HDMI1 = "HDMI1";
     public static final String LABEL_HDMI2 = "HDMI2";
     public static final String LABEL_HDMI3 = "HDMI3";
+    public static final String LABEL_HDMI4 = "HDMI4";
     public static final String LABEL_SPDIF = "SPDIF";
 
     private long mId;

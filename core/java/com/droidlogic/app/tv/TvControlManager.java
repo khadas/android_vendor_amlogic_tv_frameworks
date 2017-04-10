@@ -6190,16 +6190,17 @@ public class TvControlManager {
         HDMI1(5),
         HDMI2(6),
         HDMI3(7),
-        VGA(8),
-        XXXX(9),//not use MPEG source
-        DTV(10),
-        SVIDEO(11),
-        HDMI4K2K(12),
-        USB4K2K(13),
-        IPTV(14),
-        DUMMY(15),
-        SOURCE_SPDIF(16),
-        MAX(17);
+        HDMI4(8),
+        VGA(9),
+        XXXX(10),//not use MPEG source
+        DTV(11),
+        SVIDEO(12),
+        HDMI4K2K(13),
+        USB4K2K(14),
+        IPTV(15),
+        DUMMY(16),
+        SOURCE_SPDIF(17),
+        MAX(18);
         private int val;
 
         SourceInput(int val) {

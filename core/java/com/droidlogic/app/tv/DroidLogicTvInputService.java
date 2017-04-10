@@ -258,6 +258,9 @@ public class DroidLogicTvInputService extends TvInputService implements
         case DroidLogicTvUtils.DEVICE_ID_HDMI3:
             label = ChannelInfo.LABEL_HDMI3;
             break;
+        case DroidLogicTvUtils.DEVICE_ID_HDMI4:
+            label = ChannelInfo.LABEL_HDMI4;
+            break;
         case DroidLogicTvUtils.DEVICE_ID_SPDIF:
             label = ChannelInfo.LABEL_SPDIF;
             break;
@@ -329,6 +332,7 @@ public class DroidLogicTvInputService extends TvInputService implements
             case DroidLogicTvUtils.DEVICE_ID_HDMI1:
             case DroidLogicTvUtils.DEVICE_ID_HDMI2:
             case DroidLogicTvUtils.DEVICE_ID_HDMI3:
+            case DroidLogicTvUtils.DEVICE_ID_HDMI4:
                 if (DEBUG)
                     Log.d(TAG, "signal_info.fmt.toString() for hdmi=" + signal_info.sigFmt.toString());
 
@@ -459,7 +463,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         } else if (surface != null) {
             if (mHardware != null && mSurface != null
                 && (mSourceType >= DroidLogicTvUtils.DEVICE_ID_HDMI1)
-                && (mSourceType <= DroidLogicTvUtils.DEVICE_ID_HDMI3)) {
+                && (mSourceType <= DroidLogicTvUtils.DEVICE_ID_HDMI4)) {
                 stopTvPlay(mSession.mId);
             }
             registerInputSession(session);
