@@ -230,6 +230,12 @@ public abstract class TvStoreManager {
                .setFreeCa(event.free_ca)
                .setScrambled(event.scrambled)
                .setSdtVersion(event.sdtVersion)
+               .setMajorChannelNumber(event.majorChannelNumber)
+               .setMinorChannelNumber(event.minorChannelNumber)
+               .setSourceId(event.sourceId)
+               .setAccessControled(event.accessControlled)
+               .setHidden(event.hidden)
+               .setHideGuide(event.hideGuide)
                .build();
     }
 
@@ -293,6 +299,12 @@ public abstract class TvStoreManager {
                .setPassthrough(false)
                .setLocked(false)
                .setDisplayNameMulti(ATVName)
+               .setMajorChannelNumber(event.majorChannelNumber)
+               .setMinorChannelNumber(event.minorChannelNumber)
+               .setSourceId(event.sourceId)
+               .setAccessControled(event.accessControlled)
+               .setHidden(event.hidden)
+               .setHideGuide(event.hideGuide)
                .build();
     }
 

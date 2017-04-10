@@ -16,8 +16,9 @@ public final class Program implements Comparable<Program> {
     private static final long INVALID_LONG_VALUE = -1;
     private static final int INVALID_INT_VALUE = -1;
 
-    private long mProgramId;
+    private long mId;
     private long mChannelId;
+    private int mProgramId;
     private String mTitle;
     private String mEpisodeTitle;
     private int mSeasonNumber;
@@ -36,8 +37,9 @@ public final class Program implements Comparable<Program> {
     private boolean mIsAppointed;
 
     private Program() {
+        mId = INVALID_LONG_VALUE;
         mChannelId = INVALID_LONG_VALUE;
-        mProgramId = INVALID_LONG_VALUE;
+        mProgramId = INVALID_INT_VALUE;
         mSeasonNumber = INVALID_INT_VALUE;
         mEpisodeNumber = INVALID_INT_VALUE;
         mStartTimeUtcMillis = INVALID_LONG_VALUE;
@@ -45,6 +47,10 @@ public final class Program implements Comparable<Program> {
         mVideoWidth = INVALID_INT_VALUE;
         mVideoHeight = INVALID_INT_VALUE;
         mIsAppointed = false;
+    }
+
+    public long getId() {
+        return mId;
     }
 
     public long getProgramId() {
@@ -115,6 +121,11 @@ public final class Program implements Comparable<Program> {
         return mInternalProviderData;
     }
 
+    public void setDescription(String description) {
+        this.mDescription = description;
+        return;
+    }
+
     public boolean isAppointed() {
         return mIsAppointed;
     }
@@ -163,6 +174,7 @@ public final class Program implements Comparable<Program> {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         builder.append("Program{")
+                .append("id=").append(mId)
                 .append("programId=").append(mProgramId)
                 .append(", channelId=").append(mChannelId)
                 .append(", title=").append(mTitle)
@@ -286,6 +298,7 @@ public final class Program implements Comparable<Program> {
             values.putNull(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA);
         }
         values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG1, mIsAppointed ? 1 : 0);
+        values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG2, mProgramId);
         return values;
     }
 
@@ -293,7 +306,7 @@ public final class Program implements Comparable<Program> {
         Builder builder = new Builder();
         int index = cursor.getColumnIndex(TvContract.Programs._ID);
         if (index >= 0 && !cursor.isNull(index)) {
-            builder.setProgramId(cursor.getLong(index));
+            builder.setId(cursor.getLong(index));
         }
         index = cursor.getColumnIndex(TvContract.Programs.COLUMN_CHANNEL_ID);
         if (index >= 0 && !cursor.isNull(index)) {
@@ -364,6 +377,10 @@ public final class Program implements Comparable<Program> {
         if (index >= 0) {
             builder.setIsAppointed(cursor.getInt(index) == 1 ? true : false);
         }
+        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG2);
+        if (index >= 0) {
+            builder.setProgramId(cursor.getInt(index));
+        }
         return builder.build();
     }
 
@@ -379,7 +396,12 @@ public final class Program implements Comparable<Program> {
             mProgram.copyFrom(other);
         }
 
-        public Builder setProgramId(long programId) {
+        public Builder setId(long id) {
+            mProgram.mId = id;
+            return this;
+        }
+
+        public Builder setProgramId(int programId) {
             mProgram.mProgramId = programId;
             return this;
         }

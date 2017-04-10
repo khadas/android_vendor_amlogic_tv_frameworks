@@ -89,6 +89,13 @@ public class ChannelInfo {
     public static final String KEY_FINE_TUNE = "fine_tune";
     public static final String KEY_IS_FAVOURITE = "is_favourite";
 
+    public static final String KEY_MAJOR_NUM = "majorNum";
+    public static final String KEY_MINOR_NUM = "minorNum";
+    public static final String KEY_SOURCE_ID = "srcId";
+    public static final String KEY_ACCESS_CONTROL = "access";
+    public static final String KEY_HIDDEN = "hidden";
+    public static final String KEY_HIDE_GUIDE = "hideGuide";
+
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
 
     public static final String LABEL_ATV = "ATV";
@@ -161,6 +168,13 @@ public class ChannelInfo {
     private int mLCN;
     private int mLCN1;
     private int mLCN2;
+
+    private int mMajorChannelNumber;
+    private int mMinorChannelNumber;
+    private int mSourceId;
+    private int mAccessControlled;
+    private int mHidden;
+    private int mHideGuide;
 
     private ChannelInfo() {}
 
@@ -320,6 +334,19 @@ public class ChannelInfo {
                 builder.setScrambled(Integer.parseInt(parsedMap.get(KEY_SCRAMBLED)));
             if (parsedMap.get(KEY_SDT_VERSION) != null)
                 builder.setSdtVersion(Integer.parseInt(parsedMap.get(KEY_SDT_VERSION)));
+
+            if (parsedMap.get(KEY_MAJOR_NUM) != null)
+                builder.setMajorChannelNumber(Integer.parseInt(parsedMap.get(KEY_MAJOR_NUM)));
+            if (parsedMap.get(KEY_MINOR_NUM) != null)
+                builder.setMinorChannelNumber(Integer.parseInt(parsedMap.get(KEY_MINOR_NUM)));
+            if (parsedMap.get(KEY_SOURCE_ID) != null)
+                builder.setSourceId(Integer.parseInt(parsedMap.get(KEY_SOURCE_ID)));
+            if (parsedMap.get(KEY_ACCESS_CONTROL) != null)
+                builder.setAccessControled(Integer.parseInt(parsedMap.get(KEY_ACCESS_CONTROL)));
+            if (parsedMap.get(KEY_HIDDEN) != null)
+                builder.setHidden(Integer.parseInt(parsedMap.get(KEY_HIDDEN)));
+            if (parsedMap.get(KEY_HIDE_GUIDE) != null)
+                builder.setHideGuide(Integer.parseInt(parsedMap.get(KEY_HIDE_GUIDE)));
         }
 
         index = cursor.getColumnIndex(Channels.COLUMN_BROWSABLE);
@@ -535,6 +562,30 @@ public class ChannelInfo {
 
     public int getLCN2() {
         return mLCN2;
+    }
+
+    public int getMajorChannelNumber() {
+        return mMajorChannelNumber;
+    }
+
+    public int getMinorChannelNumber() {
+        return mMinorChannelNumber;
+    }
+
+    public int getSourceId() {
+        return mSourceId;
+    }
+
+    public int getAccessControled() {
+        return mAccessControlled;
+    }
+
+    public int getHidden() {
+        return mHidden;
+    }
+
+    public int getHideGuide() {
+        return mHideGuide;
     }
 
     public boolean isBrowsable() {
@@ -779,6 +830,13 @@ public class ChannelInfo {
             mChannel.mLCN = -1;
             mChannel.mLCN1 = -1;
             mChannel.mLCN2 = -1;
+
+            mChannel.mMajorChannelNumber = 0;
+            mChannel.mMinorChannelNumber = 0;
+            mChannel.mSourceId = -1;
+            mChannel.mAccessControlled = 0;
+            mChannel.mHidden = 0;
+            mChannel.mHideGuide = 0;
         }
 
         public Builder setId(long id) {
@@ -1032,6 +1090,36 @@ public class ChannelInfo {
             return this;
         }
 
+        public Builder setMajorChannelNumber(int number) {
+            mChannel.mMajorChannelNumber = number;
+            return this;
+        }
+
+        public Builder setMinorChannelNumber(int number) {
+            mChannel.mMinorChannelNumber = number;
+            return this;
+        }
+
+        public Builder setSourceId(int id) {
+            mChannel.mSourceId = id;
+            return this;
+        }
+
+        public Builder setAccessControled(int access) {
+            mChannel.mAccessControlled = access;
+            return this;
+        }
+
+        public Builder setHidden(int hidden) {
+            mChannel.mHidden = hidden;
+            return this;
+        }
+
+        public Builder setHideGuide(int hide) {
+            mChannel.mHideGuide = hide;
+            return this;
+        }
+
         public ChannelInfo build() {
             return mChannel;
         }
@@ -1074,6 +1162,12 @@ public class ChannelInfo {
         return (mType.equals(TvContract.Channels.TYPE_PAL)
             || mType.equals(TvContract.Channels.TYPE_NTSC)
             || mType.equals(TvContract.Channels.TYPE_SECAM));
+    }
+
+    public boolean isAtscChannnel() {
+        return (mType.equals(TvContract.Channels.TYPE_ATSC_C)
+            || mType.equals(TvContract.Channels.TYPE_ATSC_T)
+            || mType.equals(TvContract.Channels.TYPE_ATSC_M_H));
     }
 
     public boolean isAVChannel() {
@@ -1129,6 +1223,10 @@ public class ChannelInfo {
                 "\n SdtVersion = " + mSdtVersion +
                 "\n LCN = " + mLCN +
                 "\n LCN1 = " + mLCN1 +
-                "\n LCN2 = " + mLCN2;
+                "\n LCN2 = " + mLCN2 +
+                "\n mSourceId = " + mSourceId +
+                "\n AccessControled = " + mAccessControlled +
+                "\n Hidden = " + mHidden +
+                "\n HideGuide = " + mHideGuide;
     }
 }

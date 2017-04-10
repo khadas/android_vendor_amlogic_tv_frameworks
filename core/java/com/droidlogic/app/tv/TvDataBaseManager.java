@@ -378,6 +378,12 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_SCRAMBLED, String.valueOf(channel.getScrambled()));
         map.put(ChannelInfo.KEY_SDT_VERSION, String.valueOf(channel.getSdtVersion()));
         map.put(ChannelInfo.KEY_FE_PARAS, channel.getFEParas());
+        map.put(ChannelInfo.KEY_MAJOR_NUM, String.valueOf(channel.getMajorChannelNumber()));
+        map.put(ChannelInfo.KEY_MINOR_NUM, String.valueOf(channel.getMinorChannelNumber()));
+        map.put(ChannelInfo.KEY_SOURCE_ID, String.valueOf(channel.getSourceId()));
+        map.put(ChannelInfo.KEY_ACCESS_CONTROL, String.valueOf(channel.getAccessControled()));
+        map.put(ChannelInfo.KEY_HIDDEN, String.valueOf(channel.getHidden()));
+        map.put(ChannelInfo.KEY_HIDE_GUIDE, String.valueOf(channel.getHideGuide()));
         String output = DroidLogicTvUtils.mapToJson(map);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
@@ -415,6 +421,12 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_IS_FAVOURITE, String.valueOf(channel.isFavourite() ? 1 : 0));
         map.put(ChannelInfo.KEY_MULTI_NAME, DroidLogicTvUtils.TvString.toString(channel.getDisplayNameMulti()));
         map.put(ChannelInfo.KEY_FE_PARAS, channel.getFEParas());
+        map.put(ChannelInfo.KEY_MAJOR_NUM, String.valueOf(channel.getMajorChannelNumber()));
+        map.put(ChannelInfo.KEY_MINOR_NUM, String.valueOf(channel.getMinorChannelNumber()));
+        map.put(ChannelInfo.KEY_SOURCE_ID, String.valueOf(channel.getSourceId()));
+        map.put(ChannelInfo.KEY_ACCESS_CONTROL, String.valueOf(channel.getAccessControled()));
+        map.put(ChannelInfo.KEY_HIDDEN, String.valueOf(channel.getHidden()));
+        map.put(ChannelInfo.KEY_HIDE_GUIDE, String.valueOf(channel.getHideGuide()));
         return map;
     }
 
@@ -1056,6 +1068,13 @@ public class TvDataBaseManager {
 
     private static final int BATCH_OPERATION_COUNT = 100;
 
+    private boolean isATSCSpecialProgram(Program program) {
+        //If program's startTime == EndTime == 0,
+        //it is a special program for descr update in atsc.
+        return program.getStartTimeUtcMillis() == 0
+            && program.getEndTimeUtcMillis() == 0;
+    }
+
     /**
      * Updates the system database, TvProvider, with the given programs.
      *
@@ -1073,15 +1092,26 @@ public class TvDataBaseManager {
         }
         List<Program> oldPrograms = getPrograms(TvContract.buildProgramsUriForChannel(channelUri));
 
-        Program firstNewProgram = newPrograms.get(0);
+        Program firstNewProgram = null;
+        for (Program program : newPrograms) {
+            if (!isATSCSpecialProgram(program)) {
+                firstNewProgram = program;
+                break;
+            }
+        }
+
         int oldProgramsIndex = 0;
         int newProgramsIndex = 0;
+
         // Skip the past programs. They will be automatically removed by the system.
-        for (Program program : oldPrograms) {
-            if (program.getEndTimeUtcMillis() > firstNewProgram.getStartTimeUtcMillis())
-                break;
-            oldProgramsIndex++;
+        if (firstNewProgram != null) {
+            for (Program program : oldPrograms) {
+                if (program.getEndTimeUtcMillis() > firstNewProgram.getStartTimeUtcMillis())
+                    break;
+                oldProgramsIndex++;
+            }
         }
+
         // Compare the new programs with old programs one by one and update/delete the old one or
         // insert new program if there is no matching program in the database.
         ArrayList<ContentProviderOperation> ops = new ArrayList<>();
@@ -1093,7 +1123,22 @@ public class TvDataBaseManager {
 
             if (oldProgram != null) {
 
-                if (oldProgram.equals(newProgram)) {
+                if (isATSCSpecialProgram(newProgram)) {
+                    //Log.d(TAG, "ext desr:"+newProgram.getProgramId());
+                    for (Program program : oldPrograms) {
+                        //Log.d(TAG, "old:"+program.getProgramId());
+                        if (program.getProgramId() == newProgram.getProgramId()) {
+                            program.setDescription(newProgram.getDescription());
+                            ops.add(ContentProviderOperation.newUpdate(
+                                    TvContract.buildProgramUri(program.getId()))
+                                    .withValues(program.toContentValues())
+                                    .build());
+                            Log.d(TAG, "\tupdate descr");
+                            break;
+                        }
+                    }
+                    newProgramsIndex++;
+                } else if (oldProgram.equals(newProgram)) {
                     // Exact match. No need to update. Move on to the next programs.
                     oldProgramsIndex++;
                     newProgramsIndex++;
@@ -1118,24 +1163,30 @@ public class TvDataBaseManager {
                     oldProgramsIndex++;
                     Log.d(TAG, "\tdelete old");
                 } else {
-                    // No match. The new program does not match any of the old programs. Insert it
-                    // as a new program.
-                    addNewProgram = true;
-                    newProgramsIndex++;
-                    Log.d(TAG, "\tnew insert");
+                    if (!isATSCSpecialProgram(newProgram)) {
+                        // No match. The new program does not match any of the old programs. Insert it
+                        // as a new program.
+                        addNewProgram = true;
+                        newProgramsIndex++;
+                        Log.d(TAG, "\tnew insert");
+                    }
                 }
             } else {
-                // No old programs. Just insert new programs.
-                addNewProgram = true;
+                if (!isATSCSpecialProgram(newProgram)) {
+                    // No old programs. Just insert new programs.
+                    addNewProgram = true;
+                    Log.d(TAG, "no old, insert new");
+                }
                 newProgramsIndex++;
-                Log.d(TAG, "no old, insert new");
             }
+
             if (addNewProgram) {
                 ops.add(ContentProviderOperation
                         .newInsert(TvContract.Programs.CONTENT_URI)
                         .withValues(newProgram.toContentValues())
                         .build());
             }
+
             // Throttle the batch operation not to cause TransactionTooLargeException.
             if (ops.size() > BATCH_OPERATION_COUNT
                     || newProgramsIndex >= fetchedProgramsCount) {
