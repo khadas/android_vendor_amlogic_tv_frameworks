@@ -572,7 +572,6 @@ public class TvDataBaseManager {
 
 
     public void swapChannel (ChannelInfo sourceChannel, ChannelInfo targetChannel) {
-        /*
         if (sourceChannel == null || targetChannel == null
             || sourceChannel.getNumber() == targetChannel.getNumber())
             return;
@@ -585,11 +584,9 @@ public class TvDataBaseManager {
         Uri targetUri = TvContract.buildChannelUri(targetChannel.getId());
         updateValues.put(Channels.COLUMN_DISPLAY_NUMBER, sourceChannel.getNumber());
         mContentResolver.update(targetUri, updateValues, null, null);
-        */
     }
 
     public void moveChannel (ChannelInfo sourceChannel, ChannelInfo targetChannel) {
-        /*
         if ( sourceChannel == null ||  sourceChannel == null
                 || targetChannel.getNumber() == sourceChannel.getNumber())
             return;
@@ -632,7 +629,6 @@ public class TvDataBaseManager {
                 cursor.close();
             }
         }
-        */
     }
 
     public void skipChannel (ChannelInfo channel) {
@@ -755,7 +751,10 @@ public class TvDataBaseManager {
             }
         }
 
-        Collections.sort(channelList, new SortComparator());
+        if (channelList.size() > 0 && channelList.get(0).getType().contains("DTMB"))
+            Collections.sort(channelList, new SortIntComparator());
+        else
+            Collections.sort(channelList, new SortComparator());
         if (DEBUG)
             printList(channelList);
         return channelList;
@@ -866,6 +865,15 @@ public class TvDataBaseManager {
             if (a.getDisplayNumber() == null)
                 return -1;
             return a.getDisplayNumber().compareTo(b.getDisplayNumber());
+        }
+    }
+
+    public class SortIntComparator implements Comparator<ChannelInfo> {
+        @Override
+        public int compare(ChannelInfo a, ChannelInfo b) {
+            if (a.getDisplayNumber() == null)
+                return -1;
+            return Integer.parseInt(a.getDisplayNumber()) - Integer.parseInt(b.getDisplayNumber());
         }
     }
 
