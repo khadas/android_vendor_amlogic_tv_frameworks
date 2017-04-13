@@ -22,6 +22,8 @@ public interface TvControlCommand {
     int SET_PREVIEW_WINDOW = 18;
     int GET_SOURCE_CONNECT_STATUS = 19;
     int GET_SOURCE_INPUT_LIST = 20;
+    int GET_CURRENT_SOURCE_INPUT_VIRTUAL = 21;
+    int SET_SOURCE_INPUT_EXT = 22;
     // Tv function END
 
     // HDMI

@@ -643,6 +643,16 @@ public class TvControlManager {
     }
 
     /**
+     * @Function: GetCurrentVirtualSourceInput
+     * @Description: Get current virtual source input
+     * @Param:
+     * @Return: refer to enum SourceInput
+     */
+    public int GetCurrentVirtualSourceInput() {
+        return sendCmd(GET_CURRENT_SOURCE_INPUT_VIRTUAL);
+    }
+
+    /**
      * @Function: GetCurrentSourceInputType
      * @Description: Get current source input type
      * @Param:
@@ -663,6 +673,8 @@ public class TvControlManager {
             return SourceInput_Type.SOURCE_TYPE_HDMI;
         } else if (source_input == SourceInput.DTV.toInt()) {
             return SourceInput_Type.SOURCE_TYPE_DTV;
+        } else if (source_input == SourceInput.ADTV.toInt()) {
+            return SourceInput_Type.SOURCE_TYPE_ADTV;
         } else {
             return SourceInput_Type.SOURCE_TYPE_MPEG;
         }
@@ -704,6 +716,17 @@ public class TvControlManager {
           cmd.writeInt(((tmp_res_info >> 0) & 0xFFFF) - 1);*/
         int val[] = new int[]{srcInput.toInt()};
         return sendCmdIntArray(SET_SOURCE_INPUT, val);
+    }
+
+    /**
+     * @Function: SetSourceInputExt
+     * @Description: Set source input to switch source,
+     * @Param: source_input, refer to enum SourceInput;
+     * @Return: 0 success, -1 fail
+     */
+    public int SetSourceInput(SourceInput srcInput, SourceInput virtualSrcInput) {
+        int val[] = new int[]{srcInput.toInt(), virtualSrcInput.toInt()};
+        return sendCmdIntArray(SET_SOURCE_INPUT_EXT, val);
     }
 
     /**
@@ -6195,12 +6218,11 @@ public class TvControlManager {
         XXXX(10),//not use MPEG source
         DTV(11),
         SVIDEO(12),
-        HDMI4K2K(13),
-        USB4K2K(14),
-        IPTV(15),
-        DUMMY(16),
-        SOURCE_SPDIF(17),
-        MAX(18);
+        IPTV(13),
+        DUMMY(14),
+        SOURCE_SPDIF(15),
+        ADTV(16),
+        MAX(17);
         private int val;
 
         SourceInput(int val) {
