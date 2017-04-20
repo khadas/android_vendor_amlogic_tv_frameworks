@@ -214,6 +214,10 @@ public class DroidLogicTvUtils
 
     public static final String EXTRA_MORE = "bundle";
 
+    public static final int OPEN_DEV_FOR_SCAN_ATV = 1;
+    public static final int OPEN_DEV_FOR_SCAN_DTV = 2;
+    public static final int CLOSE_DEV_FOR_SCAN = 3;
+
     /**
      * used for TvSettings to switch hdmi source
      * {@link #SOURCE_NAME}
@@ -597,9 +601,11 @@ public class DroidLogicTvUtils
         return mapToJson(null, map);
     }
     public static Map<String, String> jsonToMap(String jsonString) {
+        if (jsonString == null || jsonString.length() == 0)
+            return null;
         Map<String, String> map = new HashMap<String, String>();
-        JSONObject jsonObject;
 
+        JSONObject jsonObject;
         try {
             jsonObject = new JSONObject(jsonString);
         } catch (JSONException e) {

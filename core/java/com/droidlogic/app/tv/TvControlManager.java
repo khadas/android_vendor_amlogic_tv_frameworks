@@ -166,7 +166,6 @@ public class TvControlManager {
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         request.writeInt(cmd);
-
         for (int i = 0; i < values.length; i++) {
             request.writeInt(values[i]);
         }
@@ -4010,6 +4009,10 @@ public class TvControlManager {
         return sendCmd(ATV_DTV_SCAN_RESUME);
     }
 
+    public int OpenDevForScan(int type) {
+        int val[] = new int[]{type};
+        return sendCmdIntArray(ATV_DTV_SCAN_OPERATE_DEVICE, val);
+    }
     public static final int ATV_DTV_SCAN_STATUS_RUNNING = 0;
     public static final int ATV_DTV_SCAN_STATUS_PAUSED = 1;
     public static final int ATV_DTV_SCAN_STATUS_PAUSED_USER = 2;
