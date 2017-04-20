@@ -70,6 +70,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         Log.d(TAG, "doRelease");
     }
 
+    public void doAppPrivateCmd(String action, Bundle bundle) {}
     public void doUnblockContent(TvContentRating rating) {}
 
     @Override
@@ -116,6 +117,11 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     public boolean handleMessage(Message msg) {
         if (DEBUG)
             Log.d(TAG, "handleMessage, msg.what=" + msg.what);
+        switch (msg.what) {
+            case MSG_DO_PRI_CMD:
+                doAppPrivateCmd((String)msg.obj, msg.getData());
+                break;
+        }
         return false;
     }
 }
