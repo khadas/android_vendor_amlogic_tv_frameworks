@@ -100,7 +100,8 @@ public class DroidLogicTvUtils
     public static final int SIG_INFO_TYPE_HDMI   = 2;
     public static final int SIG_INFO_TYPE_AV     = 3;
     public static final int SIG_INFO_TYPE_SPDIF  = 4;
-    public static final int SIG_INFO_TYPE_OTHER  = 5;
+    public static final int SIG_INFO_TYPE_ADTV  = 5;
+    public static final int SIG_INFO_TYPE_OTHER  = 6;
 
     /**
      * source input type need to switch
@@ -134,7 +135,7 @@ public class DroidLogicTvUtils
     public static final int DEVICE_ID_SPDIF      = 14;
 
     /*virtual device*/
-    public static final int DEVICE_ID_ADTV = 15;
+    public static final int DEVICE_ID_ADTV = 16;
 
     public static final int RESULT_OK = 1;
     public static final int RESULT_UPDATE = 2;
@@ -371,6 +372,9 @@ public class DroidLogicTvUtils
             case SOURCE_TYPE_SPDIF:
                 ret = SIG_INFO_TYPE_SPDIF;
                 break;
+            case SOURCE_TYPE_ADTV:
+                ret = SIG_INFO_TYPE_ADTV;
+                break;
             default:
                 ret = SIG_INFO_TYPE_OTHER;
                 break;
@@ -411,6 +415,7 @@ public class DroidLogicTvUtils
         DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI3, TvControlManager.SourceInput.HDMI3);
         DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI4, TvControlManager.SourceInput.HDMI4);
         DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_DTV, TvControlManager.SourceInput.DTV);
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_ADTV, TvControlManager.SourceInput.DTV);
     }
 
     public static TvControlManager.SourceInput parseTvSourceInputFromDeviceId (int deviceId) {
@@ -424,6 +429,7 @@ public class DroidLogicTvUtils
         SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_HDMI, TvControlManager.SourceInput_Type.SOURCE_TYPE_HDMI);
         SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_DTV, TvControlManager.SourceInput_Type.SOURCE_TYPE_DTV);
         SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_SPDIF, TvControlManager.SourceInput_Type.SOURCE_TYPE_SPDIF);
+        SigTypeToTvSourceType.put(DroidLogicTvUtils.SIG_INFO_TYPE_ADTV, TvControlManager.SourceInput_Type.SOURCE_TYPE_ADTV);
     }
 
     public static TvControlManager.SourceInput_Type parseTvSourceTypeFromSigType (int sigType) {
@@ -440,6 +446,7 @@ public class DroidLogicTvUtils
         SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI3, TvControlManager.SourceInput.HDMI3);
         SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI4, TvControlManager.SourceInput.HDMI4);
         SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_DTV, TvControlManager.SourceInput.DTV);
+        SigTypeToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_ADTV, TvControlManager.SourceInput.DTV);
     }
 
     public static TvControlManager.SourceInput parseTvSourceInputFromSigType (int sigType) {
