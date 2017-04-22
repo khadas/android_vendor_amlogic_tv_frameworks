@@ -399,7 +399,7 @@ public class TvDataBaseManager {
         values.put(Channels.COLUMN_INPUT_ID, channel.getInputId());
         values.put(Channels.COLUMN_DISPLAY_NUMBER, channel.getDisplayNumber());
         values.put(Channels.COLUMN_DISPLAY_NAME, channel.getDisplayName());
-        values.put(Channels.COLUMN_TYPE, Channels.TYPE_PAL);// TODO: channel.type -> COLUMN_TYPE (PAL/NTSC/SECAM)?
+        values.put(Channels.COLUMN_TYPE, channel.getType());
         values.put(Channels.COLUMN_BROWSABLE, channel.isBrowsable() ? 1 : 0);
         values.put(Channels.COLUMN_SERVICE_TYPE, channel.getServiceType());
 
@@ -427,6 +427,19 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_ACCESS_CONTROL, String.valueOf(channel.getAccessControled()));
         map.put(ChannelInfo.KEY_HIDDEN, String.valueOf(channel.getHidden()));
         map.put(ChannelInfo.KEY_HIDE_GUIDE, String.valueOf(channel.getHideGuide()));
+        map.put(ChannelInfo.KEY_AUDIO_PIDS, Arrays.toString(channel.getAudioPids()));
+        map.put(ChannelInfo.KEY_AUDIO_FORMATS, Arrays.toString(channel.getAudioFormats()));
+        map.put(ChannelInfo.KEY_AUDIO_EXTS, Arrays.toString(channel.getAudioExts()));
+        map.put(ChannelInfo.KEY_AUDIO_LANGS, DroidLogicTvUtils.TvString.toString(channel.getAudioLangs()));
+        map.put(ChannelInfo.KEY_AUDIO_TRACK_INDEX, String.valueOf(channel.getAudioTrackIndex()));
+        map.put(ChannelInfo.KEY_AUDIO_CHANNEL, String.valueOf(channel.getAudioChannel()));
+        map.put(ChannelInfo.KEY_SUBT_TYPES, Arrays.toString(channel.getSubtitleTypes()));
+        map.put(ChannelInfo.KEY_SUBT_PIDS, Arrays.toString(channel.getSubtitlePids()));
+        map.put(ChannelInfo.KEY_SUBT_STYPES, Arrays.toString(channel.getSubtitleStypes()));
+        map.put(ChannelInfo.KEY_SUBT_ID1S, Arrays.toString(channel.getSubtitleId1s()));
+        map.put(ChannelInfo.KEY_SUBT_ID2S, Arrays.toString(channel.getSubtitleId2s()));
+        map.put(ChannelInfo.KEY_SUBT_LANGS, DroidLogicTvUtils.TvString.toString(channel.getSubtitleLangs()));
+        map.put(ChannelInfo.KEY_SUBT_TRACK_INDEX, String.valueOf(channel.getSubtitleTrackIndex()));
         return map;
     }
 
