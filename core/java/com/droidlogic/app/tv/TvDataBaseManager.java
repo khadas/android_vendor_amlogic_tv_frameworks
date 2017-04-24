@@ -1215,7 +1215,7 @@ public class TvDataBaseManager {
     }
 
     public void updateProgram(Program program) {
-        mContentResolver.update(TvContract.buildProgramUri(program.getProgramId()), program.toContentValues(), null, null);
+        mContentResolver.update(TvContract.buildProgramUri(program.getId()), program.toContentValues(), null, null);
     }
 
     /**
