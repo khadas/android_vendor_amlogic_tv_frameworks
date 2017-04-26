@@ -491,7 +491,7 @@ public interface TvControlCommand {
     int DTV_SCAN = 1483;
     int DTV_GET_SCAN_FREQUENCY_LIST_MODE = 1484;
     int TV_CLEAR_FRONTEND = 1485;
-
+    int TV_SET_FRONTEND = 1486;
     int SET_AUDIO_OUTMODE = 1501;
     int GET_AUDIO_OUTMODE = 1502;
 }

@@ -1099,6 +1099,10 @@ public class TvDataBaseManager {
      *         information.
      */
     public void updatePrograms(Uri channelUri, List<Program> newPrograms) {
+        updatePrograms(channelUri, newPrograms, false);
+    }
+
+    public void updatePrograms(Uri channelUri, List<Program> newPrograms, boolean isAtsc) {
         final int fetchedProgramsCount = newPrograms.size();
         if (fetchedProgramsCount == 0) {
             return;
@@ -1107,7 +1111,7 @@ public class TvDataBaseManager {
 
         Program firstNewProgram = null;
         for (Program program : newPrograms) {
-            if (!isATSCSpecialProgram(program)) {
+            if (isAtsc && !isATSCSpecialProgram(program)) {
                 firstNewProgram = program;
                 break;
             }
@@ -1136,11 +1140,13 @@ public class TvDataBaseManager {
 
             if (oldProgram != null) {
 
-                if (isATSCSpecialProgram(newProgram)) {
+                if (isAtsc && isATSCSpecialProgram(newProgram)) {
                     //Log.d(TAG, "ext desr:"+newProgram.getProgramId());
                     for (Program program : oldPrograms) {
                         //Log.d(TAG, "old:"+program.getProgramId());
                         if (program.getProgramId() == newProgram.getProgramId()) {
+                            if (TextUtils.equals(program.getDescription(), newProgram.getDescription()))
+                                break;
                             program.setDescription(newProgram.getDescription());
                             ops.add(ContentProviderOperation.newUpdate(
                                     TvContract.buildProgramUri(program.getId()))
@@ -1151,7 +1157,8 @@ public class TvDataBaseManager {
                         }
                     }
                     newProgramsIndex++;
-                } else if (oldProgram.equals(newProgram)) {
+                } else if ((isAtsc && oldProgram.matchsWithoutDescription(newProgram))
+                    || (oldProgram.equals(newProgram))) {
                     // Exact match. No need to update. Move on to the next programs.
                     oldProgramsIndex++;
                     newProgramsIndex++;

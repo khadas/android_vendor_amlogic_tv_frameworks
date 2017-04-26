@@ -663,4 +663,20 @@ public class DroidLogicTvUtils
         TvInputManager tim = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
         return tim.getTvInputInfo(inputId);
     }
+
+    public static String US_ContentRatingDimensions[][] =
+        {
+            {"", "None", "US_TV_G", "US_TV_PG", "US_TV_14", "US_TV_MA"},
+            {"", "US_TV_D"},
+            {"", "US_TV_L"},
+            {"", "US_TV_S"},
+            {"", "US_TV_V"},
+            {"", "US_TV_Y", "US_TV_Y7"},
+            {"", "US_TV_FL"},
+            {"", "NA", "US_MV_G", "US_MV_PG", "US_MV_PG13", "US_MV_R", "US_MV_NC17", "US_MV_X", "US_MV_NR"}
+        };
+    public static String CA_EN_ContentRatingDimensions[] =
+        {
+            "",
+        };
 }

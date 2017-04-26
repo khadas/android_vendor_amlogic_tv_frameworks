@@ -5195,6 +5195,25 @@ public class TvControlManager {
         return tmpRet;
     }
 
+    public int TvSetFrontEnd(FEParas fe, boolean force) {
+        libtv_log_open();
+        Parcel cmd = Parcel.obtain();
+        Parcel r = Parcel.obtain();
+        int tmpRet ;
+        cmd.writeInt(TV_SET_FRONTEND);
+        cmd.writeInt(force? 1 : 0);
+        cmd.writeString(fe.toString());
+        sendCmdToTv(cmd, r);
+        tmpRet = r.readInt();
+        cmd.recycle();
+        r.recycle();
+        return tmpRet;
+    }
+
+    public int TvSetFrontEnd(FEParas fe) {
+        return TvSetFrontEnd(fe, false);
+    }
+
     public enum tv_fe_type_e {
         TV_FE_QPSK(0),
         TV_FE_QAM(1),

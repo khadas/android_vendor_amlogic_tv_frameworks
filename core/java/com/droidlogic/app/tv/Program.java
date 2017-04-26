@@ -165,6 +165,22 @@ public final class Program implements Comparable<Program> {
                 && mEpisodeNumber == program.mEpisodeNumber;
     }
 
+    public boolean matchsWithoutDescription(Program program) {
+         return mChannelId == program.mChannelId
+                && mStartTimeUtcMillis == program.mStartTimeUtcMillis
+                && mEndTimeUtcMillis == program.mEndTimeUtcMillis
+                && Objects.equals(mTitle, program.mTitle)
+                && Objects.equals(mEpisodeTitle, program.mEpisodeTitle)
+                && mVideoWidth == program.mVideoWidth
+                && mVideoHeight == program.mVideoHeight
+                && Objects.equals(mPosterArtUri, program.mPosterArtUri)
+                && Objects.equals(mThumbnailUri, program.mThumbnailUri)
+                && Arrays.equals(mContentRatings, program.mContentRatings)
+                && Arrays.equals(mCanonicalGenres, program.mCanonicalGenres)
+                && mSeasonNumber == program.mSeasonNumber
+                && mEpisodeNumber == program.mEpisodeNumber;
+    }
+
     @Override
     public int compareTo(Program other) {
         return Long.compare(mStartTimeUtcMillis, other.mStartTimeUtcMillis);

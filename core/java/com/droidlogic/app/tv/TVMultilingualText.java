@@ -5,6 +5,10 @@ import android.database.Cursor;
 import android.content.Context;
 import android.util.Log;
 
+import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
+
 /**
  *TVMultilingualText
  *multilingual text parsing
@@ -13,8 +17,8 @@ public class TVMultilingualText{
     private static final String TAG="TVMultilingualText";
 
     private class MultilingualText{
-        private String language;
-        private String text;
+        protected String language;
+        protected String text;
 
         public MultilingualText(String formatString){
             if (formatString != null && formatString.length() >= 3) {
@@ -29,8 +33,9 @@ public class TVMultilingualText{
             } else {
                 language = "";
             }
-
         }
+
+        public MultilingualText() {}
 
         public String getLangage(){
             return language;
@@ -41,7 +46,39 @@ public class TVMultilingualText{
         }
     }
 
-    public static String getText(String formatText, String lang){
+
+    private class MultilingualTextJ extends MultilingualText {
+        //json coding format: {lng:"eng",txt:"string"}
+
+        public MultilingualTextJ(JSONObject jsonObject) {
+            parse(jsonObject);
+        }
+
+        public MultilingualTextJ(String jsonString) {
+            if (jsonString != null && jsonString.length() >= 8) {
+                JSONObject jsonObject;
+                try {
+                    jsonObject = new JSONObject(jsonString);
+                } catch (JSONException e) {
+                    throw new RuntimeException("Json parse fail: ["+jsonString+"]", e);
+                }
+                parse(jsonObject);
+            }
+        }
+
+        public void parse(JSONObject jsonObject) {
+            if (jsonObject != null) {
+                language = jsonObject.optString("lng");
+                text = jsonObject.optString("txt");
+                if (language.equalsIgnoreCase("xxx"))
+                    language = "eng";
+            } else {
+                language = "";
+            }
+        }
+    }
+
+    public static String getText(String formatText, String lang) {
         String ret = null;
         boolean useFirst = false;
         String split;
@@ -75,17 +112,13 @@ public class TVMultilingualText{
         return ret;
     }
 
-    public static String getText(String formatText){
+    public static String getText(String formatText) {
         String ret = null;
-
-        /* read the current config */
         String configLangs = "local first";
 
-        if (configLangs == null || configLangs.isEmpty()) {
+        if (configLangs == null || configLangs.isEmpty())
             return ret;
-        }
 
-        /* get the correct text according to config */
         String[] langs = configLangs.split(" ");
         if (langs != null && langs.length > 0) {
             for (int i=0; i<langs.length; i++) {
@@ -95,18 +128,16 @@ public class TVMultilingualText{
                 }
             }
         }
-
         return ret;
     }
 
-    public static String getText(String formatText, String[] langs){
+    public static String getText(String formatText, String[] langs) {
         String ret = null;
         String[] defaultLangs = {"local", "first"};
 
         if (langs == null || langs.length == 0)
             langs = defaultLangs;
 
-        /* get the correct text according to config */
         if (langs != null && langs.length > 0) {
             for (int i=0; i<langs.length; i++) {
                 ret = getText(formatText, langs[i]);
@@ -115,7 +146,6 @@ public class TVMultilingualText{
                 }
             }
         }
-
         return ret;
     }
 
@@ -135,5 +165,61 @@ public class TVMultilingualText{
 
         return lang;
     }
+
+    public static String getTextJ(String formatText, String lang) {
+        String ret = null;
+        boolean useFirst = false;
+
+        if (formatText == null || lang == null || formatText.isEmpty())
+            return ret;
+
+        /* special case for 'local' and 'first' */
+        if (lang.equalsIgnoreCase("local")) {
+            lang = getLocalLang();
+        }else if (lang.equalsIgnoreCase("first")) {
+            useFirst = true;
+        }
+
+        JSONArray jsonArray;
+        try {
+            jsonArray = new JSONArray(formatText);
+        } catch (JSONException e) {
+            throw new RuntimeException("Json parse fail: ["+formatText+"]", e);
+        }
+        for (int i=0; i<jsonArray.length(); i++) {
+            JSONObject j = jsonArray.optJSONObject(i);
+            TVMultilingualText inst = new TVMultilingualText();
+            MultilingualTextJ text = inst.new MultilingualTextJ(j);
+            if (useFirst || text.getLangage().equalsIgnoreCase(lang)) {
+                ret = text.getText();
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    public static String getTextJ(String formatText, String[] langs) {
+        String ret = null;
+        String[] defaultLangs = {"local", "first"};
+
+        if (langs == null || langs.length == 0)
+            langs = defaultLangs;
+
+        if (langs != null && langs.length > 0) {
+            for (int i=0; i<langs.length; i++) {
+                ret = getTextJ(formatText, langs[i]);
+                if (ret != null && !ret.isEmpty()) {
+                    break;
+                }
+            }
+        }
+        return ret;
+    }
+
+    public static String getTextJ(String formatText) {
+        return getTextJ(formatText, new String[0]);
+    }
+
 }
 
