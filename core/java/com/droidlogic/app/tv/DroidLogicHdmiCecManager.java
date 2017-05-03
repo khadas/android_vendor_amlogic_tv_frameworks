@@ -93,7 +93,7 @@ public class DroidLogicHdmiCecManager {
     public void disconnectHdmiCec(int deviceId) {
         synchronized (mLock) {
           //only disconnect hdmi device.
-            if (deviceId < DroidLogicTvUtils.DEVICE_ID_HDMI1 || deviceId > DroidLogicTvUtils.DEVICE_ID_HDMI3)
+            if (deviceId < DroidLogicTvUtils.DEVICE_ID_HDMI1 || deviceId > DroidLogicTvUtils.DEVICE_ID_HDMI4)
                 return;
 
             getInputSourceType();
@@ -105,7 +105,7 @@ public class DroidLogicHdmiCecManager {
     }
 
     public int getLogicalAddress (int deviceId) {
-        if (deviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && deviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI3) {
+        if (deviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && deviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) {
             int id = deviceId - DroidLogicTvUtils.DEVICE_ID_HDMI1 + 1;
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
                 if (id == (info.getPhysicalAddress() >> 12)) {
@@ -117,7 +117,7 @@ public class DroidLogicHdmiCecManager {
     }
 
     public boolean hasHdmiCecDevice(int deviceId) {
-        if (deviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && deviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI3) {
+        if (deviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && deviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) {
             int id = deviceId - DroidLogicTvUtils.DEVICE_ID_HDMI1 + 1;
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
                 if (id == (info.getPhysicalAddress() >> 12)) {
