@@ -89,6 +89,10 @@ public class TvControlManager {
     public static final int CAPTURE_VIDEO               = 0;
     public static final int CAPTURE_GRAPHICS            = 1;
 
+    //mts out_mode
+    public static final int AUDIO_OUTMODE_MONO          = 0;
+    public static final int AUDIO_OUTMODE_STEREO        = 1;
+    public static final int AUDIO_OUTMODE_SAP           = 2;
     static {
         System.loadLibrary("tv_jni");
     }
@@ -1228,6 +1232,15 @@ public class TvControlManager {
 
     public int GetHdmiColorRangeMode() {
         return sendCmd(GET_HDMI_COLOR_RANGE_MODE);
+    }
+
+    public int SetAudioOutmode (int mode) {
+        int val[] = new int[]{mode};
+        return sendCmdIntArray(SET_AUDIO_OUTMODE, val);
+    }
+
+    public int GetAudioOutmode(){
+        return sendCmd(GET_AUDIO_OUTMODE);
     }
 
     public enum Noise_Reduction_Mode {
