@@ -132,7 +132,7 @@ public class DroidLogicTvUtils
     public static final int DEVICE_ID_HDMI3      = 7;
     public static final int DEVICE_ID_HDMI4      = 8;
     public static final int DEVICE_ID_DTV        = 11;
-    public static final int DEVICE_ID_SPDIF      = 14;
+    public static final int DEVICE_ID_SPDIF      = 15;
 
     /*virtual device*/
     public static final int DEVICE_ID_ADTV = 16;
@@ -416,6 +416,7 @@ public class DroidLogicTvUtils
         DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_HDMI4, TvControlManager.SourceInput.HDMI4);
         DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_DTV, TvControlManager.SourceInput.DTV);
         DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_ADTV, TvControlManager.SourceInput.ADTV);
+        DeviceIdToTvSourceInput.put(DroidLogicTvUtils.DEVICE_ID_SPDIF, TvControlManager.SourceInput.SOURCE_SPDIF);
     }
 
     public static TvControlManager.SourceInput parseTvSourceInputFromDeviceId (int deviceId) {
