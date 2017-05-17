@@ -142,7 +142,7 @@ public class DroidLogicTvInputService extends TvInputService implements
 
         //if hdmi signal is unstable from stable, disconnect cec.
         if (mDeviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1
-                && mDeviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI3) {
+                && mDeviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) {
             DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(this);
             if (hdmi_cec.getInputSourceType() == mDeviceId)
                 selectHdmiDevice(0);
@@ -561,9 +561,8 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
         int phyaddr = deviceInfo.getPhysicalAddress();
         int sourceType = getHdmiPortIndex(phyaddr) + DroidLogicTvUtils.DEVICE_ID_HDMI1;
-
         if (sourceType < DroidLogicTvUtils.DEVICE_ID_HDMI1
-                || sourceType > DroidLogicTvUtils.DEVICE_ID_HDMI3
+                || sourceType > DroidLogicTvUtils.DEVICE_ID_HDMI4
                 || sourceType != mSourceType)
             return null;
         Log.d(TAG, "onHdmiDeviceAdded, sourceType = " + sourceType + ", mSourceType = " + mSourceType);
@@ -617,7 +616,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         int sourceType = getHdmiPortIndex(phyaddr) + DroidLogicTvUtils.DEVICE_ID_HDMI1;
 
         if (sourceType < DroidLogicTvUtils.DEVICE_ID_HDMI1
-                || sourceType > DroidLogicTvUtils.DEVICE_ID_HDMI3
+                || sourceType > DroidLogicTvUtils.DEVICE_ID_HDMI4
                 || sourceType != mSourceType)
             return null;
 
