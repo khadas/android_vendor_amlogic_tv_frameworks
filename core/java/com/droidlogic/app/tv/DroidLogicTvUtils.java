@@ -678,6 +678,10 @@ public class DroidLogicTvUtils
         };
     public static String CA_EN_ContentRatingDimensions[] =
         {
-            "",
+            "CA_TV_EN_EXEMPT", "CA_TV_EN_C", "CA_TV_EN_C8", "CA_TV_EN_G", "CA_TV_EN_PG", "CA_TV_EN_14", "CA_TV_EN_18"
+        };
+    public static String CA_FR_ContentRatingDimensions[] =
+        {
+            "CA_TV_FR_E", "CA_TV_FR_G", "CA_TV_FR_8", "CA_TV_FR_13", "CA_TV_FR_16", "CA_TV_FR_18"
         };
 }
