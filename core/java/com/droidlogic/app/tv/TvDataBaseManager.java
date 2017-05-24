@@ -1233,11 +1233,15 @@ public class TvDataBaseManager {
         // NOTE: Here, we update the old program if it has the same title and overlaps with the new
         // program. The test logic is just an example and you can modify this. E.g. check whether
         // the both programs have the same program ID if your EPG supports any ID for the programs.
-        return oldProgram.getTitle().equals(newProgram.getTitle())
+        if (oldProgram.getTitle()== null ||oldProgram.getTitle().isEmpty()) {
+            return false;
+        }else {
+            return oldProgram.getTitle().equals(newProgram.getTitle())
                 && !(oldProgram.getStartTimeUtcMillis() == newProgram.getStartTimeUtcMillis()
                     && oldProgram.getEndTimeUtcMillis() == newProgram.getEndTimeUtcMillis())
                 && oldProgram.getStartTimeUtcMillis() < newProgram.getEndTimeUtcMillis()
                 && newProgram.getStartTimeUtcMillis() < oldProgram.getEndTimeUtcMillis();
+        }
     }
 
     public List<Program> getPrograms(Uri uri) {
