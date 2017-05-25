@@ -724,21 +724,15 @@ public abstract class TvStoreManager {
             initChannelsExist();
 
             channel = createAtvChannelInfo(event);
-            if (event.majorChannelNumber != -1)
-                channel.setDisplayNumber(""+event.majorChannelNumber+"-"+event.minorChannelNumber);
 
             Log.d(TAG, "reset number to " + channel.getDisplayNumber());
 
             channel.print();
 
-            if (mSortMode.isATSCStandard()) {
-                cacheChannel(event, channel);
-            } else {
-                if (mScanMode.isATVManualScan())
-                    onUpdateCurrent(channel, true);
-                else
-                    mTvDataBaseManager.updateOrinsertAtvChannelWithNumber(channel);
-            }
+            if (mScanMode.isATVManualScan())
+                onUpdateCurrent(channel, true);
+            else
+                mTvDataBaseManager.updateOrinsertAtvChannelWithNumber(channel);
 
             Log.d(TAG, "onEvent,displayNum:" + mDisplayNumber);
 
