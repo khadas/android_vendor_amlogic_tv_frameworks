@@ -717,7 +717,7 @@ public class TvDataBaseManager {
         if (channel.getInputId() == null)
             return;
 
-        if (channel.isAnalogChannnel()) {
+        if (channel.isAnalogChannel()) {
             updateAtvChannel(channel);
         } else {
             updateDtvChannel(channel);

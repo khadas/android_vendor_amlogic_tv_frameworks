@@ -608,12 +608,12 @@ public abstract class TvStoreManager {
                 }
 
                 if (isRealtimeStore) {
-                    if (c.isAnalogChannnel())
+                    if (c.isAnalogChannel())
                         mTvDataBaseManager.updateOrinsertAtvChannelWithNumber(c);
                     else
                         mTvDataBaseManager.updateOrinsertDtvChannelWithNumber(c);
                 } else {
-                    if (c.isAnalogChannnel())
+                    if (c.isAnalogChannel())
                         mTvDataBaseManager.insertAtvChannel(c, c.getDisplayNumber());
                     else
                         mTvDataBaseManager.insertDtvChannel(c, c.getDisplayNumber());
