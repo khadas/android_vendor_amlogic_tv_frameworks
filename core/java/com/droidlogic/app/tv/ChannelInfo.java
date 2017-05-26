@@ -1159,7 +1159,7 @@ public class ChannelInfo {
         return false;
     }
 
-    public boolean isAnalogChannnel() {
+    public boolean isAnalogChannel() {
         return (mType.equals(TvContract.Channels.TYPE_PAL)
             || mType.equals(TvContract.Channels.TYPE_NTSC)
             || mType.equals(TvContract.Channels.TYPE_SECAM));

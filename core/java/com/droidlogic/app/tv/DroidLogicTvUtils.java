@@ -6,6 +6,7 @@ import android.media.tv.TvContract;
 import android.media.tv.TvInputHardwareInfo;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
+import android.media.tv.TvContentRating;
 import android.net.Uri;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -22,13 +23,14 @@ import java.net.URLDecoder;
 import java.io.UnsupportedEncodingException;
 
 import org.json.JSONObject;
+import org.json.JSONArray;
 import org.json.JSONException;
 
 import android.util.Log;
 
 public class DroidLogicTvUtils
 {
-
+    public static final String TAG = "DroidLogicTvUtils";
     /**
      * final parameters for {@link TvInpuptService.Session.notifySessionEvent}
      */
@@ -383,7 +385,7 @@ public class DroidLogicTvUtils
     }
 
     public static int getSigType(ChannelInfo info) {
-        if (info.isAnalogChannnel())
+        if (info.isAnalogChannel())
             return SIG_INFO_TYPE_ATV;
         return SIG_INFO_TYPE_DTV;
     }
@@ -684,4 +686,196 @@ public class DroidLogicTvUtils
         {
             "CA_TV_FR_E", "CA_TV_FR_G", "CA_TV_FR_8", "CA_TV_FR_13", "CA_TV_FR_16", "CA_TV_FR_18"
         };
+
+    public static TvContentRating[] parseDRatings(String jsonString) {
+        String RatingDomain = "com.android.tv";
+
+        if (jsonString == null || jsonString.isEmpty())
+            return null;
+
+        ArrayList<TvContentRating> RatingList = new ArrayList<TvContentRating>();
+
+        /*
+        [
+            //g=region, rx=ratings, d=dimension, r=rating value, rs:rating string
+            {g:0,rx:[{d:0,r:3},{d:2,r:1},{d:4,r:1}],rs:[{lng:"eng",txt:"TV-PG-L-V"}]},
+            {g:1,rx:[{d:7,r:3},rs:[{lng:"eng",txt:"MPAA-PG"}]}
+            ...
+        ]
+        */
+        JSONArray regionArray;
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            throw new RuntimeException("Json parse fail: ("+jsonString+")", e);
+        }
+
+        try {
+            regionArray = obj.getJSONArray("Dratings");
+        } catch (JSONException e) {
+            return null;
+        }
+
+        Log.d(TAG, "D rating:"+regionArray.toString());
+
+        int ArraySize = regionArray.length();
+        for (int i = 0; i < regionArray.length(); i++) {
+            JSONObject g = regionArray.optJSONObject(i);
+            if (g == null)
+                continue;
+
+            String ratingDescription = TVMultilingualText.getTextJ(g.optString("rs"));
+            int region = g.optInt("g", -1);
+
+            JSONArray ratings = g.optJSONArray("rx");
+            if (ratings != null) {
+                JSONObject ratingValues = ratings.optJSONObject(0);
+                int dimension = ratingValues.optInt("d", -1);
+                int value = ratingValues.optInt("r", -1);
+                if (dimension == -1 || value == -1)
+                    continue;
+                if (region == 1) {//US ratings
+                    if (dimension == 7
+                            /*&& ratingDescription != null
+                            && ratingDescription.startsWith("MPAA-")*/
+                            ) {
+                        TvContentRating r = TvContentRating.createRating(RatingDomain, "US_MV",
+                                DroidLogicTvUtils.US_ContentRatingDimensions[dimension][value]);
+                        RatingList.add(r);
+                        Log.d(TAG, "add rating:"+r.flattenToString());
+                    } else /*if (ratingDescription != null
+                                && ratingDescription.startsWith("TV-")
+                            )*/ {
+                        ArrayList<String> subRatings = new ArrayList<String>();
+                        for (int j = 1; j < ratings.length(); j++) {
+                            JSONObject subRatingValues = ratings.optJSONObject(j);
+                            int subDimension = subRatingValues.optInt("d", -1);
+                            int subValue = subRatingValues.optInt("r", -1);
+                            if (subDimension == -1 || subValue == -1)
+                                continue;
+                            subRatings.add(DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue]);
+                        }
+                        if (dimension == 255)
+                            dimension = 0;
+                        TvContentRating r = TvContentRating.createRating(RatingDomain, "US_TV",
+                                DroidLogicTvUtils.US_ContentRatingDimensions[dimension][value],
+                                subRatings.toArray(new String[subRatings.size()]));
+                        RatingList.add(r);
+                        Log.d(TAG, "add rating:"+r.flattenToString());
+                    }
+                } else if (region == 2) {//Canadian ratings
+                    for (int j = 0; j < ratings.length(); j++) {
+                        JSONObject RatingValues = ratings.optJSONObject(j);
+                        int Dimension = RatingValues.optInt("d", -1);
+                        int Value = RatingValues.optInt("r", -1);
+                        if (Dimension == -1 || Value == -1)
+                             continue;
+                        if (Dimension == 0) {
+                            //canadian english language rating
+                            TvContentRating r = TvContentRating.createRating(RatingDomain, "CA_TV_EN",
+                                    DroidLogicTvUtils.CA_EN_ContentRatingDimensions[Value]);
+                            RatingList.add(r);
+                            Log.d(TAG, "add rating:"+r.flattenToString());
+                        } else if (Dimension == 1) {
+                            //canadian frech language rating
+                            TvContentRating r = TvContentRating.createRating(RatingDomain, "CA_TV_FR",
+                                    DroidLogicTvUtils.CA_FR_ContentRatingDimensions[Value]);
+                            RatingList.add(r);
+                            Log.d(TAG, "add rating:"+r.flattenToString());
+                        }
+                    }
+                }
+            }
+        }
+
+        return (RatingList.size() == 0 ? null : RatingList.toArray(new TvContentRating[RatingList.size()]));
+    }
+
+    public static TvContentRating getARating(int auth, int id, int dlsv) {
+        final String RatingDomain = "com.android.tv";
+        final String ratings[][] = {
+            { "", "", "", "", "", "", "", "" },
+            { "NA", "US_MV_G", "US_MV_PG", "US_MV_PG13", "US_MV_R", "US_MV_NC17", "US_MV_X", "US_MV_NR" },
+            { "None", "US_TV_Y", "US_TV_Y7", "US_TV_G", "US_TV_PG", "US_TV_14", "US_TV_MA", "None" },
+            { "CA_TV_EN_EXEMPT", "CA_TV_EN_C", "CA_TV_EN_C8", "CA_TV_EN_G", "CA_TV_EN_PG", "CA_TV_EN_14", "CA_TV_EN_18", "" },
+            { "CA_TV_FR_E", "CA_TV_FR_G", "CA_TV_FR_8", "CA_TV_FR_13", "CA_TV_FR_16", "CA_TV_FR_18", "", "" }
+        };
+        final String region[] = { "", "US_MV", "US_TV", "CA_TV_EN", "CA_TV_FR" };
+
+        final int VBI_RATING_AUTH_NONE = 0;
+        final int VBI_RATING_AUTH_MPAA = 1;
+        final int VBI_RATING_AUTH_TV_US = 2;
+        final int VBI_RATING_AUTH_TV_CA_EN = 3;
+        final int VBI_RATING_AUTH_TV_CA_FR = 4;
+
+        final int VBI_RATING_D = 0x08;
+        final int VBI_RATING_L = 0x04;
+        final int VBI_RATING_S = 0x02;
+        final int VBI_RATING_V = 0x01;
+
+        if (auth < 0 || auth > 4)
+            return null;
+
+        if (id < 0 || id > 7)
+            return null;
+
+        ArrayList<String> subRatings = new ArrayList<String>();
+        if ((dlsv & VBI_RATING_D) == VBI_RATING_D)
+            subRatings.add("US_TV_D");
+        if ((dlsv & VBI_RATING_L) == VBI_RATING_L)
+            subRatings.add("US_TV_L");
+        if ((dlsv & VBI_RATING_S) == VBI_RATING_S)
+            subRatings.add("US_TV_S");
+        if ((dlsv & VBI_RATING_V) == VBI_RATING_V)
+            subRatings.add("US_TV_V");
+
+        return TvContentRating.createRating(RatingDomain, region[auth],
+                   ratings[auth][id],
+                   (subRatings.size() == 0 ? null : subRatings.toArray(new String[subRatings.size()]))
+               );
+    }
+
+    public static TvContentRating[] parseARatings(String jsonString) {
+
+        if (jsonString == null || jsonString.isEmpty())
+            return null;
+
+        ArrayList<TvContentRating> RatingList = new ArrayList<TvContentRating>();
+
+        /*
+            //g=region, i=id, dlsv=dlsv
+            Aratings:{g:0,i:0,dlsv:3}
+        */
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            throw new RuntimeException("Json parse fail: ("+jsonString+")", e);
+        }
+        JSONObject ratingObj = null;
+        try {
+            ratingObj = obj.getJSONObject("Aratings");
+        } catch (JSONException e) {
+            return null;
+        }
+
+        Log.d(TAG, "A rating:"+ratingObj.toString());
+
+        int region = ratingObj.optInt("g", -1);
+        int id = ratingObj.optInt("i", -1);
+        int dlsv = ratingObj.optInt("dlsv", 0);
+        if (region == -1 || id == -1)
+            return null;
+
+        TvContentRating r = getARating(region, id, dlsv);
+        if (r != null) {
+            RatingList.add(r);
+            Log.d(TAG, "add rating:"+r.flattenToString());
+        }
+        return (RatingList.size() == 0 ? null : RatingList.toArray(new TvContentRating[RatingList.size()]));
+    }
+
+
+
 }
