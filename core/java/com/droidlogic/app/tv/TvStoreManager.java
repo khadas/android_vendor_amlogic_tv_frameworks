@@ -730,7 +730,8 @@ public abstract class TvStoreManager {
             channel.print();
 
             if (mScanMode.isATVManualScan())
-                onUpdateCurrent(channel, true);
+                //onUpdateCurrent(channel, true);
+                cacheChannel(event, channel);
             else
                 mTvDataBaseManager.updateOrinsertAtvChannelWithNumber(channel);
 
