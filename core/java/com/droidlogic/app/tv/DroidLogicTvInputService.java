@@ -49,6 +49,8 @@ import java.util.HashMap;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.provider.Settings;
+import android.content.IntentFilter;
+import android.content.BroadcastReceiver;
 
 public class DroidLogicTvInputService extends TvInputService implements
         TVInSignalInfo.SigInfoChangeListener, TvControlManager.StorDBEventListener,
@@ -103,6 +105,13 @@ public class DroidLogicTvInputService extends TvInputService implements
     public void onCreate() {
         super.onCreate();
         mTvInputManager = (TvInputManager)this.getSystemService(Context.TV_INPUT_SERVICE);
+
+        IntentFilter filter= new IntentFilter();
+        filter.addAction(DroidLogicTvUtils.ACTION_DTV_AUTO_SCAN);
+        filter.addAction(DroidLogicTvUtils.ACTION_DTV_MANUAL_SCAN);
+        filter.addAction(DroidLogicTvUtils.ACTION_ATV_AUTO_SCAN);
+        filter.addAction(DroidLogicTvUtils.ACTION_ATV_MANUAL_SCAN);
+        registerReceiver(mChannelScanStartReceiver, filter);
     }
 
     /**
@@ -160,26 +169,9 @@ public class DroidLogicTvInputService extends TvInputService implements
         Log.d(TAG, "inputId["+mCurrentInputId+"]");
         Log.d(TAG, "xsession["+session+"]");
 
-        SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
-        int channel_number_start = mSystemControlManager.getPropertyInt("tv.channel.number.start", 1);
-        mTvStoreManager = new TvStoreManager(this, mCurrentInputId, channel_number_start) {
-                @Override
-                public void onEvent(String eventType, Bundle eventArgs) {
-                    mSession.notifySessionEvent(eventType, eventArgs);
-                }
-                @Override
-                public void onUpdateCurrent(ChannelInfo channel, boolean store) {
-                    onUpdateCurrentChannel(channel, store);
-                }
-                @Override
-                public void onDtvNumberMode(String mode) {
-                    Settings.System.putString(DroidLogicTvInputService.this.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_NUMBER_MODE, "lcn");
-                }
-                public void onScanEnd() {
-                    mTvControlManager.DtvStopScan();
-                }
-            };
-        mTvControlManager = TvControlManager.getInstance();
+        initTvStoreManager();
+        if (mTvControlManager == null)
+            mTvControlManager = TvControlManager.getInstance();
         mTvControlManager.SetSigInfoChangeListener(this);
         mTvControlManager.setScanningFrameStableListener(this);
         resetScanStoreListener();
@@ -401,6 +393,8 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     public void resetScanStoreListener() {
+        if (mTvControlManager == null)
+            mTvControlManager = TvControlManager.getInstance();;
         mTvControlManager.setStorDBListener(this);
     }
 
@@ -632,4 +626,44 @@ public class DroidLogicTvInputService extends TvInputService implements
 
         return id;
     }
+
+    protected final BroadcastReceiver mChannelScanStartReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+                 String action = intent.getAction();
+                 Bundle bundle = intent.getBundleExtra(DroidLogicTvUtils.EXTRA_MORE);
+                 String inputId = bundle.getString(TvInputInfo.EXTRA_INPUT_ID);
+                 Log.d(TAG, "inputId:"+inputId);
+                 registerInput(inputId);
+                 resetScanStoreListener();
+                 initTvStoreManager();
+            }
+    };
+
+    private void initTvStoreManager() {
+            if (mTvStoreManager == null) {
+            SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
+            int channel_number_start = mSystemControlManager.getPropertyInt("tv.channel.number.start", 1);
+            mTvStoreManager = new TvStoreManager(this, mCurrentInputId, channel_number_start) {
+                @Override
+                public void onEvent(String eventType, Bundle eventArgs) {
+                    Log.d(TAG, "TvStoreManager.onEvent:"+eventType);
+                    if (mSession != null)
+                        mSession.notifySessionEvent(eventType, eventArgs);
+                    else
+                        Log.d(TAG, "mSession is null, no need to notify tvview.callback");
+                }
+                @Override
+                public void onUpdateCurrent(ChannelInfo channel, boolean store) {
+                    onUpdateCurrentChannel(channel, store);
+                }
+                @Override
+                public void onDtvNumberMode(String mode) {
+                    Settings.System.putString(DroidLogicTvInputService.this.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_NUMBER_MODE, "lcn");
+                }
+                public void onScanEnd() {
+                    mTvControlManager.DtvStopScan();
+                }
+            };
+    }}
 }
