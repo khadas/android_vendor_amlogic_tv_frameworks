@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
@@ -84,7 +85,16 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     @Override
     public void onSetStreamVolume(float volume) {
-        // TODO Auto-generated method stub
+        if (DEBUG)
+            Log.d(TAG, "onSetStreamVolume volume = " + volume);
+
+        if ( 0.0 == volume ) {
+            SystemProperties.set("persist.sys.tvview.blocked", "true");
+            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_MUTE_FOR_TV);
+        } else {
+            SystemProperties.set("persist.sys.tvview.blocked", "false");
+            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_UNMUTE_FOR_TV);
+        }
     }
 
     @Override
