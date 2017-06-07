@@ -262,7 +262,7 @@ public abstract class TvStoreManager {
         if (ATVName.length() == 0)
             ATVName = "xxxATV Program";
         if (ATVName.startsWith("xxxATV Program"))
-            ATVName = ATVName + " " + Integer.toString(mDisplayNumber);
+            ATVName = ATVName;
 
         return new ChannelInfo.Builder()
                .setInputId(mInputId == null ? "NULL" : mInputId)
@@ -718,8 +718,8 @@ public abstract class TvStoreManager {
 
             checkOrPatchBeginLost(event);
 
-            if (!isFinalStoreStage)
-                isRealtimeStore = true;
+            if (isFinalStoreStage)
+                break;
 
             initChannelsExist();
 
@@ -732,8 +732,10 @@ public abstract class TvStoreManager {
             if (mScanMode.isATVManualScan())
                 //onUpdateCurrent(channel, true);
                 cacheChannel(event, channel);
-            else
-                mTvDataBaseManager.updateOrinsertAtvChannelWithNumber(channel);
+            else {
+                mDisplayNumber = mTvDataBaseManager.insertAtvChannelWithFreOrder(channel);
+                mDisplayNumber++;
+            }
 
             Log.d(TAG, "onEvent,displayNum:" + mDisplayNumber);
 

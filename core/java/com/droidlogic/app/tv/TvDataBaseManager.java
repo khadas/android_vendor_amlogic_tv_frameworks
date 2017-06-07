@@ -337,6 +337,41 @@ public class TvDataBaseManager {
                 +"]");
     }
 
+    public int insertAtvChannelWithFreOrder(ChannelInfo channel) {
+        int newChannelNum = -1;
+        ArrayList<ChannelInfo> atvlist = getChannelList(channel.getInputId(), Channels.SERVICE_TYPE_AUDIO_VIDEO);
+        if (atvlist.size() <= 0 || channel.getFrequency() > atvlist.get(atvlist.size() - 1).getFrequency()) {
+            newChannelNum = atvlist.size() + 1;
+        } else {
+            for (int i = 0; i < atvlist.size(); i++) {
+                if (channel.getFrequency() == atvlist.get(i).getFrequency()) {
+                    Log.d(TAG, "ATV CH[freq:" + channel.getFrequency() + "] already exist");
+                    newChannelNum = atvlist.size() + 1;
+                    return newChannelNum;
+                } else if (channel.getFrequency() < atvlist.get(i).getFrequency()) {
+                    if (i == 0 && atvlist.get(i).getNumber() > 1) {
+                        newChannelNum = 1;
+                        break;
+                    } else if (i > 0 && atvlist.get(i).getNumber() - atvlist.get(i - 1).getNumber() > 1) {
+                        newChannelNum = atvlist.get(i - 1).getNumber() + 1;
+                        break;
+                    }
+
+                    newChannelNum = atvlist.get(i).getNumber();
+                    int updateNum = atvlist.get(i).getNumber() + 1;
+                    for (int j = i; j < atvlist.size(); j++, updateNum++) {
+                        atvlist.get(j).setDisplayNumber(String.valueOf(updateNum));
+                        updateAtvChannel(atvlist.get(j));
+                    }
+                    break;
+                }
+            }
+        }
+        insertAtvChannel(channel, newChannelNum);
+        return newChannelNum;
+    }
+
+
     private ContentValues  buildDtvChannelData (ChannelInfo channel){
         ContentValues values = new ContentValues();
         values.put(Channels.COLUMN_INPUT_ID, channel.getInputId());
