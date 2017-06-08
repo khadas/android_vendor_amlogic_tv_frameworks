@@ -6365,7 +6365,8 @@ public class TvControlManager {
     public enum HdmiPortID {
         HDMI_PORT_1(1),
         HDMI_PORT_2(2),
-        HDMI_PORT_3(3);
+        HDMI_PORT_3(3),
+        HDMI_PORT_4(4);
         private int val;
 
         HdmiPortID(int val) {
