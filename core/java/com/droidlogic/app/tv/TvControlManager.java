@@ -364,6 +364,8 @@ public class TvControlManager {
                         readScanEvent(scan_ev, p);
                         mStorDBListener.StorDBonEvent(scan_ev);
                     }
+                    if (mStorDBListener == null)
+                        Log.d(TAG,"mStorDBListener is null !!!");
                     break;
                 case SCANNING_FRAME_STABLE_CALLBACK:
                     p = ((Parcel) (msg.obj));
@@ -4354,6 +4356,8 @@ public class TvControlManager {
     public void setStorDBListener(StorDBEventListener l) {
         libtv_log_open();
         mStorDBListener = l;
+        if (l == null)
+            Log.i(TAG,"setStorDBListener null");
     }
 
     public void setScanningFrameStableListener(ScanningFrameStableListener l) {
