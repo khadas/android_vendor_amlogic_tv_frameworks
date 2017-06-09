@@ -675,7 +675,7 @@ public class DroidLogicTvUtils
             {"", "US_TV_S"},
             {"", "US_TV_V"},
             {"", "US_TV_Y", "US_TV_Y7"},
-            {"", "US_TV_FL"},
+            {"", "US_TV_FV"},
             {"", "NA", "US_MV_G", "US_MV_PG", "US_MV_PG13", "US_MV_R", "US_MV_NC17", "US_MV_X", "US_MV_NR"}
         };
     public static String CA_EN_ContentRatingDimensions[] =
