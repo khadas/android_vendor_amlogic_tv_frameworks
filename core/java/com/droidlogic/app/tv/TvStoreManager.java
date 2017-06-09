@@ -31,7 +31,7 @@ public abstract class TvStoreManager {
 
     /*for store in search*/
     private boolean isFinalStoreStage = false;
-    private boolean isRealtimeStore = false;
+    private boolean isRealtimeStore = true;
 
 
     private ArrayList<ChannelInfo> mChannelsOld = null;
@@ -137,7 +137,7 @@ public abstract class TvStoreManager {
         mDisplayNumber = mInitialDisplayNumber;
         mDisplayNumber2 = new Integer(mInitialDisplayNumber);
         isFinalStoreStage = false;
-        isRealtimeStore = false;
+        isRealtimeStore = true;
 
         Bundle bundle = null;
         bundle = getScanEventBundle(event);
@@ -724,17 +724,23 @@ public abstract class TvStoreManager {
             initChannelsExist();
 
             channel = createAtvChannelInfo(event);
+            if (event.majorChannelNumber != -1)
+                channel.setDisplayNumber(""+event.majorChannelNumber+"-"+event.minorChannelNumber);
 
             Log.d(TAG, "reset number to " + channel.getDisplayNumber());
 
             channel.print();
 
-            if (mScanMode.isATVManualScan())
-                //onUpdateCurrent(channel, true);
+            if (mSortMode.isATSCStandard()) {
                 cacheChannel(event, channel);
-            else {
-                mDisplayNumber = mTvDataBaseManager.insertAtvChannelWithFreOrder(channel);
-                mDisplayNumber++;
+            } else {
+                if (mScanMode.isATVManualScan())
+                    //onUpdateCurrent(channel, true);
+                    cacheChannel(event, channel);
+                else {
+                    mDisplayNumber = mTvDataBaseManager.insertAtvChannelWithFreOrder(channel);
+                    mDisplayNumber++;
+                }
             }
 
             Log.d(TAG, "onEvent,displayNum:" + mDisplayNumber);
