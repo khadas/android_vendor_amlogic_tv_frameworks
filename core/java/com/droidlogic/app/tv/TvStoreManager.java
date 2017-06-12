@@ -718,7 +718,7 @@ public abstract class TvStoreManager {
 
             checkOrPatchBeginLost(event);
 
-            if (isFinalStoreStage)
+            if (isFinalStoreStage && !mScanMode.isATVManualScan())
                 break;
 
             initChannelsExist();
