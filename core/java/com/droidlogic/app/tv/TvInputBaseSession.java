@@ -69,6 +69,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     public void doRelease() {
         Log.d(TAG, "doRelease");
+        SystemProperties.set("persist.sys.tvview.blocked", "false");
     }
 
     public void doAppPrivateCmd(String action, Bundle bundle) {}
@@ -90,10 +91,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
         if ( 0.0 == volume ) {
             SystemProperties.set("persist.sys.tvview.blocked", "true");
-            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_MUTE_FOR_TV);
+            mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_MUTE_FOR_TV);
         } else {
             SystemProperties.set("persist.sys.tvview.blocked", "false");
-            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_UNMUTE_FOR_TV);
+            mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_UNMUTE_FOR_TV);
         }
     }
 
