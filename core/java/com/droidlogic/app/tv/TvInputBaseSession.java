@@ -92,9 +92,11 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if ( 0.0 == volume ) {
             SystemProperties.set("persist.sys.tvview.blocked", "true");
             mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_MUTE_FOR_TV);
+            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_MUTE_FOR_TV);
         } else {
             SystemProperties.set("persist.sys.tvview.blocked", "false");
             mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_UNMUTE_FOR_TV);
+            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_UNMUTE_FOR_TV);
         }
     }
 
