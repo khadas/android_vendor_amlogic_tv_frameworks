@@ -629,16 +629,6 @@ public abstract class TvStoreManager {
             }
         }
 
-        if (mScanMode != null) {
-            if (mScanMode.isDTVManulScan() || mScanMode.isATVManualScan()) {
-                if (mChannelsOld != null) {
-                    mTvDataBaseManager.deleteChannels(mChannelsOld);
-                    for (ChannelInfo c : mChannelsOld)
-                        Log.d(TAG, "rm ch[" + c.getDisplayNumber() + "][" + c.getDisplayName() + "][" + c.getFrequency() + "]");
-                }
-            }
-        }
-
         lcn_overflow_start = mInitialLcnNumber;
         display_number_start = mInitialDisplayNumber;
         on_channel_store_tschanged = true;
