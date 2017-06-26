@@ -465,7 +465,7 @@ public class DroidLogicTvInputService extends TvInputService implements
             mSurface = surface;
         }
 
-        if (surface == null && mHardware != null && session.mId == mSession.mId) {
+        if (surface == null && mHardware != null && mConfigs != null && session.mId == mSession.mId) {
             Log.d(TAG, "surface is null, so stop TV play");
             mSurface = null;
             stopTvPlay(session.mId);
