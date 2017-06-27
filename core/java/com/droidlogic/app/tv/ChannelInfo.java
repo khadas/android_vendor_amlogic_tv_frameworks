@@ -1165,7 +1165,7 @@ public class ChannelInfo {
             || mType.equals(TvContract.Channels.TYPE_SECAM));
     }
 
-    public boolean isAtscChannnel() {
+    public boolean isAtscChannel() {
         return (mType.equals(TvContract.Channels.TYPE_ATSC_C)
             || mType.equals(TvContract.Channels.TYPE_ATSC_T)
             || mType.equals(TvContract.Channels.TYPE_ATSC_M_H));
@@ -1230,4 +1230,133 @@ public class ChannelInfo {
                 "\n Hidden = " + mHidden +
                 "\n HideGuide = " + mHideGuide;
     }
+
+    public static class Subtitle {
+        public static final int TYPE_DVB_SUBTITLE = 1;
+        public static final int TYPE_DTV_TELETEXT = 2;
+        public static final int TYPE_ATV_TELETEXT = 3;
+        public static final int TYPE_DTV_CC = 4;
+        public static final int TYPE_ATV_CC = 5;
+
+        public static final int CC_CAPTION_DEFAULT = 0;
+        /*NTSC CC channels*/
+        public static final int CC_CAPTION_CC1 = 1;
+        public static final int CC_CAPTION_CC2 = 2;
+        public static final int CC_CAPTION_CC3 = 3;
+        public static final int CC_CAPTION_CC4 = 4;
+        public static final int CC_CAPTION_TEXT1 =5;
+        public static final int CC_CAPTION_TEXT2 = 6;
+        public static final int CC_CAPTION_TEXT3 = 7;
+        public static final int CC_CAPTION_TEXT4 = 8;
+        /*DTVCC services*/
+        public static final int CC_CAPTION_SERVICE1 = 9;
+        public static final int CC_CAPTION_SERVICE2 = 10;
+        public static final int CC_CAPTION_SERVICE3 = 11;
+        public static final int CC_CAPTION_SERVICE4 = 12;
+        public static final int CC_CAPTION_SERVICE5 = 13;
+        public static final int CC_CAPTION_SERVICE6 = 14;
+
+        public int mType;
+        public int mPid;
+        public int mStype;
+        public int mId1;
+        public int mId2;
+        public String mLang;
+
+        public int id;
+
+        public Subtitle() {
+            id = -1;
+            mType = -1;
+            mPid = -1;
+            mStype = -1;
+            mId1 = -1;
+            mId2 = -1;
+            mLang = "";
+       }
+
+        public Subtitle(int type, int pid, int stype, int id1, int id2, String language) {
+            mType = type;
+            mPid = pid;
+            mStype = stype;
+            mId1 = id1;
+            mId2 = id2;
+            mLang = language;
+        }
+
+        public Subtitle(int type, int pid, int stype, int id1, int id2, String language, int id) {
+            this(type, pid, stype, id1, id2, language);
+            setId(id);
+        }
+
+        public Subtitle(Subtitle subtitle) {
+            mType = subtitle.mType;
+            mPid = subtitle.mPid;
+            mStype = subtitle.mStype;
+            mId1 = subtitle.mId1;
+            mId2 = subtitle.mId2;
+            mLang = subtitle.mLang;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public static final class Builder {
+            private final Subtitle mSubtitle = new Subtitle();
+
+            public Builder() {
+            }
+
+            public Builder(Subtitle subtitle) {
+                mSubtitle.id = subtitle.id;
+                mSubtitle.mType = subtitle.mType;
+                mSubtitle.mPid = subtitle.mPid;
+                mSubtitle.mStype = subtitle.mStype;
+                mSubtitle.mId1 = subtitle.mId1;
+                mSubtitle.mId2 = subtitle.mId2;
+                mSubtitle.mLang = new String(subtitle.mLang);
+            }
+
+            public Subtitle build() {
+                return mSubtitle;
+            }
+
+            public Builder setId(int id) {
+                mSubtitle.id = id;
+                return this;
+            }
+
+            public Builder setType(int type) {
+                mSubtitle.mType = type;
+                return this;
+            }
+
+            public Builder setPid(int pid) {
+                mSubtitle.mPid = pid;
+                return this;
+            }
+
+            public Builder setStype(int stype) {
+                mSubtitle.mStype = stype;
+                return this;
+            }
+
+            public Builder setId1(int id1) {
+                mSubtitle.mId1 = id1;
+                return this;
+            }
+
+            public Builder setId2(int id2) {
+                mSubtitle.mId2 = id2;
+                return this;
+            }
+
+            public Builder setLang(String lang) {
+                mSubtitle.mLang = lang;
+                return this;
+            }
+        }
+    }
+
 }

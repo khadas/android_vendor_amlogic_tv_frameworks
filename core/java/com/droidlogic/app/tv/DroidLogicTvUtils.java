@@ -876,6 +876,74 @@ public class DroidLogicTvUtils
         return (RatingList.size() == 0 ? null : RatingList.toArray(new TvContentRating[RatingList.size()]));
     }
 
+    public static List<ChannelInfo.Subtitle> parseAtscCaptions(String jsonString) {
 
+        if (jsonString == null || jsonString.isEmpty())
+            return null;
+
+        ArrayList<ChannelInfo.Subtitle> SubtitleList = new ArrayList<ChannelInfo.Subtitle>();
+        /*
+            [
+                //bdig=b_digtal_cc, sn=caption_service_number, lng=language,
+                //beasy=b_easy_reader, bwar=b_wide_aspect_ratio
+                {bdig:1,sn:0x2,lng:"eng",beasy:0,bwar:1},
+                {bdig:0,l21:1},
+                ...
+            ]
+        */
+
+        JSONArray captionArray = null;
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            throw new RuntimeException("Json parse fail: ("+jsonString+")", e);
+        }
+
+        try {
+            captionArray = obj.getJSONArray("captions");
+        } catch (JSONException e) {
+            return null;
+        }
+
+        Log.d(TAG, "captions:"+captionArray.toString());
+
+        int ArraySize = captionArray.length();
+        int count = 0;
+        for (int i = 0; i < captionArray.length(); i++) {
+            JSONObject c = captionArray.optJSONObject(i);
+            if (c == null)
+                continue;
+
+            int isDigitalCC = c.optInt("bdig", -1);
+            if (isDigitalCC == 1) {
+                int serviceNumber = c.optInt("sn", -1);
+                int easyReader = c.optInt("bwasy", 0);
+                int wideAspectRatio = c.optInt("bwar", 0);
+                ChannelInfo.Subtitle s
+                    = new ChannelInfo.Subtitle(ChannelInfo.Subtitle.TYPE_DTV_CC,
+                                        ChannelInfo.Subtitle.CC_CAPTION_SERVICE1 + serviceNumber - 1,
+                                        ChannelInfo.Subtitle.TYPE_DTV_CC,
+                                        0,
+                                        (easyReader == 0 ? 0x80 : 0) | (wideAspectRatio == 0 ? 0x40 : 0),
+                                        c.optString("lng", ""),
+                                        count++);
+                SubtitleList.add(s);
+            } else if (isDigitalCC == 0) {
+                int line21 = c.optInt("l21", 0);
+                ChannelInfo.Subtitle s
+                    = new ChannelInfo.Subtitle(ChannelInfo.Subtitle.TYPE_ATV_CC,
+                                        ChannelInfo.Subtitle.CC_CAPTION_CC1,
+                                        ChannelInfo.Subtitle.TYPE_ATV_CC,
+                                        0,
+                                        0,
+                                        "CC1",
+                                        count++);
+                SubtitleList.add(s);
+            }
+         }
+
+        return (SubtitleList.size() == 0 ? null : SubtitleList);
+    }
 
 }
