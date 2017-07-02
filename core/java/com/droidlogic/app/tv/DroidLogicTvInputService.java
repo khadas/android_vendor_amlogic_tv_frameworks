@@ -513,23 +513,11 @@ public class DroidLogicTvInputService extends TvInputService implements
     protected int getCurrentSessionId() {
         return mCurrentSessionId;
     }
-
-    private boolean isInTvApp() {
-        ActivityManager am = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> runTaskInfos = am.getRunningTasks(1);
-        if (runTaskInfos == null)
-            return false;
-        ActivityManager.RunningTaskInfo runningTaskInfo = runTaskInfos.get(0);
-        return runningTaskInfo.topActivity.getPackageName().equals("com.droidlogic.tvsource");
-    }
-
     /**
      * select hdmi cec device.
      * @param port the hardware device id of hdmi need to be selected.
      */
     public void selectHdmiDevice(final int port) {
-        if (!isInTvApp())
-            return;
         DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(this);
         hdmi_cec.selectHdmiDevice(port);
     }
