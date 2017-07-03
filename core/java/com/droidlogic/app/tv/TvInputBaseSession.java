@@ -69,7 +69,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     public void doRelease() {
         Log.d(TAG, "doRelease");
-        SystemProperties.set("persist.sys.tvview.blocked", "false");
+        setAudiodMute(false);
     }
 
     public void doAppPrivateCmd(String action, Bundle bundle) {}
@@ -89,15 +89,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (DEBUG)
             Log.d(TAG, "onSetStreamVolume volume = " + volume);
 
-        if ( 0.0 == volume ) {
-            SystemProperties.set("persist.sys.tvview.blocked", "true");
-            mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_MUTE_FOR_TV);
-            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_MUTE_FOR_TV);
-        } else {
-            SystemProperties.set("persist.sys.tvview.blocked", "false");
-            mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_UNMUTE_FOR_TV);
-            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_UNMUTE_FOR_TV);
-        }
+        setAudiodMute(0.0 == volume);
     }
 
     @Override
@@ -124,6 +116,18 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
             Log.d(TAG, "onUnblockContent");
 
         doUnblockContent(unblockedRating);
+    }
+
+    private void setAudiodMute(boolean mute) {
+        if (mute) {
+            SystemProperties.set("persist.sys.tvview.blocked", "true");
+            mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_MUTE_FOR_TV);
+            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_MUTE_FOR_TV);
+        } else {
+            SystemProperties.set("persist.sys.tvview.blocked", "false");
+            mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_UNMUTE_FOR_TV);
+            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_UNMUTE_FOR_TV);
+        }
     }
 
     @Override
