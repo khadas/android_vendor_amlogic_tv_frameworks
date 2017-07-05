@@ -1171,6 +1171,10 @@ public class ChannelInfo {
             || mType.equals(TvContract.Channels.TYPE_ATSC_M_H));
     }
 
+    public boolean isNtscChannel() {
+        return mType.equals(TvContract.Channels.TYPE_NTSC);
+    }
+
     public boolean isAVChannel() {
         return (!mServiceType.equals(TvContract.Channels.SERVICE_TYPE_OTHER));
     }
