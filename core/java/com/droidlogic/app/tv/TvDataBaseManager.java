@@ -70,9 +70,16 @@ public class TvDataBaseManager {
     }
 
     public void deleteChannels(String inputId) {
+        deleteChannels(inputId, null);
+    }
+
+    public void deleteChannels(String inputId, String type) {
         Uri channelsUri = TvContract.buildChannelsUriForInput(inputId);
         try {
-            mContentResolver.delete(channelsUri, Channels._ID + "!=-1", null);
+            if (type == null)
+                mContentResolver.delete(channelsUri, Channels._ID + "!=-1", null);
+            else
+                mContentResolver.delete(channelsUri, Channels._ID + "!=-1 and " + Channels.COLUMN_TYPE + "='" + type +"'", null);
         } catch (Exception e) {
             e.printStackTrace();
         }
