@@ -1363,4 +1363,89 @@ public class ChannelInfo {
         }
     }
 
+    public static class Audio {
+
+        public int mPid;
+        public int mFormat;
+        public int mExt;
+        public String mLang;
+
+        public int id;
+
+        public Audio() {
+            id = -1;
+            mPid = -1;
+            mFormat = -1;
+            mExt = -1;
+            mLang = "";
+       }
+
+        public Audio(int pid, int format, int ext, String language) {
+            mPid = pid;
+            mFormat = format;
+            mExt = ext;
+            mLang = language;
+        }
+
+        public Audio(int pid, int format, int ext, String language, int id) {
+            this(pid, format, ext, language);
+            setId(id);
+        }
+
+        public Audio(Audio audio) {
+            mPid = audio.mPid;
+            mFormat = audio.mFormat;
+            mExt = audio.mExt;
+            mLang = audio.mLang;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public static final class Builder {
+            private final Audio mAudio = new Audio();
+
+            public Builder() {
+            }
+
+            public Builder(Audio audio) {
+                mAudio.id = audio.id;
+                mAudio.mPid = audio.mPid;
+                mAudio.mFormat = audio.mFormat;
+                mAudio.mExt = audio.mExt;
+                mAudio.mLang = new String(audio.mLang);
+            }
+
+            public Audio build() {
+                return mAudio;
+            }
+
+            public Builder setId(int id) {
+                mAudio.id = id;
+                return this;
+            }
+
+            public Builder setPid(int pid) {
+                mAudio.mPid = pid;
+                return this;
+            }
+
+            public Builder setFormat(int format) {
+                mAudio.mFormat = format;
+                return this;
+            }
+
+            public Builder setExt(int ext) {
+                mAudio.mExt = ext;
+                return this;
+            }
+
+            public Builder setLang(String lang) {
+                mAudio.mLang = lang;
+                return this;
+            }
+        }
+    }
+
 }
