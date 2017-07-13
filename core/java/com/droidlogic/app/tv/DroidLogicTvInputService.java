@@ -39,6 +39,7 @@ import android.net.Uri;
 import com.android.internal.os.SomeArgs;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.hardware.hdmi.HdmiControlManager;
 import android.hardware.hdmi.HdmiTvClient;
 import android.provider.Settings.Global;
@@ -423,8 +424,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     protected  boolean doTuneInService(Uri channelUri, int sessionId) {
-        if (DEBUG)
-            Log.d(TAG, "onTune, channelUri=" + channelUri);
+        Log.d(TAG, "[source_switch_time]:" +getUptimeSeconds() + "s, onTune channelUri=" + channelUri);
 
         mSessionHandler.obtainMessage(MSG_DO_TUNE, sessionId, 0, channelUri).sendToTarget();
         return false;
@@ -448,7 +448,8 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
     }
     private void doSetSurface(Surface surface, TvInputBaseSession session) {
-        Log.d(TAG, "doSetSurface inputId=" + mCurrentInputId + " number=" + session.mId + " surface=" + surface);
+        Log.d(TAG, "[source_switch_time]:" +getUptimeSeconds()
+                + "s, doSetSurface inputId=" + mCurrentInputId + " number=" + session.mId + " surface=" + surface);
         timeout = RETUNE_TIMEOUT;
 
         if (surface != null && !surface.isValid()) {
@@ -654,4 +655,8 @@ public class DroidLogicTvInputService extends TvInputService implements
                 }
             };
     }}
+
+    private float getUptimeSeconds() {
+       return  (float)SystemClock.uptimeMillis() / 1000;
+    }
 }
