@@ -139,8 +139,9 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     protected void acquireHardware(TvInputInfo info){
         mDeviceId = getHardwareDeviceId(info.getId());
+        mCurrentInputId = info.getId();
         mHardware = mTvInputManager.acquireTvInputHardware(mDeviceId, mHardwareCallback,info);
-        Log.d(TAG, "acquireHardware , mHardware: " + mHardware);
+        Log.d(TAG, "acquireHardware mDeviceId="+mDeviceId+",  mCurrentInputId="+mCurrentInputId+", mHardware: " + mHardware);
     }
 
     protected void releaseHardware(){
@@ -425,6 +426,8 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     protected  boolean doTuneInService(Uri channelUri, int sessionId) {
         Log.d(TAG, "[source_switch_time]:" +getUptimeSeconds() + "s, onTune channelUri=" + channelUri);
+        if (mSession != null)
+            mSession.hideUI();
 
         mSessionHandler.obtainMessage(MSG_DO_TUNE, sessionId, 0, channelUri).sendToTarget();
         return false;
@@ -622,10 +625,12 @@ public class DroidLogicTvInputService extends TvInputService implements
                  String action = intent.getAction();
                  Bundle bundle = intent.getBundleExtra(DroidLogicTvUtils.EXTRA_MORE);
                  String inputId = bundle.getString(TvInputInfo.EXTRA_INPUT_ID);
-                 Log.d(TAG, "inputId:"+inputId);
-                 registerInput(inputId);
-                 resetScanStoreListener();
-                 initTvStoreManager();
+                 Log.d(TAG, "mCurrentInputId:"+mCurrentInputId+", inputId:"+inputId);
+                 if (mCurrentInputId != null && mCurrentInputId.equals(inputId)) {
+                     registerInput(inputId);
+                     resetScanStoreListener();
+                     initTvStoreManager();
+                 }
             }
     };
 

@@ -16,6 +16,8 @@ import android.os.SystemProperties;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
+import android.view.View;
+import android.view.LayoutInflater;
 
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvControlManager;
@@ -31,6 +33,8 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     private static final String TAG = "TvInputBaseSession";
 
     private static final int MSG_DO_PRI_CMD = 9;
+    protected static final int MSG_SUBTITLE_SHOW = 10;
+    protected static final int MSG_SUBTITLE_HIDE = 11;
 
     private Context mContext;
     public int mId;
@@ -38,8 +42,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     private int mDeviceId;
     private TvInputManager mTvInputManager;
     private boolean mHasRetuned = false;
-    private Handler mSessionHandler;
+    protected Handler mSessionHandler;
     private TvControlManager mTvControlManager;
+    protected DroidLogicOverlayView mOverlayView = null;
 
     public TvInputBaseSession(Context context, String inputId, int deviceId) {
         super(context);
@@ -70,6 +75,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     public void doRelease() {
         Log.d(TAG, "doRelease");
         setAudiodMute(false);
+        setOverlayViewEnabled(false);
     }
 
     public void doAppPrivateCmd(String action, Bundle bundle) {}
@@ -118,6 +124,46 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         doUnblockContent(unblockedRating);
     }
 
+    public void initOverlayView(int resId) {
+        LayoutInflater inflater = (LayoutInflater)
+                mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mOverlayView = (DroidLogicOverlayView)inflater.inflate(resId, null);
+        setOverlayViewEnabled(true);
+    }
+
+    @Override
+    public View onCreateOverlayView() {
+        if (mOverlayView != null)
+            return mOverlayView;
+        return null;
+    }
+
+    @Override
+    public void onOverlayViewSizeChanged(int width, int height) {
+        Log.d(TAG, "onOverlayViewSizeChanged: "+width+","+height);
+    }
+
+    @Override
+    public void notifyVideoAvailable() {
+        Log.d(TAG, "notifyVideoAvailable ");
+        super.notifyVideoAvailable();
+        mOverlayView.setImageVisibility(false);
+        mOverlayView.setTextVisibility(false);
+    }
+
+    @Override
+    public void notifyVideoUnavailable(int reason) {
+        Log.d(TAG, "notifyVideoUnavailable: "+reason);
+        super.notifyVideoAvailable();
+        mOverlayView.setImageVisibility(true);
+        mOverlayView.setTextVisibility(false);
+    }
+
+    public void hideUI() {
+        mOverlayView.setImageVisibility(false);
+        mOverlayView.setTextVisibility(false);
+    }
+
     private void setAudiodMute(boolean mute) {
         if (mute) {
             SystemProperties.set("persist.sys.tvview.blocked", "true");
@@ -137,6 +183,12 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         switch (msg.what) {
             case MSG_DO_PRI_CMD:
                 doAppPrivateCmd((String)msg.obj, msg.getData());
+                break;
+            case MSG_SUBTITLE_SHOW:
+                mOverlayView.setSubtitleVisibility(true);
+                break;
+            case MSG_SUBTITLE_HIDE:
+                mOverlayView.setSubtitleVisibility(false);
                 break;
         }
         return false;
