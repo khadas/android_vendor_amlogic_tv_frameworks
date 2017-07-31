@@ -482,7 +482,7 @@ public class DroidLogicTvInputService extends TvInputService implements
             Log.d(TAG, "doTune failed, timeout=" + timeout + ", retune 50ms later ...");
 
             if (timeout > 0) {
-                Message msg = mSessionHandler.obtainMessage(MSG_DO_TUNE, uri);
+                Message msg = mSessionHandler.obtainMessage(MSG_DO_TUNE, sessionId, 0, uri);
                 mSessionHandler.sendMessageDelayed(msg, 50);
                 timeout--;
                 return ACTION_FAILED;
