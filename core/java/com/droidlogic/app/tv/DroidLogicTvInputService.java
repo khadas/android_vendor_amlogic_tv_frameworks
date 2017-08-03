@@ -477,6 +477,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     public int doTune(Uri uri, int sessionId) {
+        SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
         Log.d(TAG, "doTune, uri = " + uri);
         if (mConfigs == null || startTvPlay() == ACTION_FAILED) {
             Log.d(TAG, "doTune failed, timeout=" + timeout + ", retune 50ms later ...");
@@ -488,6 +489,7 @@ public class DroidLogicTvInputService extends TvInputService implements
                 return ACTION_FAILED;
             }
         }
+        mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
         doTuneFinish(ACTION_SUCCESS, uri, sessionId);
         return ACTION_SUCCESS;
     }
