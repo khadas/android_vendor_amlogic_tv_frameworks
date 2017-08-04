@@ -946,4 +946,56 @@ public class DroidLogicTvUtils
         return (SubtitleList.size() == 0 ? null : SubtitleList);
     }
 
+    public static String getObjectString(String jsonString, String objName) {
+        if (jsonString == null || jsonString.isEmpty()
+            ||objName == null || objName.isEmpty())
+            return null;
+
+        /*
+            title:{a:0,b:0,c:1}
+        */
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            throw new RuntimeException("Json parse fail: ("+jsonString+")", e);
+        }
+        JSONObject tObj = null;
+        try {
+            tObj = obj.getJSONObject(objName);
+        } catch (JSONException e) {
+            return null;
+        }
+
+        Log.d(TAG, objName+":"+tObj.toString());
+
+        return tObj.toString();
+    }
+
+    public static int getObjectValueInt(String jsonString, String objName, String valueName, int defaultValue) {
+        if (jsonString == null || jsonString.isEmpty()
+            || objName == null || objName.isEmpty()
+            || valueName == null || valueName.isEmpty())
+            return defaultValue;
+
+        /*
+            objName1:{valueName1:0,valueName2:0,valueName3:1}
+        */
+        JSONObject obj = null;
+        try {
+            obj = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            throw new RuntimeException("Json parse fail: ("+jsonString+")", e);
+        }
+        JSONObject nObj = null;
+        try {
+            nObj = obj.getJSONObject(objName);
+        } catch (JSONException e) {
+            return defaultValue;
+        }
+
+        Log.d(TAG, objName+":"+nObj.toString());
+
+        return nObj.optInt(valueName, defaultValue);
+    }
 }

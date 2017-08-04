@@ -183,7 +183,8 @@ public abstract class TvStoreManager {
             serviceType = TvContract.Channels.SERVICE_TYPE_OTHER;
         }
 
-        TvControlManager.FEParas fep = new TvControlManager.FEParas(event.paras);
+        TvControlManager.FEParas fep =
+            new TvControlManager.FEParas(DroidLogicTvUtils.getObjectString(event.paras, "fe"));
 
         return new ChannelInfo.Builder()
                .setInputId(mInputId)
@@ -257,7 +258,8 @@ public abstract class TvStoreManager {
                 break;
         }
 
-        TvControlManager.FEParas fep = new TvControlManager.FEParas(event.paras);
+        TvControlManager.FEParas fep =
+            new TvControlManager.FEParas(DroidLogicTvUtils.getObjectString(event.paras, "fe"));
 
         if (ATVName.length() == 0)
             ATVName = "xxxATV Program";
@@ -684,8 +686,13 @@ public abstract class TvStoreManager {
             else
                 channel.setDisplayNumber(String.valueOf(mDisplayNumber));
 
-            if (event.majorChannelNumber != -1)
+            if (event.minorChannelNumber != -1) {
                 channel.setDisplayNumber(""+event.majorChannelNumber+"-"+event.minorChannelNumber);
+                int vct = DroidLogicTvUtils.getObjectValueInt(event.paras, "srv", "vct", 0);
+                Log.d(TAG, "srv.vct:"+vct);
+                if (vct == 1)//one-part channnel numbers for digital cable system.
+                    channel.setDisplayNumber(""+event.minorChannelNumber);
+            }
 
             Log.d(TAG, "reset number to " + channel.getDisplayNumber());
 
