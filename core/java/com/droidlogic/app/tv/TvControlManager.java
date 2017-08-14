@@ -4952,17 +4952,17 @@ public class TvControlManager {
     }
 
     public static class FEParas extends Paras {
-        private static final String K_MODE = "mode";
-        private static final String K_FREQ = "freq";
-        private static final String K_FREQ2 = "freq2";
-        private static final String K_BW = "bw";
-        private static final String K_SR = "sr";
-        private static final String K_MOD = "mod";
-        private static final String K_PLP = "plp";
-        private static final String K_LAYR = "layr";
-        private static final String K_VSTD = "vtd";
-        private static final String K_ASTD = "atd";
-        private static final String K_AFC = "afc";
+        public static final String K_MODE = "mode";
+        public static final String K_FREQ = "freq";
+        public static final String K_FREQ2 = "freq2";
+        public static final String K_BW = "bw";
+        public static final String K_SR = "sr";
+        public static final String K_MOD = "mod";
+        public static final String K_PLP = "plp";
+        public static final String K_LAYR = "layr";
+        public static final String K_VSTD = "vtd";
+        public static final String K_ASTD = "atd";
+        public static final String K_AFC = "afc";
 
         public FEParas() { super(); }
         public FEParas(String paras) { super(paras); }
@@ -5084,15 +5084,17 @@ public class TvControlManager {
 
 
     public static class ScanParas extends Paras {
-        private static final String K_MODE = "m";
-        private static final String K_ATVMODE = "am";
-        private static final String K_DTVMODE = "dm";
-        private static final String K_ATVFREQ1 = "af1";
-        private static final String K_ATVFREQ2 = "af2";
-        private static final String K_DTVFREQ1 = "df1";
-        private static final String K_DTVFREQ2 = "df2";
-        private static final String K_PROC = "prc";
-        private static final String K_DTVSTD = "dstd";
+        public static final String K_MODE = "m";
+        public static final String K_ATVMODE = "am";
+        public static final String K_DTVMODE = "dm";
+        public static final String K_ATVFREQ1 = "af1";
+        public static final String K_ATVFREQ2 = "af2";
+        public static final String K_DTVFREQ1 = "df1";
+        public static final String K_DTVFREQ2 = "df2";
+        public static final String K_PROC = "prc";
+        public static final String K_DTVSTD = "dstd";
+        public static final String KM_ATVMODIFIER = "_amod";
+        public static final String KM_DTVMODIFIER = "_dmod";
 
         public static int MODE_ATV_DTV = 0;
         public static int MODE_DTV_ATV = 1;
@@ -5146,6 +5148,13 @@ public class TvControlManager {
         public int getDtvStandard() {
             return getInt(K_DTVSTD, -1);
         }
+        public int getAtvModifier(String name, int def) {
+            return getInt(name+KM_ATVMODIFIER, def);
+        }
+        public int getDtvModifier(String name, int def) {
+            return getInt(name+KM_DTVMODIFIER, def);
+        }
+
         public ScanParas setMode(int mode) {
             set(K_MODE, mode);
             return this;
@@ -5180,6 +5189,14 @@ public class TvControlManager {
         }
         public ScanParas setDtvStandard(int std) {
             set(K_DTVSTD, std);
+            return this;
+        }
+        public ScanParas setAtvModifier(String name, int m) {
+            set(name+KM_ATVMODIFIER, m);
+            return this;
+        }
+        public ScanParas setDtvModifier(String name, int m) {
+            set(name+KM_DTVMODIFIER, m);
             return this;
         }
     }
