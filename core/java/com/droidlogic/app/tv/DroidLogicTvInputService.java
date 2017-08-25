@@ -310,6 +310,8 @@ public class DroidLogicTvInputService extends TvInputService implements
         if (DEBUG)
             Log.d(TAG, "onSigChange" + status.ordinal() + status.toString());
 
+        onSigChanged(signal_info);
+
         if (status == TVInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOSIG
                 || status == TVInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NULL
                 || status == TVInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOTSUP) {
@@ -388,6 +390,8 @@ public class DroidLogicTvInputService extends TvInputService implements
             }
         }
     }
+
+    public void onSigChanged(TVInSignalInfo signal_info) { }
 
     @Override
     public void StorDBonEvent(TvControlManager.ScannerEvent event) {
