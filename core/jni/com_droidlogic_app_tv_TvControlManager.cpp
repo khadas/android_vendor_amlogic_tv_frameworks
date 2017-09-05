@@ -4,7 +4,6 @@
 #include "tvcmd.h"
 #include "jni.h"
 #include "JNIHelp.h"
-#include "GraphicsJNI.h"
 #include "android_runtime/AndroidRuntime.h"
 #include <utils/Vector.h>
 #include "TvClient.h"
@@ -15,12 +14,6 @@
 #include <core/SkBitmap.h>
 #include "android_util_Binder.h"
 #include "android_os_Parcel.h"
-
-#include <linux/videodev2.h>
-#include <hardware/hardware.h>
-#include <hardware/aml_screen.h>
-#include <hardware/tv_input.h>
-
 #include <unistd.h>
 #include <fcntl.h>
 #include <sched.h>
@@ -328,135 +321,6 @@ static void com_droidlogic_app_tv_TvControlManager_create_subtitle_bitmap(JNIEnv
     return;
 }
 
-
-static jobject com_droidlogic_app_tv_TvControlManager_nativeGetFrameBitmap(JNIEnv *env, jobject thiz, jint width, jint hight, jint type) {
-    ALOGD("[%s %d]", __FUNCTION__, __LINE__);
-    if (type == CAPTURE_GRAPHICS) {
-        ALOGD("CAPTURE_GRAPHICS is not support now");
-        return NULL;
-    }
-
-    jobject ret1 = NULL;
-    //int mBufferSize = width * height * 2; // V4L2_PIX_FMT_NV21:*3/2  ; V4L2_PIX_FMT_RGB24: *3
-
-    int custom_w = 0;
-    int custom_h = 0;
-
-    //-----------------getVideoBuffer--------------//
-    aml_screen_module_t* screenModule = NULL;
-    aml_screen_device_t* screenDev = NULL;
-    if (!screenModule)
-        hw_get_module(AML_SCREEN_HARDWARE_MODULE_ID, (const hw_module_t **)&screenModule);
-
-    if (screenModule)
-        screenModule->common.methods->open((const hw_module_t *)screenModule, "0",
-                (struct hw_device_t **)&screenDev);
-
-    if (screenDev) {
-        if (width*9 == hight*16) {
-            custom_w = width;
-            custom_h = hight;
-            screenDev->ops.set_screen_mode(screenDev,2);
-        } else {
-            custom_w = CAPTURE_MAX_BITMAP_W;
-            custom_h = CAPTURE_MAX_BITMAP_H;
-            ALOGD("!!!!!request bitmap w:h != 16:9, resize custom_w:custom_h = 1920:1080");
-            screenDev->ops.set_screen_mode(screenDev,2);
-        }
-
-        if (custom_w > CAPTURE_MAX_BITMAP_W || custom_h > CAPTURE_MAX_BITMAP_H) {
-            custom_w = CAPTURE_MAX_BITMAP_W;
-            custom_h = CAPTURE_MAX_BITMAP_H;
-        }
-
-        screenDev->ops.set_format(screenDev, custom_w, custom_h, V4L2_PIX_FMT_RGB565X); // V4L2_PIX_FMT_NV21 ,V4L2_PIX_FMT_RGB24
-        screenDev->ops.set_port_type(screenDev, (int)0x4000); //TVIN_PORT_HDMI0 = 0x4000
-        screenDev->ops.start_v4l2_device(screenDev);
-
-        aml_screen_buffer_info_t buff_info;
-        int ret = 0;
-        int dumpfd;
-        int framecount = 0;
-        long *src = NULL;
-
-        while (framecount < 10) {
-            ret = screenDev->ops.aquire_buffer(screenDev, &buff_info);
-            ALOGD("ret = %d",ret);
-            if (ret != 0 || (buff_info.buffer_mem == 0)) {
-                framecount++;
-                ALOGD("Get V4l2 buffer failed,retry,sleep 10ms");
-                usleep(10000);
-                continue;
-            } else {
-                ALOGE("get buffer finish!");
-                src = (long *)buff_info.buffer_mem;
-                break;
-            }
-        }
-
-        //------------------create bitmap-------------------//
-        SkBitmap result;
-        SkBitmap *createdBitmap = new SkBitmap();//createFrameBitmap();
-
-        if (src) {
-            if (createdBitmap != NULL) {
-                //-----------------setPinxels for bitmap--------------//
-                ALOGD("final bitmap size: %dX%d",custom_w,custom_h);
-                SkImageInfo info = SkImageInfo::Make(custom_w, custom_h,kRGB_565_SkColorType,kPremul_SkAlphaType); //  kRGBA_8888_SkColorType
-                createdBitmap->setInfo(info);
-                createdBitmap->setPixels(src);
-
-                JavaPixelAllocator  allocator(env);
-                if (createdBitmap->copyTo(&result, &allocator)) {
-                    Bitmap* bitmap = allocator.getStorageObjAndReset();
-                    if (bitmap != NULL)
-                        ret1 = GraphicsJNI::createBitmap(env, bitmap, false);
-                }
-            }
-        }
-
-        if (framecount < 10 && src != NULL )
-            screenDev->ops.release_buffer(screenDev,src);
-        screenDev->ops.stop_v4l2_device(screenDev);
-        //delete screenDev;
-        screenDev->common.close((hw_device_t*)screenDev);
-    }
-    return ret1;
-}
-
-static void com_droidlogic_app_tv_TvControlManager_create_video_frame_bitmap(JNIEnv *env, jobject thiz, jobject bmpobj,  jint inputSourceMode, jint iCapVideoLayer )
-{
-    ALOGD("create video frame bmp");
-    sp<TvClient> tv = get_native_tv(env, thiz, NULL);
-    if (tv == 0) return;
-
-    //get skbitmap
-    jclass bmp_clazz;
-    jfieldID skbmp_fid;
-    jlong hbmp;
-    bmp_clazz = env->FindClass("android/graphics/Bitmap");
-    skbmp_fid  = env->GetFieldID(bmp_clazz, "mNativePtr", "J");
-    hbmp = env->GetLongField(bmpobj, skbmp_fid);
-    SkBitmap *pSkBmp = reinterpret_cast<SkBitmap *>(hbmp);
-    ALOGD("pSkBmp = %d", hbmp);
-    ALOGD("bmp width = %d height = %d", pSkBmp->width(), pSkBmp->height());
-    env->DeleteLocalRef(bmp_clazz);
-
-    //alloc share mem
-    sp<MemoryHeapBase> MemHeap = new MemoryHeapBase(1920 * 1080 * 4, 0, "video frame bmp");
-    ALOGD("heap id = %d", MemHeap->getHeapID());
-    if (MemHeap->getHeapID() < 0) {
-        return;
-    }
-    sp<MemoryBase> MemBase = new MemoryBase(MemHeap, 0, 1920 * 1080 * 4);
-    pSkBmp->setPixels(MemBase->pointer());
-
-
-    //send share mem to server
-    tv->createVideoFrame(MemBase, inputSourceMode, iCapVideoLayer);
-    return;
-}
-
 //-------------------------------------------------
 
 static JNINativeMethod camMethods[] = {
@@ -500,16 +364,6 @@ static JNINativeMethod camMethods[] = {
         "(Ljava/lang/Object;)V",
         (void *)com_droidlogic_app_tv_TvControlManager_create_subtitle_bitmap
     },
-    {
-        "native_GetFrameBitmap",
-        "(III)Landroid/graphics/Bitmap;",
-        (void*)com_droidlogic_app_tv_TvControlManager_nativeGetFrameBitmap},
-    {
-        "native_create_video_frame_bitmap",
-        "(Ljava/lang/Object;)V",
-        (void *)com_droidlogic_app_tv_TvControlManager_create_video_frame_bitmap
-    },
-
 };
 
 struct field {

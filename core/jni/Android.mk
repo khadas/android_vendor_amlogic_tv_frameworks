@@ -3,20 +3,20 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
 
-LIB_TV_BINDER_PATH := $(LOCAL_PATH)/../../libtvbinder
+LIB_TV_BINDER_PATH := $(wildcard vendor/amlogic/tv/frameworks/libtvbinder)
 
 LOCAL_SRC_FILES:= \
-	com_droidlogic_app_tv_TvControlManager.cpp
+        com_droidlogic_app_tv_TvControlManager.cpp
 LOCAL_SHARED_LIBRARIES := \
-	libcutils \
-	libutils \
-	libbinder \
-	libtvbinder \
-	libnativehelper \
-	libandroid_runtime \
-	liblog \
-	libskia \
-	libhardware
+        libcutils \
+        libutils \
+        libbinder \
+        libtvbinder \
+        libnativehelper \
+        libandroid_runtime \
+        liblog \
+        libskia \
+        libhardware
 
 LOCAL_C_INCLUDES += \
     frameworks/base/core/jni \

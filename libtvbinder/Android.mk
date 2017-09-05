@@ -4,16 +4,17 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES:= \
-	TvClient.cpp \
-	ITv.cpp \
-	ITvClient.cpp \
-	ITvService.cpp
+        TvClient.cpp \
+        ITv.cpp \
+        ITvClient.cpp \
+        ITvService.cpp
 
 LOCAL_SHARED_LIBRARIES := \
-	libcutils \
-	libutils \
-	libbinder \
-	libui
+        libcutils \
+        liblog \
+        libutils \
+        libbinder \
+        libui
 
 LOCAL_MODULE:= libtvbinder
 
