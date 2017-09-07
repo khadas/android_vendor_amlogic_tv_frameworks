@@ -76,6 +76,8 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         Log.d(TAG, "doRelease");
         setAudiodMute(false);
         setOverlayViewEnabled(false);
+        mOverlayView.releaseResource();
+        mOverlayView = null;
     }
 
     public void doAppPrivateCmd(String action, Bundle bundle) {}
@@ -133,9 +135,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     @Override
     public View onCreateOverlayView() {
-        if (mOverlayView != null)
-            return mOverlayView;
-        return null;
+        return mOverlayView;
     }
 
     @Override
@@ -147,21 +147,29 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     public void notifyVideoAvailable() {
         Log.d(TAG, "notifyVideoAvailable ");
         super.notifyVideoAvailable();
-        mOverlayView.setImageVisibility(false);
-        mOverlayView.setTextVisibility(false);
+        if (mOverlayView != null) {
+            mOverlayView.setImageVisibility(false);
+            mOverlayView.setTextVisibility(false);
+        }
     }
 
     @Override
     public void notifyVideoUnavailable(int reason) {
         Log.d(TAG, "notifyVideoUnavailable: "+reason);
-        super.notifyVideoAvailable();
-        mOverlayView.setImageVisibility(true);
-        mOverlayView.setTextVisibility(false);
+        if (mOverlayView != null) {
+            super.notifyVideoAvailable();
+            mOverlayView.setImageVisibility(true);
+            mOverlayView.setTextVisibility(false);
+        } else {
+            super.notifyVideoUnavailable(reason);
+        }
     }
 
     public void hideUI() {
-        mOverlayView.setImageVisibility(false);
-        mOverlayView.setTextVisibility(false);
+        if (mOverlayView != null) {
+            mOverlayView.setImageVisibility(false);
+            mOverlayView.setTextVisibility(false);
+        }
     }
 
     private void setAudiodMute(boolean mute) {
@@ -185,10 +193,14 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
                 doAppPrivateCmd((String)msg.obj, msg.getData());
                 break;
             case MSG_SUBTITLE_SHOW:
-                mOverlayView.setSubtitleVisibility(true);
+                if (mOverlayView != null) {
+                    mOverlayView.setSubtitleVisibility(true);
+                }
                 break;
             case MSG_SUBTITLE_HIDE:
-                mOverlayView.setSubtitleVisibility(false);
+                if (mOverlayView != null) {
+                    mOverlayView.setSubtitleVisibility(false);
+                }
                 break;
         }
         return false;

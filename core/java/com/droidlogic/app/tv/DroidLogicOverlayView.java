@@ -59,4 +59,9 @@ public abstract class DroidLogicOverlayView extends FrameLayout {
         return mSubtitleView;
     }
 
+    public void releaseResource() {
+        mImageView = null;
+        mTextView = null;
+        mSubtitleView = null;
+    }
 }
