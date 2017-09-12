@@ -76,8 +76,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         Log.d(TAG, "doRelease");
         setAudiodMute(false);
         setOverlayViewEnabled(false);
-        mOverlayView.releaseResource();
-        mOverlayView = null;
+        if (mOverlayView != null) {
+            mOverlayView.releaseResource();
+            mOverlayView = null;
+        }
     }
 
     public void doAppPrivateCmd(String action, Bundle bundle) {}
