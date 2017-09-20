@@ -137,7 +137,8 @@ public class DroidLogicTvUtils
     public static final int DEVICE_ID_SPDIF      = 15;
 
     /*virtual device*/
-    public static final int DEVICE_ID_ADTV = 16;
+    public static final int DEVICE_ID_ADTV       = 16;
+    public static final int DEVICE_ID_HDMIEXTEND = 18;
 
     public static final int RESULT_OK = 1;
     public static final int RESULT_UPDATE = 2;
