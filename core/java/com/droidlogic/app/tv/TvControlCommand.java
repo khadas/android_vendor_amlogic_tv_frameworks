@@ -254,7 +254,8 @@ public interface TvControlCommand {
     int EPG_EVENT_CALLBACK = 542;
     int VFRAME_BMP_EVENT_CALLBACK = 543;
     int SCANNING_FRAME_STABLE_CALLBACK = 544;
-    int SCAN_LCN_CALLBACK = 545;
+    int FRONTEND_EVENT_CALLBACK = 545;
+    int RECORDER_EVENT_CALLBACK = 546;
     // CALLBACK END
 
     // SSM
@@ -500,4 +501,8 @@ public interface TvControlCommand {
     int GET_AMAUDIO_VOLUME = 1505;
     int SAVE_AMAUDIO_VOLUME = 1506;
     int GET_SAVE_AMAUDIO_VOLUME = 1507;
+
+    int DTV_RECORDING_CMD = 1600;
+    int DTV_PLAY_CMD = 1610;
+
 }
