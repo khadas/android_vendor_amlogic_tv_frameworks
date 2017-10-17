@@ -48,6 +48,8 @@ public class TvControlManager {
     private static final String TAG = "TvControlManager";
     private static final String OPEN_TV_LOG_FLG = "open.libtv.log.flg";
     private boolean tvLogFlg =false;
+    private int speakerState = AUDIO_MUTE_ON;
+    private int numThreadUnmuteSpeaker = 0;
 
     public static final int AUDIO_MUTE_ON               = 0;
     public static final int AUDIO_MUTE_OFF              = 1;
@@ -2704,6 +2706,49 @@ public class TvControlManager {
         sendCmdToTv(cmd, r);
         int ret = r.readInt();
         return ret;
+    }
+
+    public enum AudioOutputEnum {
+        SPEAKER, ARC;
+    };
+
+  /**
+    * @description set audio output mode
+    * @param mode output mode of auddio, e.g "SPEAKER"
+    */
+    //public void setAudioOutputMode(AudioOutputEnum  mode) {
+    public void setAudioOutputMode(int mode) {
+        // TvHdmiArc ArcInfo = new TvHdmiArc(mInstance);
+        if (mode == 0) {// speaker
+            // ArcInfo.setArcEnable(false);
+            SystemProperties.set("persist.sys.arc.enable", "false");
+            SystemProperties.set("persist.sys.spdif.enable", "false");
+            speakerState = AUDIO_MUTE_ON;
+            SetAudioSPDIFMute(AUDIO_MUTE_OFF);
+            new Thread() {
+                public void run() {
+                    numThreadUnmuteSpeaker++;
+                    try {
+                        int millSec = SystemProperties.getInt("millsec.sleep.switch.tospeaker", 3000);
+                        Thread.sleep(millSec);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    if (numThreadUnmuteSpeaker == 1) {
+                        SetAudioMuteKeyStatus(speakerState);
+                    }
+                    numThreadUnmuteSpeaker--;
+                }
+            }.start();
+        } else if (mode == 1) { // arc
+            // ArcInfo.setArcEnable(true);
+            SetAudioMuteKeyStatus(AUDIO_MUTE_OFF);
+            speakerState = AUDIO_MUTE_OFF;
+            SystemProperties.set("persist.sys.arc.enable", "true");
+            SystemProperties.set("persist.sys.spdif.enable", "true");
+            SystemProperties.set("persist.sys.arc.savevolume", "true");
+            SetAudioSPDIFMute(AUDIO_MUTE_ON);
+        }
     }
     // AUDIO END
 
