@@ -494,4 +494,5 @@ public interface TvControlCommand {
     int TV_SET_FRONTEND = 1486;
     int SET_AUDIO_OUTMODE = 1501;
     int GET_AUDIO_OUTMODE = 1502;
+    int GET_AUDIO_STREAM_OUTMODE = 1503;
 }

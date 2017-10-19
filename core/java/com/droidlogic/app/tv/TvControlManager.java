@@ -1247,6 +1247,10 @@ public class TvControlManager {
         return sendCmd(GET_AUDIO_OUTMODE);
     }
 
+    public int GetAudioStreamOutmode(){
+        return sendCmd(GET_AUDIO_STREAM_OUTMODE);
+    }
+
     public enum Noise_Reduction_Mode {
         REDUCE_NOISE_CLOSE(0),
         REDUCE_NOISE_WEAK(1),
