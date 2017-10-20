@@ -192,6 +192,13 @@ public class DroidLogicTvUtils
     /*auto tracks call*/
     public static final String ACTION_DTV_AUTO_TRACKS = "dtv_auto_tracks";
 
+   /*when it's on ,block all program without rating*/
+   public static final String ACTION_BLOCK_NORATING = "block_norating";
+   public static final String PARAM_NORATING_ENABLE = "enable_norating";
+   public static final int NORATING_OFF = 0;
+   public static final int NORATING_ON = 1;
+   public static final int NORATING_UNLOCK_CURRENT = 2;
+
     /*set type call*/
     public static final String ACTION_DTV_SET_TYPE = "dtv_set_type";
     public static final String PARA_TYPE = "dtv_type";
@@ -248,6 +255,7 @@ public class DroidLogicTvUtils
     public static final String TV_ATV_CHANNEL_INDEX = "tv_atv_channel_index";
     public static final String TV_DTV_CHANNEL_INDEX  = "tv_dtv_channel_index";
     public static final String TV_CURRENT_CHANNEL_IS_RADIO = "tv_current_channel_is_radio";
+    public static final String BLOCK_NORATING = "block_norating";
 
     public static final String TV_KEY_DTV_NUMBER_MODE = "tv_dtv_number_mode";
     public static final String TV_KEY_DTV_TYPE = "tv_dtv_type";

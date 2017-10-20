@@ -46,6 +46,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     private TvControlManager mTvControlManager;
     protected DroidLogicOverlayView mOverlayView = null;
 
+    protected boolean isBlockNoRatingEnable = false;
+    protected boolean isUnlockCurrent_NR = false;
+
     public TvInputBaseSession(Context context, String inputId, int deviceId) {
         super(context);
         mContext = context;
@@ -54,6 +57,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
         mTvControlManager = TvControlManager.getInstance();
         mSessionHandler = new Handler(context.getMainLooper(), this);
+        int block_norating = Settings.System.getInt(mContext.getContentResolver(), DroidLogicTvUtils.BLOCK_NORATING, 0);
+        isBlockNoRatingEnable = block_norating == 0 ? false : true;
+        if (DEBUG)
+            Log.d(TAG, "isBlockNoRatingEnable = " + isBlockNoRatingEnable);
     }
 
     public void setSessionId(int id) {
