@@ -3,6 +3,7 @@ package com.droidlogic.app.tv;
 import android.database.Cursor;
 import android.media.tv.TvContract;
 import android.media.tv.TvContract.Channels;
+import android.media.tv.TvContentRating;
 import android.net.Uri;
 import android.util.Log;
 import android.text.TextUtils;
@@ -97,6 +98,7 @@ public class ChannelInfo {
     public static final String KEY_HIDE_GUIDE = "hideGuide";
 
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
+    public static final String KEY_CONTENT_RATINGS = "content_ratings";
 
     public static final String LABEL_ATV = "ATV";
     public static final String LABEL_DTV = "DTV";
@@ -176,6 +178,8 @@ public class ChannelInfo {
     private int mAccessControlled;
     private int mHidden;
     private int mHideGuide;
+
+    private String mContentRatings;
 
     private ChannelInfo() {}
 
@@ -272,6 +276,8 @@ public class ChannelInfo {
                 builder.setVideoPid(Integer.parseInt(parsedMap.get(KEY_VIDEO_PID)));
             if (parsedMap.get(KEY_PCR_ID) != null)
                 builder.setPcrPid(Integer.parseInt(parsedMap.get(KEY_PCR_ID)));
+            if (parsedMap.get(KEY_CONTENT_RATINGS) != null)
+                builder.setContentRatings(DroidLogicTvUtils.TvString.fromString(parsedMap.get(KEY_CONTENT_RATINGS)));
 
             if (parsedMap.get(KEY_AUDIO_TRACK_INDEX) != null)
                 builder.setAudioTrackIndex(Integer.parseInt(parsedMap.get(KEY_AUDIO_TRACK_INDEX)));
@@ -479,6 +485,16 @@ public class ChannelInfo {
 
     public int getFrequency() {
         return mFrequency;
+    }
+
+    public String getContentRatings() {
+        Log.d("CHENNW", "ChannelInfo getContentRatings: " + mContentRatings);
+        return mContentRatings;
+    }
+
+    public void setContentRatings(String contentRatings) {
+        Log.d("CHENNW", "ChannelInfo setContentRatings: " + contentRatings);
+        mContentRatings = contentRatings;
     }
 
     public int getBandwidth() {
@@ -804,6 +820,7 @@ public class ChannelInfo {
 
             mChannel.mPcrPid = -1;
             mChannel.mFrequency = -1;
+            mChannel.mContentRatings = "";
             mChannel.mBandwidth = -1;
             mChannel.mSymbolRate = -1;
             mChannel.mModulation = -1;
@@ -973,6 +990,12 @@ public class ChannelInfo {
 
         public Builder setFrequency(int freq) {
             mChannel.mFrequency = freq;
+            return this;
+        }
+
+        public Builder setContentRatings(String contentRatings) {
+            Log.d("CHENNW", "ChannelInfo setContentRatings: " + contentRatings);
+            mChannel.mContentRatings = contentRatings;
             return this;
         }
 

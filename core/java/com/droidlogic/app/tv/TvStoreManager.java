@@ -313,6 +313,7 @@ public abstract class TvStoreManager {
                .setAccessControled(event.accessControlled)
                .setHidden(event.hidden)
                .setHideGuide(event.hideGuide)
+               .setContentRatings(null)
                .build();
     }
 
