@@ -7,7 +7,7 @@ import android.os.SystemClock;
 import java.util.Date;
 
 import com.droidlogic.app.SystemControlManager;
-
+import com.droidlogic.app.DaylightSavingTime;
 /**
  *TV时间管理
  */
@@ -39,6 +39,8 @@ public class TVTime{
                 && (Math.abs(diff) > 1000)) {
             SystemClock.setCurrentTimeMillis(time);
             diff = 0;
+            DaylightSavingTime daylightSavingTime = DaylightSavingTime.getInstance();
+            daylightSavingTime.updateDaylightSavingTimeForce();
         }
 
         Settings.System.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, diff);
