@@ -691,8 +691,14 @@ public abstract class TvStoreManager {
                 channel.setDisplayNumber(""+event.majorChannelNumber+"-"+event.minorChannelNumber);
                 int vct = DroidLogicTvUtils.getObjectValueInt(event.paras, "srv", "vct", 0);
                 Log.d(TAG, "srv.vct:"+vct);
-                if (vct == 1)//one-part channnel numbers for digital cable system.
-                    channel.setDisplayNumber(""+event.minorChannelNumber);
+                if (vct == 1 && ((event.majorChannelNumber >> 4) == 0x3f)) {
+                  //one-part channnel numbers for digital cable system.
+                  //see atsc a/65 page 35, if major_channel_number hi 6 bit is 11 1111
+                  //one_part_number = (major_channel_number & 0x00f) << 10 + mino_channel_number
+                  int one_part_number = ((event.majorChannelNumber & 0x00f) << 10) + event.minorChannelNumber;
+                  Log.d(TAG, "set one_part_number:"+ one_part_number + " maj:" + event.majorChannelNumber + " min:" +event.minorChannelNumber);
+                  channel.setDisplayNumber(""+one_part_number);
+                }
             }
 
             Log.d(TAG, "reset number to " + channel.getDisplayNumber());
