@@ -3,6 +3,7 @@ package com.droidlogic.app.tv;
 import android.content.Context;
 import android.provider.Settings;
 import android.os.SystemClock;
+import android.util.Log;
 
 import java.util.Date;
 
@@ -41,6 +42,8 @@ public class TVTime{
             diff = 0;
             DaylightSavingTime daylightSavingTime = DaylightSavingTime.getInstance();
             daylightSavingTime.updateDaylightSavingTimeForce();
+            Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.AUTO_TIME, 0);
+            Log.d("DroidLogic", "setTime");
         }
 
         Settings.System.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, diff);
