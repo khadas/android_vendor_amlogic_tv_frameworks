@@ -328,6 +328,7 @@ public class TvControlManager {
             scan_ev.accessControlled = p.readInt();
             scan_ev.hidden = p.readInt();
             scan_ev.hideGuide = p.readInt();
+            scan_ev.vct = p.readString();
         }
 
         @Override
@@ -4537,6 +4538,7 @@ public class TvControlManager {
         public int accessControlled;
         public int hidden;
         public int hideGuide;
+        public String vct;
     }
 
     public class ScannerLcnInfo {

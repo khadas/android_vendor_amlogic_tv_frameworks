@@ -95,6 +95,7 @@ public class ChannelInfo {
     public static final String KEY_ACCESS_CONTROL = "access";
     public static final String KEY_HIDDEN = "hidden";
     public static final String KEY_HIDE_GUIDE = "hideGuide";
+    public static final String KEY_VCT = "vct";
 
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
     public static final String KEY_CONTENT_RATINGS = "content_ratings";
@@ -177,6 +178,7 @@ public class ChannelInfo {
     private int mAccessControlled;
     private int mHidden;
     private int mHideGuide;
+    private String mVct;
 
     private String mContentRatings;
 
@@ -352,6 +354,8 @@ public class ChannelInfo {
                 builder.setHidden(Integer.parseInt(parsedMap.get(KEY_HIDDEN)));
             if (parsedMap.get(KEY_HIDE_GUIDE) != null)
                 builder.setHideGuide(Integer.parseInt(parsedMap.get(KEY_HIDE_GUIDE)));
+            if (parsedMap.get(KEY_VCT) != null)
+                builder.setVct(parsedMap.get(KEY_VCT));
         }
 
         index = cursor.getColumnIndex(Channels.COLUMN_BROWSABLE);
@@ -599,6 +603,10 @@ public class ChannelInfo {
 
     public int getHideGuide() {
         return mHideGuide;
+    }
+
+    public String getVct() {
+        return mVct;
     }
 
     public boolean isBrowsable() {
@@ -851,6 +859,7 @@ public class ChannelInfo {
             mChannel.mAccessControlled = 0;
             mChannel.mHidden = 0;
             mChannel.mHideGuide = 0;
+            mChannel.mVct = null;
         }
 
         public Builder setId(long id) {
@@ -1139,6 +1148,11 @@ public class ChannelInfo {
             return this;
         }
 
+        public Builder setVct(String vct) {
+            mChannel.mVct = vct;
+            return this;
+        }
+
         public ChannelInfo build() {
             return mChannel;
         }
@@ -1251,7 +1265,8 @@ public class ChannelInfo {
                 "\n AccessControled = " + mAccessControlled +
                 "\n Hidden = " + mHidden +
                 "\n HideGuide = " + mHideGuide +
-                "\n Ratings = " + mContentRatings;
+                "\n Ratings = " + mContentRatings +
+                "\n vct = " + mVct;
     }
 
     public static class Subtitle {

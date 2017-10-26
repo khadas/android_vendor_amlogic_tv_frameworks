@@ -427,6 +427,7 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_HIDDEN, String.valueOf(channel.getHidden()));
         map.put(ChannelInfo.KEY_HIDE_GUIDE, String.valueOf(channel.getHideGuide()));
         map.put(ChannelInfo.KEY_CONTENT_RATINGS, DroidLogicTvUtils.TvString.toString(channel.getContentRatings()));
+        map.put(ChannelInfo.KEY_VCT, "\""+channel.getVct()+"\"");
         String output = DroidLogicTvUtils.mapToJson(map);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
@@ -1146,6 +1147,91 @@ public class TvDataBaseManager {
         updatePrograms(channelUri, newPrograms, false);
     }
 
+    public static final class ComparatorValues implements Comparator<Program> {
+        @Override
+        public int compare(Program object1, Program object2) {
+            long m1 = object1.getStartTimeUtcMillis();
+            long m2 = object2.getStartTimeUtcMillis();
+            int result = 0;
+            if (m1 > m2)
+            {
+                result = 1;
+            }
+            if (m1 < m2)
+            {
+                result=-1;
+            }
+            return result;
+        }
+    }
+    public void updatePrograms(Long channelId, List<Program> newPrograms) {
+        Log.d(TAG, "updatePrograms epg start-----");
+        for (Program p: newPrograms) {
+            String sql_start ;
+            Program oldProgram = null;
+            String sql_query ;
+            Cursor cursor ;
+            Log.d(TAG, "updatePrograms epg title:"+p.getTitle()+" des:"+p.getDescription()+" chid:"+p.getChannelId()+" id:"+p.getId()+" start:" + p.getStartTimeUtcMillis() + " end:" + p.getEndTimeUtcMillis());
+            if (isATSCSpecialProgram(p))
+            {
+                // if (true)
+                //  continue;
+                //sql_query = "(_id=" + p.getId() + ")";
+                sql_query = "(" + TvContract.Programs.COLUMN_CHANNEL_ID + "=" + channelId + ") AND ("+ TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG2 +"=" + p.getProgramId() + ")";
+                cursor =  mContentResolver.query(TvContract.Programs.CONTENT_URI, null, sql_query, null, null);
+                if (cursor != null && cursor.getCount() != 0) {
+                    cursor.moveToNext();
+                    oldProgram = Program.fromCursor(cursor);
+                }
+                if (cursor != null) {
+                    cursor.close();
+                }
+                if (oldProgram != null && !TextUtils.equals(p.getDescription(), oldProgram.getDescription()))
+                {
+                    ContentValues vals = new ContentValues();
+                    vals.put(TvContract.Programs.COLUMN_SHORT_DESCRIPTION, p.getDescription());
+                    Log.d(TAG, "updatePrograms sql sql_query:" + sql_query);
+                    mContentResolver.update(TvContract.Programs.CONTENT_URI, vals, sql_query, null);
+                }
+                else
+                {
+                    Log.d(TAG, "updatePrograms isATSCSpecialProgram true");
+                }
+            }
+            else
+            {
+                 sql_start = TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS + "=" + p.getStartTimeUtcMillis() + " AND " + TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS + " = " +p.getEndTimeUtcMillis();
+                 oldProgram = null;
+                 sql_query = "(" + TvContract.Programs.COLUMN_CHANNEL_ID + "=" + channelId + ") AND (" + sql_start + ")";
+                 cursor =  mContentResolver.query(TvContract.Programs.CONTENT_URI, null, sql_query, null, null);
+                if (cursor != null && cursor.getCount() != 0) {
+                    cursor.moveToNext();
+                    oldProgram = Program.fromCursor(cursor);
+                }
+                if (cursor != null) {
+                    cursor.close();
+                }
+                if (oldProgram == null || !isProgramEq(oldProgram, p))
+                {
+                    sql_start = TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS + "<=" + p.getStartTimeUtcMillis() + " AND " + TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS + " > " +p.getStartTimeUtcMillis();
+                    String sql_end = TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS + "<=" + p.getEndTimeUtcMillis() + " AND " + TvContract.Programs.COLUMN_END_TIME_UTC_MILLIS + " > " +p.getEndTimeUtcMillis();
+                    String sql_del = "(" + TvContract.Programs.COLUMN_CHANNEL_ID + "=" + channelId + ") AND ((" + sql_start + ") OR (" + sql_end + "))";
+                    if (oldProgram == null) {
+                        Log.d(TAG, "updatePrograms oldProgram is null insert sql:" + sql_del);
+                    } else {
+                        Log.d(TAG, "updatePrograms not eq insert sql:" + sql_del);
+                    }
+                    mContentResolver.delete(TvContract.Programs.CONTENT_URI, sql_del, null);
+                    mContentResolver.insert(TvContract.Programs.CONTENT_URI, p.toContentValues());
+                }
+                else
+                {
+                    Log.d(TAG, "updatePrograms no insert true");
+                }
+            }
+        }
+        Log.d(TAG, "updatePrograms epg end-----");
+    }
     public void updatePrograms(Uri channelUri, List<Program> newPrograms, boolean isAtsc) {
         final int fetchedProgramsCount = newPrograms.size();
         if (fetchedProgramsCount == 0) {
@@ -1153,12 +1239,19 @@ public class TvDataBaseManager {
         }
         List<Program> oldPrograms = getPrograms(TvContract.buildProgramsUriForChannel(channelUri));
 
+        Collections.sort(newPrograms, new ComparatorValues());
+        Collections.sort(oldPrograms, new ComparatorValues());
+        Log.d(TAG, "updatePrograms sort programs ");
         Program firstNewProgram = null;
         for (Program program : newPrograms) {
             if (isAtsc && !isATSCSpecialProgram(program)) {
                 firstNewProgram = program;
                 break;
             }
+        }
+
+        for (Program p : newPrograms) {
+            Log.d(TAG, "updatePrograms epg atsc title:"+p.getTitle()+" des:"+p.getDescription()+" chid:"+p.getChannelId()+" id:"+p.getId()+" start:" + p.getStartTimeUtcMillis() + " end:" + p.getEndTimeUtcMillis());
         }
 
         int oldProgramsIndex = 0;
@@ -1269,6 +1362,28 @@ public class TvDataBaseManager {
         mContentResolver.update(TvContract.buildProgramUri(program.getId()), program.toContentValues(), null, null);
     }
 
+    /**
+     * Returns {@code true} if the {@code oldProgram} program needs to be updated with the
+     * {@code newProgram} program.
+     */
+    private static boolean isProgramEq(Program oldProgram, Program newProgram) {
+        // NOTE: Here, we update the old program if it has the same title and overlaps with the new
+        // program. The test logic is just an example and you can modify this. E.g. check whether
+        // the both programs have the same program ID if your EPG supports any ID for the programs.
+        if (oldProgram.getTitle() == null || oldProgram.getTitle().isEmpty()) {
+            Log.d(TAG, "getTitle is null");
+            return false;
+        } else if (!oldProgram.getTitle().equals(newProgram.getTitle())) {
+            Log.d(TAG, "getTitle is not eq");
+            return false;
+        } else if (oldProgram.getDescription() == null && newProgram.getDescription() != null) {
+            Log.d(TAG, "getDescription is old is null new not null");
+            return false;
+        } else {
+            Log.d(TAG, "isProgramEq is eq true");
+            return true;
+        }
+    }
     /**
      * Returns {@code true} if the {@code oldProgram} program needs to be updated with the
      * {@code newProgram} program.
