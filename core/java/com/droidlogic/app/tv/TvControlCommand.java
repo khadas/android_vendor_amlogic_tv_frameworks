@@ -495,4 +495,9 @@ public interface TvControlCommand {
     int SET_AUDIO_OUTMODE = 1501;
     int GET_AUDIO_OUTMODE = 1502;
     int GET_AUDIO_STREAM_OUTMODE = 1503;
+
+    int SET_AMAUDIO_VOLUME = 1504;
+    int GET_AMAUDIO_VOLUME = 1505;
+    int SAVE_AMAUDIO_VOLUME = 1506;
+    int GET_SAVE_AMAUDIO_VOLUME = 1507;
 }

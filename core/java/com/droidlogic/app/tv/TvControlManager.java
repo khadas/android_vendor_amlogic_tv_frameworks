@@ -1251,6 +1251,48 @@ public class TvControlManager {
         return sendCmd(GET_AUDIO_STREAM_OUTMODE);
     }
 
+    public static final int AM_AUDIO_TV = 0;
+    public static final int AM_AUDIO_AV1 = 1;
+    public static final int AM_AUDIO_AV2 = 2;
+    public static final int AM_AUDIO_YPBPR1 = 3;
+    public static final int AM_AUDIO_YPBPR2 = 4;
+    public static final int AM_AUDIO_HDMI1 = 5;
+    public static final int AM_AUDIO_HDMI2 = 6;
+    public static final int AM_AUDIO_HDMI3 = 7;
+    public static final int AM_AUDIO_HDMI4 = 8;
+    public static final int AM_AUDIO_VGA = 9;
+    public static final int AM_AUDIO_MPEG = 10;
+    public static final int AM_AUDIO_DTV = 11;
+    public static final int AM_AUDIO_SVIDEO = 12;
+    public static final int AM_AUDIO_IPTV = 13;
+    public static final int AM_AUDIO_DUMMY = 14;
+    public static final int AM_AUDIO_SPDIF = 15;
+    public static final int AM_AUDIO_ADTV = 16;
+
+    public int SetAmAudioVolume(int volume, int source) {
+        int val[] = new int[]{volume};
+        if (source == AM_AUDIO_MPEG) {
+            SystemProperties.set("persist.media.player.volume",
+                    String.valueOf(volume));
+        }
+
+        return sendCmdIntArray(SET_AMAUDIO_VOLUME, val);
+    }
+
+    public int GetAmAudioVolume() {
+        return sendCmd(GET_AMAUDIO_VOLUME);
+    }
+
+    public int SaveAmAudioVolume(int volume, int source) {
+        int val[] = new int[]{volume, source};
+        return sendCmdIntArray(SAVE_AMAUDIO_VOLUME, val);
+    }
+
+    public int GetSaveAmAudioVolume(int source) {
+        int val[] = new int[]{source};
+        return sendCmdIntArray(GET_SAVE_AMAUDIO_VOLUME, val);
+    }
+
     public enum Noise_Reduction_Mode {
         REDUCE_NOISE_CLOSE(0),
         REDUCE_NOISE_WEAK(1),

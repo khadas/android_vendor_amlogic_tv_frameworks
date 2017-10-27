@@ -3,7 +3,6 @@ package com.droidlogic.app.tv;
 import android.database.Cursor;
 import android.media.tv.TvContract;
 import android.media.tv.TvContract.Channels;
-import android.media.tv.TvContentRating;
 import android.net.Uri;
 import android.util.Log;
 import android.text.TextUtils;
@@ -488,12 +487,10 @@ public class ChannelInfo {
     }
 
     public String getContentRatings() {
-        Log.d("CHENNW", "ChannelInfo getContentRatings: " + mContentRatings);
         return mContentRatings;
     }
 
     public void setContentRatings(String contentRatings) {
-        Log.d("CHENNW", "ChannelInfo setContentRatings: " + contentRatings);
         mContentRatings = contentRatings;
     }
 
@@ -994,7 +991,6 @@ public class ChannelInfo {
         }
 
         public Builder setContentRatings(String contentRatings) {
-            Log.d("CHENNW", "ChannelInfo setContentRatings: " + contentRatings);
             mChannel.mContentRatings = contentRatings;
             return this;
         }
