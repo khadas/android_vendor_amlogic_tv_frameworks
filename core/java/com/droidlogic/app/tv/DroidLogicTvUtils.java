@@ -829,7 +829,7 @@ public class DroidLogicTvUtils
         if ((dlsv & VBI_RATING_S) == VBI_RATING_S)
             subRatings.add("US_TV_S");
         if ((dlsv & VBI_RATING_V) == VBI_RATING_V)
-            subRatings.add("US_TV_V");
+            subRatings.add(TextUtils.equals(ratings[auth][id], "US_TV_Y7")? "US_TV_FV" : "US_TV_V");
 
         return TvContentRating.createRating(RatingDomain, region[auth],
                    ratings[auth][id],

@@ -277,7 +277,6 @@ public class ChannelInfo {
                 builder.setPcrPid(Integer.parseInt(parsedMap.get(KEY_PCR_ID)));
             if (parsedMap.get(KEY_CONTENT_RATINGS) != null)
                 builder.setContentRatings(DroidLogicTvUtils.TvString.fromString(parsedMap.get(KEY_CONTENT_RATINGS)));
-
             if (parsedMap.get(KEY_AUDIO_TRACK_INDEX) != null)
                 builder.setAudioTrackIndex(Integer.parseInt(parsedMap.get(KEY_AUDIO_TRACK_INDEX)));
             if (parsedMap.get(KEY_AUDIO_COMPENSATION) != null)
@@ -1251,7 +1250,8 @@ public class ChannelInfo {
                 "\n mSourceId = " + mSourceId +
                 "\n AccessControled = " + mAccessControlled +
                 "\n Hidden = " + mHidden +
-                "\n HideGuide = " + mHideGuide;
+                "\n HideGuide = " + mHideGuide +
+                "\n Ratings = " + mContentRatings;
     }
 
     public static class Subtitle {
