@@ -698,9 +698,10 @@ public class DroidLogicTvUtils
             "CA_TV_FR_E", "CA_TV_FR_G", "CA_TV_FR_8", "CA_TV_FR_13", "CA_TV_FR_16", "CA_TV_FR_18"
         };
 
+
     public static TvContentRating[] parseDRatings(String jsonString) {
         String RatingDomain = "com.android.tv";
-
+        Log.d(TAG, "parseDRatings:"+jsonString);
         if (jsonString == null || jsonString.isEmpty())
             return null;
 

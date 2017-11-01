@@ -118,6 +118,8 @@ public class TvControlManager {
     private ScanningFrameStableListener mScanningFrameStableListener = null;
     private VframBMPEventListener mVframBMPListener = null;
     private EpgEventListener mEpgListener = null;
+    private RRT5SourceUpdateListener mRrtListener = null;
+    private EasEventListener mEasListener = null;
     private AVPlaybackListener mAVPlaybackListener = null;
 
     private static TvControlManager mInstance;
@@ -534,6 +536,15 @@ public class TvControlManager {
                         ev.Status = p.readInt();
                         ev.Error = p.readInt();
                         mRecorderEventListener.onRecoderEvent(ev);
+                    }
+                    break;
+
+                case RRT_EVENT_CALLBACK:
+                    p = ((Parcel) (msg.obj));
+                    if (mRrtListener != null) {
+                        int result = p.readInt();
+                        Log.e(TAG, "RRT_EVENT_CALLBACK:" + result);
+                        mRrtListener.onRRT5InfoUpdated(result);
                     }
                     break;
 
@@ -4684,6 +4695,74 @@ public class TvControlManager {
 
     public interface EpgEventListener {
         void onEvent(EpgEvent ev);
+    }
+
+    //rrt
+    public void SetRRT5SourceUpdateListener(RRT5SourceUpdateListener l) {
+        mRrtListener = l;
+    }
+
+    public interface RRT5SourceUpdateListener {
+        void onRRT5InfoUpdated(int status);
+    }
+
+    public int updateRRTRes() {
+         return sendCmd(DTV_UPDATE_RRT);
+    }
+
+    public class RrtSearchInfo {
+        public String rating_region_name;
+        public String dimensions_name;
+        public String rating_value_text;
+    }
+
+    public RrtSearchInfo SearchRrtInfo(int rating_region_id, int dimension_id, int value_id) {
+         Parcel cmd = Parcel.obtain();
+         Parcel r = Parcel.obtain();
+         Log.d(TAG, "rating_region_id: " + rating_region_id);
+         Log.d(TAG, "dimension_id: " + dimension_id);
+         Log.d(TAG, "value_id: " + value_id);
+         cmd.writeInt(DTV_SEARCH_RRT);
+         cmd.writeInt(rating_region_id);
+         cmd.writeInt(dimension_id);
+         cmd.writeInt(value_id);
+         sendCmdToTv(cmd, r);
+
+         RrtSearchInfo tmpRet = new RrtSearchInfo();
+         int cnt = r.readInt();
+         if (cnt != 0) {
+             tmpRet.dimensions_name = r.readString();
+         }
+
+         cnt = r.readInt();
+         if (cnt != 0) {
+             tmpRet.rating_region_name = r.readString();
+         }
+
+         cnt = r.readInt();
+         if (cnt != 0) {
+             tmpRet.rating_value_text = r.readString();
+         }
+         cmd.recycle();
+         r.recycle();
+
+         Log.d(TAG, "rating_region_name: " + tmpRet.dimensions_name);
+         Log.d(TAG, "dimensions_name: " + tmpRet.rating_region_name);
+         Log.d(TAG, "rating_value_text: " + tmpRet.rating_value_text);
+         return tmpRet;
+    }
+    //eas
+    public void setEasListener(EasEventListener l) {
+        libtv_log_open();
+        mEasListener = l;
+    }
+
+    public class EasEvent {
+        public int status;
+    }
+
+    public interface EasEventListener {
+        void onEvent(EasEvent ev);
     }
 
     public class VFrameEvent{
