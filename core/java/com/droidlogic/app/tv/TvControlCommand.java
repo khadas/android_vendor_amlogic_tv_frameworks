@@ -258,6 +258,7 @@ public interface TvControlCommand {
     int RECORDER_EVENT_CALLBACK = 546;
     int SCAN_LCN_CALLBACK = 547;
     int RRT_EVENT_CALLBACK = 548;
+    int EAS_EVENT_CALLBACK = 549;
     // CALLBACK END
 
     // SSM
@@ -505,7 +506,7 @@ public interface TvControlCommand {
     int GET_SAVE_AMAUDIO_VOLUME = 1507;
     int DTV_UPDATE_RRT = 1508;
     int DTV_SEARCH_RRT = 1509;
-
+    int DTV_UPDATE_EAS = 1510;
 
     int DTV_RECORDING_CMD = 1600;
     int DTV_PLAY_CMD = 1610;

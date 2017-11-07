@@ -43,6 +43,7 @@ import android.text.TextUtils;
 //import android.media.audiofx.Hpeq;
 
 import static com.droidlogic.app.tv.TvControlCommand.*;
+import com.droidlogic.app.tv.EasEvent;
 
 public class TvControlManager {
     private static final String TAG = "TvControlManager";
@@ -119,8 +120,8 @@ public class TvControlManager {
     private VframBMPEventListener mVframBMPListener = null;
     private EpgEventListener mEpgListener = null;
     private RRT5SourceUpdateListener mRrtListener = null;
-    private EasEventListener mEasListener = null;
     private AVPlaybackListener mAVPlaybackListener = null;
+    private EasEventListener mEasListener = null;
 
     private static TvControlManager mInstance;
 
@@ -548,9 +549,23 @@ public class TvControlManager {
                     }
                     break;
 
-                default:
-                    Log.e(TAG, "Unknown message type " + msg.what);
-                    break;
+                case EAS_EVENT_CALLBACK:
+                     Log.i(TAG,"get EAS_event_callBack");
+                     p = ((Parcel) (msg.obj));
+                     if (mEasListener != null) {
+                        Log.i(TAG,"mEaslister is not null");
+                        int sectionCount = p.readInt();
+                        for (int count = 0; count<sectionCount; count++) {
+                            EasEvent curEasEvent = new EasEvent();
+                            curEasEvent.readEasEvent(p);
+                            mEasListener.processDetailsChannelAlert(curEasEvent);
+                        }
+                     }
+
+                     break;
+                 default:
+                     Log.e(TAG, "Unknown message type " + msg.what);
+                     break;
             }
         }
     }
@@ -4593,7 +4608,6 @@ public class TvControlManager {
         public int[] valid;
     }
 
-
     public static class ScanMode {
         private int scanMode;
 
@@ -4751,18 +4765,13 @@ public class TvControlManager {
          Log.d(TAG, "rating_value_text: " + tmpRet.rating_value_text);
          return tmpRet;
     }
-    //eas
+
     public void setEasListener(EasEventListener l) {
-        libtv_log_open();
         mEasListener = l;
     }
-
-    public class EasEvent {
-        public int status;
-    }
-
     public interface EasEventListener {
-        void onEvent(EasEvent ev);
+        HashMap<String,Integer> getCurChannelNumber();
+        void processDetailsChannelAlert(EasEvent ev);
     }
 
     public class VFrameEvent{
