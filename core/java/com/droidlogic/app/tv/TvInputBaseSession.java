@@ -165,12 +165,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     @Override
     public void notifyVideoUnavailable(int reason) {
         Log.d(TAG, "notifyVideoUnavailable: "+reason);
+        super.notifyVideoUnavailable(reason);
         if (mOverlayView != null) {
-            super.notifyVideoAvailable();
             mOverlayView.setImageVisibility(true);
             mOverlayView.setTextVisibility(false);
-        } else {
-            super.notifyVideoUnavailable(reason);
         }
     }
 
