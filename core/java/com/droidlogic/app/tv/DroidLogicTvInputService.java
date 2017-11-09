@@ -478,6 +478,10 @@ public class DroidLogicTvInputService extends TvInputService implements
             mSurface = null;
             stopTvPlay(session.mId);
         }
+
+        if (mHardware != null && mSurface != null && mSurface.isValid()) {
+            mHardware.setSurface(mSurface, mConfigs[0]);
+        }
     }
 
     public int doTune(Uri uri, int sessionId) {
@@ -501,7 +505,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     private int startTvPlay() {
         Log.d(TAG, "startTvPlay inputId=" + mCurrentInputId + " surface=" + mSurface);
         if (mHardware != null && mSurface != null && mSurface.isValid()) {
-            mHardware.setSurface(mSurface, mConfigs[0]);
+            //mHardware.setSurface(mSurface, mConfigs[0]);
             selectHdmiDevice(mDeviceId);
             return ACTION_SUCCESS;
         }
@@ -509,6 +513,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     private int stopTvPlay(int sessionId) {
+        Log.d(TAG, "stopTvPlay:"+sessionId+" mHardware:"+mHardware);
         if (mHardware != null) {
             mHardware.setSurface(null, mConfigs[0]);
             tvPlayStopped(sessionId);

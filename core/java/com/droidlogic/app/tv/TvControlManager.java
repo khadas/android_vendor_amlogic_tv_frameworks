@@ -223,6 +223,26 @@ public class TvControlManager {
         return ret;
     }
 
+    public int sendCmdStringArray(int cmd, int id, String[] values) {
+        libtv_log_open();
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        request.writeInt(cmd);
+        request.writeInt(id);
+
+        for (int i = 0; i < values.length; i++) {
+            request.writeString(values[i]);
+        }
+        request.setDataPosition(0);
+        processCmd(request, reply);
+        reply.setDataPosition(0);
+        int ret = reply.readInt();
+
+        request.recycle();
+        reply.recycle();
+        return ret;
+    }
+
     class EventHandler extends Handler {
         int dataArray[];
         int cmdArray[];
@@ -505,6 +525,18 @@ public class TvControlManager {
                         mCloseCaptionListener.onCloseCaptionProcess(dataArray, cmdArray);
                     }
                     break;
+
+                case RECORDER_EVENT_CALLBACK:
+                    p = ((Parcel) (msg.obj));
+                    if (mRecorderEventListener != null) {
+                        RecorderEvent ev = new RecorderEvent();
+                        ev.Id = p.readString();
+                        ev.Status = p.readInt();
+                        ev.Error = p.readInt();
+                        mRecorderEventListener.onRecoderEvent(ev);
+                    }
+                    break;
+
                 default:
                     Log.e(TAG, "Unknown message type " + msg.what);
                     break;
@@ -6246,6 +6278,10 @@ public class TvControlManager {
     public final static int EVENT_AV_SCRAMBLED                  = 3;
     public final static int EVENT_AV_UNSUPPORT                  = 4;
     public final static int EVENT_AV_VIDEO_AVAILABLE            = 5;
+    public final static int EVENT_AV_TIMESHIFT_REC_FAIL = 6;
+    public final static int EVENT_AV_TIMESHIFT_PLAY_FAIL = 7;
+    public final static int EVENT_AV_TIMESHIFT_START_TIME_CHANGED = 8;
+    public final static int EVENT_AV_TIMESHIFT_CURRENT_TIME_CHANGED = 9;
     public final static int AUDIO_UNMUTE_FOR_TV                 = 0;
     public final static int AUDIO_MUTE_FOR_TV                   = 1;
 
@@ -6566,5 +6602,87 @@ public class TvControlManager {
         r.recycle();
         return ret;
     }
+
+    // frontend event
+    public class RecorderEvent {
+        //frontend events
+        public static final int EVENT_RECORDER_START         = 1;
+        public static final int EVENT_RECORDER_STOP    = 2;
+
+        public int Status;
+        public int Error;
+        public String Id;
+    }
+    public interface RecorderEventListener {
+        void onRecoderEvent(RecorderEvent ev);
+    };
+
+    private RecorderEventListener mRecorderEventListener = null;
+    public void SetRecorderEventListener(RecorderEventListener l) {
+        libtv_log_open();
+        mRecorderEventListener = l;
+    }
+
+
+    public static final int RECORDING_CMD_STOP = 0;
+    public static final int RECORDING_CMD_PREPARE = 1;
+    public static final int RECORDING_CMD_START = 2;
+
+    public int sendRecordingCmd(int cmd, String id, String param) {
+        String para[] = new String[]{id, param};
+        return sendCmdStringArray(DTV_RECORDING_CMD, cmd, para);
+    }
+
+    public int prepareRecording(String id, String param) {
+        return sendRecordingCmd(RECORDING_CMD_PREPARE, id, param);
+    }
+
+    public int startRecording(String id, String param) {
+        return sendRecordingCmd(RECORDING_CMD_START, id, param);
+    }
+
+    public int stopRecording(String id, String param) {
+        return sendRecordingCmd(RECORDING_CMD_STOP, id, param);
+    }
+
+    public static final int PLAY_CMD_STOP = 0;
+    public static final int PLAY_CMD_START = 1;
+    public static final int PLAY_CMD_PAUSE = 2;
+    public static final int PLAY_CMD_RESUME = 3;
+    public static final int PLAY_CMD_SEEK = 4;
+    public static final int PLAY_CMD_SETPARAM = 5;
+
+    public int sendPlayCmd(int cmd, String id, String param) {
+        String para[] = new String[]{id, param};
+        return sendCmdStringArray(DTV_PLAY_CMD, cmd, para);
+    }
+
+    public int startPlay(String id, String param) {
+        //SystemProperties.set ("media.audio.enable_asso", (adPrepare)? "1" : "0");
+        //SystemProperties.set ("media.audio.mix_asso", String.valueOf(adMixingLevel));
+        return sendPlayCmd(PLAY_CMD_START, id, param);
+    }
+
+    public int stopPlay(String id, String param) {
+        return sendPlayCmd(PLAY_CMD_STOP, id, param);
+    }
+
+    public int pausePlay(String id) {
+        return sendPlayCmd(PLAY_CMD_PAUSE, id, null);
+    }
+
+    public int resumePlay(String id) {
+        return sendPlayCmd(PLAY_CMD_RESUME, id, null);
+    }
+
+    public int seekPlay(String id, String param) {
+        return sendPlayCmd(PLAY_CMD_SEEK, id, param);
+    }
+
+    public int setPlayParam(String id, String param) {
+        return sendPlayCmd(PLAY_CMD_SETPARAM, id, param);
+    }
+
+
 }
 
