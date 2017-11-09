@@ -231,6 +231,8 @@ public class DroidLogicTvUtils
     public static final int OPEN_DEV_FOR_SCAN_DTV = 2;
     public static final int CLOSE_DEV_FOR_SCAN = 3;
 
+    public static final String SYSTEM_CAPTION_STYLE_ENABLE = "accessibility_captioning_style_enabled";
+
     /**
      * used for TvSettings to switch hdmi source
      * {@link #SOURCE_NAME}
