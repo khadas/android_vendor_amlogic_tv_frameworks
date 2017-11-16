@@ -96,6 +96,7 @@ public class ChannelInfo {
     public static final String KEY_HIDDEN = "hidden";
     public static final String KEY_HIDE_GUIDE = "hideGuide";
     public static final String KEY_VCT = "vct";
+    public static final String KEY_EITV = "eitv";
 
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
     public static final String KEY_CONTENT_RATINGS = "content_ratings";
@@ -179,6 +180,7 @@ public class ChannelInfo {
     private int mHidden;
     private int mHideGuide;
     private String mVct;
+    private int[] mEitVersions;
 
     private String mContentRatings;
 
@@ -356,6 +358,16 @@ public class ChannelInfo {
                 builder.setHideGuide(Integer.parseInt(parsedMap.get(KEY_HIDE_GUIDE)));
             if (parsedMap.get(KEY_VCT) != null)
                 builder.setVct(parsedMap.get(KEY_VCT));
+            if (parsedMap.get(KEY_EITV) != null) {
+                String[] svs = parsedMap.get(KEY_EITV).replace("[", "").replace("]", "").split(",");
+                int vn = (svs[0].compareTo("null") == 0)? 0 : svs.length;
+                if (vn > 0) {
+                    int[] vs = new int[vn];
+                    for (int i = 0; i < vn; i++)
+                        vs[i] = Integer.parseInt(svs[i]);
+                    builder.setEitVersions(vs);
+                }
+            }
         }
 
         index = cursor.getColumnIndex(Channels.COLUMN_BROWSABLE);
@@ -609,6 +621,10 @@ public class ChannelInfo {
         return mVct;
     }
 
+    public int[] getEitVersions() {
+        return mEitVersions;
+    }
+
     public boolean isBrowsable() {
         return this.mBrowsable;
     }
@@ -773,6 +789,10 @@ public class ChannelInfo {
         mLCN2 = lcn;
     }
 
+    public void setEitVersions(int[] versions) {
+        mEitVersions = versions;
+    }
+
     public void copyFrom(ChannelInfo channel) {
         if (this == channel)
             return;
@@ -860,6 +880,7 @@ public class ChannelInfo {
             mChannel.mHidden = 0;
             mChannel.mHideGuide = 0;
             mChannel.mVct = null;
+            mChannel.mEitVersions = null;
         }
 
         public Builder setId(long id) {
@@ -1153,6 +1174,11 @@ public class ChannelInfo {
             return this;
         }
 
+        public Builder setEitVersions(int[] versions) {
+            mChannel.mEitVersions = versions;
+            return this;
+        }
+
         public ChannelInfo build() {
             return mChannel;
         }
@@ -1266,7 +1292,8 @@ public class ChannelInfo {
                 "\n Hidden = " + mHidden +
                 "\n HideGuide = " + mHideGuide +
                 "\n Ratings = " + mContentRatings +
-                "\n vct = " + mVct;
+                "\n vct = " + mVct +
+                "\n EitVers = " + Arrays.toString(mEitVersions);
     }
 
     public static class Subtitle {

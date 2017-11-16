@@ -35,6 +35,8 @@ public final class Program implements Comparable<Program> {
     private TvContentRating[] mContentRatings;
     private String mInternalProviderData;
     private boolean mIsAppointed;
+    private String mVersion;
+    private String mEitExt;
 
     private Program() {
         mId = INVALID_LONG_VALUE;
@@ -47,6 +49,8 @@ public final class Program implements Comparable<Program> {
         mVideoWidth = INVALID_INT_VALUE;
         mVideoHeight = INVALID_INT_VALUE;
         mIsAppointed = false;
+        mVersion = null;
+        mEitExt = null;
     }
 
     public long getId() {
@@ -134,6 +138,22 @@ public final class Program implements Comparable<Program> {
         mIsAppointed = isAppointed;
     }
 
+    public String getVersion() {
+        return mVersion;
+    }
+
+    public void setVersion(String version) {
+        mVersion = version;
+    }
+
+    public String getEitExt() {
+        return mEitExt;
+    }
+
+    public void setEitExt(String ext) {
+        mEitExt = ext;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(mChannelId, mStartTimeUtcMillis, mEndTimeUtcMillis,
@@ -162,7 +182,9 @@ public final class Program implements Comparable<Program> {
                 && Arrays.equals(mContentRatings, program.mContentRatings)
                 && Arrays.equals(mCanonicalGenres, program.mCanonicalGenres)
                 && mSeasonNumber == program.mSeasonNumber
-                && mEpisodeNumber == program.mEpisodeNumber;
+                && mEpisodeNumber == program.mEpisodeNumber
+                && TextUtils.equals(mVersion, program.mVersion)
+                && TextUtils.equals(mEitExt, program.mEitExt);
     }
 
     public boolean matchsWithoutDescription(Program program) {
@@ -206,7 +228,8 @@ public final class Program implements Comparable<Program> {
                 .append(", thumbnailUri=").append(mThumbnailUri)
                 .append(", contentRatings=").append(mContentRatings)
                 .append(", genres=").append(mCanonicalGenres)
-                .append(", isAppointed=").append(mIsAppointed);
+                .append(", isAppointed=").append(mIsAppointed)
+                .append(", ext=").append(mVersion).append(":"+mEitExt);
         return builder.append("}").toString();
     }
 
@@ -232,6 +255,8 @@ public final class Program implements Comparable<Program> {
         mCanonicalGenres = other.mCanonicalGenres;
         mContentRatings = other.mContentRatings;
         mIsAppointed = other.mIsAppointed;
+        mVersion = other.mVersion;
+        mEitExt = other.mEitExt;
     }
 
     public ContentValues toContentValues() {
@@ -315,6 +340,16 @@ public final class Program implements Comparable<Program> {
         }
         values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG1, mIsAppointed ? 1 : 0);
         values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG2, mProgramId);
+        if (!TextUtils.isEmpty(mVersion)) {
+            values.put(TvContract.Programs.COLUMN_VERSION_NUMBER, mVersion);
+        } else {
+            values.putNull(TvContract.Programs.COLUMN_VERSION_NUMBER);
+        }
+        if (!TextUtils.isEmpty(mEitExt)) {
+            values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG3, mEitExt);
+        } else {
+            values.putNull(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG3);
+        }
         return values;
     }
 
@@ -396,6 +431,14 @@ public final class Program implements Comparable<Program> {
         index = cursor.getColumnIndex(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG2);
         if (index >= 0) {
             builder.setProgramId(cursor.getInt(index));
+        }
+        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_VERSION_NUMBER);
+        if (index >= 0 && !cursor.isNull(index)) {
+            builder.setVersion(cursor.getString(index));
+        }
+        index = cursor.getColumnIndex(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG3);
+        if (index >=0 && !cursor.isNull(index)) {
+            builder.setEitExt(cursor.getString(index));
         }
         return builder.build();
     }
@@ -506,6 +549,17 @@ public final class Program implements Comparable<Program> {
             mProgram.mIsAppointed = isAppointed;
             return this;
         }
+
+        public Builder setVersion(String version) {
+            mProgram.mVersion = version;
+            return this;
+        }
+
+        public Builder setEitExt(String ext) {
+            mProgram.mEitExt = ext;
+            return this;
+        }
+
         public Program build() {
             return mProgram;
         }

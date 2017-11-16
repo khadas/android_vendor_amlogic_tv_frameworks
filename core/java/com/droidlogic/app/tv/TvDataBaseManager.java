@@ -428,6 +428,7 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_HIDE_GUIDE, String.valueOf(channel.getHideGuide()));
         map.put(ChannelInfo.KEY_CONTENT_RATINGS, DroidLogicTvUtils.TvString.toString(channel.getContentRatings()));
         map.put(ChannelInfo.KEY_VCT, "\""+channel.getVct()+"\"");
+        map.put(ChannelInfo.KEY_EITV, Arrays.toString(channel.getEitVersions()));
         String output = DroidLogicTvUtils.mapToJson(map);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
@@ -1126,7 +1127,7 @@ public class TvDataBaseManager {
 
     private static final int BATCH_OPERATION_COUNT = 100;
 
-    private boolean isATSCSpecialProgram(Program program) {
+    private static boolean isATSCSpecialProgram(Program program) {
         //If program's startTime == EndTime == 0,
         //it is a special program for descr update in atsc.
         return program.getStartTimeUtcMillis() == 0
@@ -1164,7 +1165,8 @@ public class TvDataBaseManager {
             return result;
         }
     }
-    public void updatePrograms(Long channelId, List<Program> newPrograms) {
+    public boolean updatePrograms(Long channelId, List<Program> newPrograms) {
+        boolean updated = false;
         Log.d(TAG, "updatePrograms epg start-----");
         for (Program p: newPrograms) {
             String sql_start ;
@@ -1223,6 +1225,7 @@ public class TvDataBaseManager {
                     }
                     mContentResolver.delete(TvContract.Programs.CONTENT_URI, sql_del, null);
                     mContentResolver.insert(TvContract.Programs.CONTENT_URI, p.toContentValues());
+                    updated = true;
                 }
                 else
                 {
@@ -1231,6 +1234,7 @@ public class TvDataBaseManager {
             }
         }
         Log.d(TAG, "updatePrograms epg end-----");
+        return updated;
     }
     public void updatePrograms(Uri channelUri, List<Program> newPrograms, boolean isAtsc) {
         final int fetchedProgramsCount = newPrograms.size();
@@ -1489,5 +1493,45 @@ public class TvDataBaseManager {
             program = null;
 
         return program;
+    }
+
+    public int deleteProgram(ChannelInfo channel) {
+        return deleteProgram(channel.getId());
+    }
+
+    public int deleteProgram(Long channelId) {
+        int deleteCount = mContentResolver.delete(
+                TvContract.Programs.CONTENT_URI,
+                TvContract.Programs.COLUMN_CHANNEL_ID + "=?",
+                new String[] { String.valueOf(channelId)});
+        if (deleteCount > 0) {
+            Log.d(TAG, "Deleted " + deleteCount + " programs");
+        }
+        return deleteCount;
+    }
+
+    public int deleteProgram(Long channelId, String versionNotEqual, String eitExt) {
+        int deleteCount = mContentResolver.delete(
+                TvContract.Programs.CONTENT_URI,
+                TvContract.Programs.COLUMN_CHANNEL_ID + "=? AND "
+                + TvContract.Programs.COLUMN_VERSION_NUMBER + "!=? AND "
+                + TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG3 + "=?",
+                new String[] { String.valueOf(channelId), versionNotEqual, eitExt});
+        if (deleteCount > 0) {
+            Log.d(TAG, "Deleted " + deleteCount + " programs");
+        }
+        return deleteCount;
+    }
+
+    public int deletePrograms(Long channelId, String versionNotEqual) {
+        int deleteCount = mContentResolver.delete(
+                TvContract.Programs.CONTENT_URI,
+                TvContract.Programs.COLUMN_CHANNEL_ID + "=? AND "
+                + TvContract.Programs.COLUMN_VERSION_NUMBER + "!=?",
+                new String[] { String.valueOf(channelId), versionNotEqual});
+        if (deleteCount > 0) {
+            Log.d(TAG, "Deleted " + deleteCount + " programs");
+        }
+        return deleteCount;
     }
 }
