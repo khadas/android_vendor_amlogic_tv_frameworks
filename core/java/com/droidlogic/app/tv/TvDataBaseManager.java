@@ -1145,7 +1145,7 @@ public class TvDataBaseManager {
      *         information.
      */
     public void updatePrograms(Uri channelUri, List<Program> newPrograms) {
-        updatePrograms(channelUri, newPrograms, false);
+        updatePrograms(channelUri, newPrograms, null, false);
     }
 
     public static final class ComparatorValues implements Comparator<Program> {
@@ -1165,7 +1165,14 @@ public class TvDataBaseManager {
             return result;
         }
     }
-    public boolean updatePrograms(Long channelId, List<Program> newPrograms) {
+
+    public boolean isProgramAtTime(Program program, Long timeUtcMillis) {
+        return (timeUtcMillis != null
+            && timeUtcMillis >= program.getStartTimeUtcMillis()
+            && timeUtcMillis < program.getEndTimeUtcMillis());
+    }
+
+    public boolean updatePrograms(Long channelId, List<Program> newPrograms, Long timeUtcMillis) {
         boolean updated = false;
         Log.d(TAG, "updatePrograms epg start-----");
         for (Program p: newPrograms) {
@@ -1225,7 +1232,7 @@ public class TvDataBaseManager {
                     }
                     mContentResolver.delete(TvContract.Programs.CONTENT_URI, sql_del, null);
                     mContentResolver.insert(TvContract.Programs.CONTENT_URI, p.toContentValues());
-                    updated = true;
+                    updated = isProgramAtTime(p, timeUtcMillis);
                 }
                 else
                 {
@@ -1236,10 +1243,11 @@ public class TvDataBaseManager {
         Log.d(TAG, "updatePrograms epg end-----");
         return updated;
     }
-    public void updatePrograms(Uri channelUri, List<Program> newPrograms, boolean isAtsc) {
+    public boolean updatePrograms(Uri channelUri, List<Program> newPrograms, Long timeUtcMillis, boolean isAtsc) {
+        boolean updated = false;
         final int fetchedProgramsCount = newPrograms.size();
         if (fetchedProgramsCount == 0) {
-            return;
+            return updated;
         }
         List<Program> oldPrograms = getPrograms(TvContract.buildProgramsUriForChannel(channelUri));
 
@@ -1314,6 +1322,9 @@ public class TvDataBaseManager {
                             .build());
                     oldProgramsIndex++;
                     newProgramsIndex++;
+
+                    updated = isProgramAtTime(newProgram, timeUtcMillis);
+
                     Log.d(TAG, "\tupdate");
                 } else if (oldProgram.getEndTimeUtcMillis() < newProgram.getEndTimeUtcMillis()) {
                     // No match. Remove the old program first to see if the next program in
@@ -1322,6 +1333,9 @@ public class TvDataBaseManager {
                             TvContract.buildProgramUri(oldProgram.getProgramId()))
                             .build());
                     oldProgramsIndex++;
+
+                    updated = isProgramAtTime(newProgram, timeUtcMillis);
+
                     Log.d(TAG, "\tdelete old");
                 } else {
                     if (!isATSCSpecialProgram(newProgram)) {
@@ -1329,6 +1343,9 @@ public class TvDataBaseManager {
                         // as a new program.
                         addNewProgram = true;
                         newProgramsIndex++;
+
+                        updated = isProgramAtTime(newProgram, timeUtcMillis);
+
                         Log.d(TAG, "\tnew insert");
                     }
                 }
@@ -1336,6 +1353,9 @@ public class TvDataBaseManager {
                 if (!isATSCSpecialProgram(newProgram)) {
                     // No old programs. Just insert new programs.
                     addNewProgram = true;
+
+                    updated = isProgramAtTime(newProgram, timeUtcMillis);
+
                     Log.d(TAG, "no old, insert new");
                 }
                 newProgramsIndex++;
@@ -1355,11 +1375,12 @@ public class TvDataBaseManager {
                     mContentResolver.applyBatch(TvContract.AUTHORITY, ops);
                 } catch (RemoteException | OperationApplicationException e) {
                     Log.e(TAG, "Failed to insert programs.", e);
-                    return;
+                    return updated;
                 }
                 ops.clear();
             }
         }
+        return updated;
     }
 
     public void updateProgram(Program program) {
