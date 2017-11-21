@@ -200,7 +200,9 @@ public final class Program implements Comparable<Program> {
                 && Arrays.equals(mContentRatings, program.mContentRatings)
                 && Arrays.equals(mCanonicalGenres, program.mCanonicalGenres)
                 && mSeasonNumber == program.mSeasonNumber
-                && mEpisodeNumber == program.mEpisodeNumber;
+                && mEpisodeNumber == program.mEpisodeNumber
+                && Objects.equals(contentRatingsToString(mContentRatings),
+                    contentRatingsToString(program.mContentRatings));
     }
 
     @Override

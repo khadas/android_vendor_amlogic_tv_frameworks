@@ -76,7 +76,7 @@ public class DroidContentRatingsParser {
     private static final String TAG = "DroidContentRatingsParser";
     private static final boolean DEBUG = false;
 
-    public static final String DOMAIN_RRT_RATINGS = "ccom.droidlogic.app.tv";
+    public static final String DOMAIN_RRT_RATINGS = "com.droidlogic.app.tv";
 
     private static final String TAG_RATING_SYSTEM_DEFINITIONS = "rating-system-definitions";
     private static final String TAG_RATING_SYSTEM_DEFINITION = "rating-system-definition";
@@ -96,6 +96,7 @@ public class DroidContentRatingsParser {
     //private final Context mContext;
     //private Resources mResources;
     private String mXmlVersionCode;
+    private final Object mLock = new Object();
 
     private AtomicFile mAtomicFile_t;
     public DroidContentRatingsParser() {
@@ -111,27 +112,29 @@ public class DroidContentRatingsParser {
 
     public List<ContentRatingSystemT> load_t() {
         //clearState();
+        synchronized (mLock) {
+            final InputStream is;
+            Log.d(TAG, "==== start load_t====");
+            try {
+                is = mAtomicFile_t.openRead();
+            } catch (FileNotFoundException ex) {
+                Log.d(TAG, "==== load FileNotFoundException====");
+                return null;
+            }
 
-        final InputStream is;
-        try {
-            is = mAtomicFile_t.openRead();
-        } catch (FileNotFoundException ex) {
-            Log.d(TAG, "==== load FileNotFoundException====");
+            XmlPullParser parser;
+            try {
+                parser = Xml.newPullParser();
+                parser.setInput(new BufferedInputStream(is), StandardCharsets.UTF_8.name());
+                return loadFromXml_t(parser);
+            } catch (IOException | XmlPullParserException ex) {
+                Log.w(TAG, "Failed to load tv input manager persistent store data.", ex);
+                //clearState();
+            } finally {
+                IoUtils.closeQuietly(is);
+            }
             return null;
         }
-
-        XmlPullParser parser;
-        try {
-            parser = Xml.newPullParser();
-            parser.setInput(new BufferedInputStream(is), StandardCharsets.UTF_8.name());
-            return loadFromXml_t(parser);
-        } catch (IOException | XmlPullParserException ex) {
-            Log.w(TAG, "Failed to load tv input manager persistent store data.", ex);
-            //clearState();
-        } finally {
-            IoUtils.closeQuietly(is);
-        }
-        return null;
     }
     private List<ContentRatingSystemT> loadFromXml_t(XmlPullParser parser)
             throws IOException, XmlPullParserException {
@@ -217,8 +220,8 @@ public class DroidContentRatingsParser {
     }
 
     private void clearState() {
-        //mBlockedRatings.clear();
-        //mParentalControlsEnabled = false;
+        /*mBlockedRatings.clear();
+        mParentalControlsEnabled = false;*/
     }
 
     public class ContentRatingSystemT {

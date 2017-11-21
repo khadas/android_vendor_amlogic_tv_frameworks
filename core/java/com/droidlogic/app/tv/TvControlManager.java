@@ -123,6 +123,10 @@ public class TvControlManager {
     private AVPlaybackListener mAVPlaybackListener = null;
     private EasEventListener mEasListener = null;
 
+    private int rrt5XmlLoadStatus = 0;
+    public static  int EVENT_RRT_SCAN_START          = 1;
+    public static  int EVENT_RRT_SCAN_END            = 3;
+
     private static TvControlManager mInstance;
 
     private native final void native_setup(Object tv_this);
@@ -545,6 +549,7 @@ public class TvControlManager {
                     if (mRrtListener != null) {
                         int result = p.readInt();
                         Log.e(TAG, "RRT_EVENT_CALLBACK:" + result);
+                        rrt5XmlLoadStatus = result;
                         mRrtListener.onRRT5InfoUpdated(result);
                     }
                     break;
@@ -4720,8 +4725,15 @@ public class TvControlManager {
         void onRRT5InfoUpdated(int status);
     }
 
-    public int updateRRTRes() {
-         return sendCmd(DTV_UPDATE_RRT);
+    public int updateRRTRes(int freq, int module, int mode) {
+        if (rrt5XmlLoadStatus == EVENT_RRT_SCAN_START) {
+            Log.d(TAG, "abandon updateRRTRes,becasue current status is : " + rrt5XmlLoadStatus);
+            return -1;
+        }
+        Log.d(TAG, "updateRRTRes,freq: " + freq+",module:"+module+",mode:"+mode);
+        int val[] = new int[]{freq, module, mode};
+        rrt5XmlLoadStatus = EVENT_RRT_SCAN_START;
+        return sendCmdIntArray(DTV_UPDATE_RRT, val);
     }
 
     public class RrtSearchInfo {

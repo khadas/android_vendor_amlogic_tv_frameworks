@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
+import java.util.Objects;
 
 import com.droidlogic.app.tv.DroidLogicTvUtils.*;
 
@@ -1263,7 +1264,7 @@ public class TvDataBaseManager {
         }
 
         for (Program p : newPrograms) {
-            Log.d(TAG, "updatePrograms epg atsc title:"+p.getTitle()+" des:"+p.getDescription()+" chid:"+p.getChannelId()+" id:"+p.getId()+" start:" + p.getStartTimeUtcMillis() + " end:" + p.getEndTimeUtcMillis());
+            Log.d(TAG, "epg todo:"+p.getTitle()+" desc:"+p.getDescription()+" chid:"+p.getChannelId()+" id:"+p.getId()+" ("+p.getStartTimeUtcMillis()+"-"+p.getEndTimeUtcMillis());
         }
 
         int oldProgramsIndex = 0;
@@ -1311,7 +1312,7 @@ public class TvDataBaseManager {
                     // Exact match. No need to update. Move on to the next programs.
                     oldProgramsIndex++;
                     newProgramsIndex++;
-                    Log.d(TAG, "\tmatch");
+                    Log.d(TAG, "\tepg match:cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
                 } else if (needsUpdate(oldProgram, newProgram)) {
                     // Partial match. Update the old program with the new one.
                     // NOTE: Use 'update' in this case instead of 'insert' and 'delete'. There could
@@ -1325,7 +1326,7 @@ public class TvDataBaseManager {
 
                     updated = isProgramAtTime(newProgram, timeUtcMillis);
 
-                    Log.d(TAG, "\tupdate");
+                    Log.d(TAG, "\tepg update:"+oldProgram.getId()+":cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
                 } else if (oldProgram.getEndTimeUtcMillis() < newProgram.getEndTimeUtcMillis()) {
                     // No match. Remove the old program first to see if the next program in
                     // {@code oldPrograms} partially matches the new program.
@@ -1334,9 +1335,9 @@ public class TvDataBaseManager {
                             .build());
                     oldProgramsIndex++;
 
-                    updated = isProgramAtTime(newProgram, timeUtcMillis);
+                    updated = isProgramAtTime(oldProgram, timeUtcMillis);
 
-                    Log.d(TAG, "\tdelete old");
+                    Log.d(TAG, "\tepg delete:"+oldProgram.getId()+":cid("+oldProgram.getChannelId()+")eid("+oldProgram.getProgramId()+")desc("+oldProgram.getTitle()+")time("+oldProgram.getStartTimeUtcMillis()+"-"+oldProgram.getEndTimeUtcMillis()+")");
                 } else {
                     if (!isATSCSpecialProgram(newProgram)) {
                         // No match. The new program does not match any of the old programs. Insert it
@@ -1346,7 +1347,7 @@ public class TvDataBaseManager {
 
                         updated = isProgramAtTime(newProgram, timeUtcMillis);
 
-                        Log.d(TAG, "\tnew insert");
+                        Log.d(TAG, "\tepg new:"+newProgram.getId()+":cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
                     }
                 }
             } else {
@@ -1356,7 +1357,7 @@ public class TvDataBaseManager {
 
                     updated = isProgramAtTime(newProgram, timeUtcMillis);
 
-                    Log.d(TAG, "no old, insert new");
+                    Log.d(TAG, "\tepg new:(old none)"+newProgram.getId()+":cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
                 }
                 newProgramsIndex++;
             }
@@ -1403,6 +1404,10 @@ public class TvDataBaseManager {
             return false;
         } else if (oldProgram.getDescription() == null && newProgram.getDescription() != null) {
             Log.d(TAG, "getDescription is old is null new not null");
+            return false;
+        } else if (!Objects.equals(Program.contentRatingsToString(oldProgram.getContentRatings()),
+                newProgram.getContentRatings())) {
+            Log.d(TAG, "ratings not eq");
             return false;
         } else {
             Log.d(TAG, "isProgramEq is eq true");
