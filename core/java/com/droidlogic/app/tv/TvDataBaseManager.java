@@ -1264,7 +1264,7 @@ public class TvDataBaseManager {
         }
 
         for (Program p : newPrograms) {
-            Log.d(TAG, "epg todo:"+p.getTitle()+" desc:"+p.getDescription()+" chid:"+p.getChannelId()+" id:"+p.getId()+" ("+p.getStartTimeUtcMillis()+"-"+p.getEndTimeUtcMillis());
+            Log.d(TAG, "epg todo:cid("+p.getChannelId()+")eid("+p.getProgramId()+")desc("+p.getTitle()+")desc2("+p.getDescription()+")time("+p.getStartTimeUtcMillis()+"-"+p.getEndTimeUtcMillis()+")");
         }
 
         int oldProgramsIndex = 0;
@@ -1294,7 +1294,7 @@ public class TvDataBaseManager {
                     //Log.d(TAG, "ext desr:"+newProgram.getProgramId());
                     for (Program program : oldPrograms) {
                         //Log.d(TAG, "old:"+program.getProgramId());
-                        if (program.getProgramId() == newProgram.getProgramId()) {
+                        if (program.getProgramId() == newProgram.getProgramId()) {//same event id
                             if (TextUtils.equals(program.getDescription(), newProgram.getDescription()))
                                 break;
                             program.setDescription(newProgram.getDescription());
@@ -1302,7 +1302,15 @@ public class TvDataBaseManager {
                                     TvContract.buildProgramUri(program.getId()))
                                     .withValues(program.toContentValues())
                                     .build());
-                            Log.d(TAG, "\tupdate descr");
+                            /*Program p = new Program.Builder(program)
+                                .build();
+                            ops.add(ContentProviderOperation.newInsert(TvContract.Programs.CONTENT_URI)
+                                                        .withValues(p.toContentValues())
+                                                        .build());
+                            ops.add(ContentProviderOperation.newDelete(TvContract.buildProgramUri(program.getId()))
+                                                        .build());
+                            */
+                            Log.d(TAG, "\tepg etm:cid("+program.getChannelId()+")eid("+program.getProgramId()+")");
                             break;
                         }
                     }
@@ -1318,7 +1326,7 @@ public class TvDataBaseManager {
                     // NOTE: Use 'update' in this case instead of 'insert' and 'delete'. There could
                     // be application specific settings which belong to the old program.
                     ops.add(ContentProviderOperation.newUpdate(
-                            TvContract.buildProgramUri(oldProgram.getProgramId()))
+                            TvContract.buildProgramUri(oldProgram.getId()))
                             .withValues(newProgram.toContentValues())
                             .build());
                     oldProgramsIndex++;
@@ -1326,12 +1334,12 @@ public class TvDataBaseManager {
 
                     updated = isProgramAtTime(newProgram, timeUtcMillis);
 
-                    Log.d(TAG, "\tepg update:"+oldProgram.getId()+":cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
+                    Log.d(TAG, "\tepg update:cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")id("+oldProgram.getId()+")");
                 } else if (oldProgram.getEndTimeUtcMillis() < newProgram.getEndTimeUtcMillis()) {
                     // No match. Remove the old program first to see if the next program in
                     // {@code oldPrograms} partially matches the new program.
                     ops.add(ContentProviderOperation.newDelete(
-                            TvContract.buildProgramUri(oldProgram.getProgramId()))
+                            TvContract.buildProgramUri(oldProgram.getId()))
                             .build());
                     oldProgramsIndex++;
 
@@ -1347,7 +1355,7 @@ public class TvDataBaseManager {
 
                         updated = isProgramAtTime(newProgram, timeUtcMillis);
 
-                        Log.d(TAG, "\tepg new:"+newProgram.getId()+":cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
+                        Log.d(TAG, "\tepg new:cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")id("+newProgram.getId()+")");
                     }
                 }
             } else {
@@ -1357,7 +1365,7 @@ public class TvDataBaseManager {
 
                     updated = isProgramAtTime(newProgram, timeUtcMillis);
 
-                    Log.d(TAG, "\tepg new:(old none)"+newProgram.getId()+":cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
+                    Log.d(TAG, "\tepg new:(old none):cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")id("+newProgram.getId()+")");
                 }
                 newProgramsIndex++;
             }

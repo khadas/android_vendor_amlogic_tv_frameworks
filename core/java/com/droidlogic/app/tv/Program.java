@@ -13,8 +13,8 @@ import java.util.Objects;
  * A convenience class to create and insert program information into the database.
  */
 public final class Program implements Comparable<Program> {
-    private static final long INVALID_LONG_VALUE = -1;
-    private static final int INVALID_INT_VALUE = -1;
+    public static final long INVALID_LONG_VALUE = -1;
+    public static final int INVALID_INT_VALUE = -1;
 
     private long mId;
     private long mChannelId;

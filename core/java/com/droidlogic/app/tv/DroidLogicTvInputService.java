@@ -393,9 +393,11 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     public void onSigChanged(TVInSignalInfo signal_info) { }
 
+
     @Override
     public void StorDBonEvent(TvControlManager.ScannerEvent event) {
-        mTvStoreManager.onStoreEvent(event);
+        if (mTvStoreManager != null)
+            mTvStoreManager.onStoreEvent(event);
     }
 
     public void resetScanStoreListener() {
