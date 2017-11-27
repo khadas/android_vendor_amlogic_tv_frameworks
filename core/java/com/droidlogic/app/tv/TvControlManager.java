@@ -127,6 +127,7 @@ public class TvControlManager {
     public static  int EVENT_RRT_SCAN_START          = 1;
     public static  int EVENT_RRT_SCAN_END            = 3;
 
+    private EasManager easManager = new EasManager();
     private static TvControlManager mInstance;
 
     private native final void native_setup(Object tv_this);
@@ -563,7 +564,13 @@ public class TvControlManager {
                         for (int count = 0; count<sectionCount; count++) {
                             EasEvent curEasEvent = new EasEvent();
                             curEasEvent.readEasEvent(p);
-                            mEasListener.processDetailsChannelAlert(curEasEvent);
+                            if (easManager.isEasEventNeedProcess(curEasEvent)) {
+                                if (easManager.isEasEventNeedChannel()) {
+                                    mEasListener.processDetailsChannelAlert(curEasEvent);
+                                }else {
+                                    mEasListener.processTextAlert(curEasEvent);
+                                }
+                            }
                         }
                      }
 
@@ -4782,8 +4789,8 @@ public class TvControlManager {
         mEasListener = l;
     }
     public interface EasEventListener {
-        HashMap<String,Integer> getCurChannelNumber();
         void processDetailsChannelAlert(EasEvent ev);
+        void processTextAlert(EasEvent ev);
     }
 
     public class VFrameEvent{
