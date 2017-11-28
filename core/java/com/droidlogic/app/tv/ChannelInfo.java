@@ -100,6 +100,7 @@ public class ChannelInfo {
 
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
     public static final String KEY_CONTENT_RATINGS = "content_ratings";
+    public static final String KEY_SIGNAL_TYPE = "signal_type";
 
     public static final String LABEL_ATV = "ATV";
     public static final String LABEL_DTV = "DTV";
@@ -183,6 +184,7 @@ public class ChannelInfo {
     private int[] mEitVersions;
 
     private String mContentRatings;
+    private String mSignalType;
 
     private ChannelInfo() {}
 
@@ -281,6 +283,8 @@ public class ChannelInfo {
                 builder.setPcrPid(Integer.parseInt(parsedMap.get(KEY_PCR_ID)));
             if (parsedMap.get(KEY_CONTENT_RATINGS) != null)
                 builder.setContentRatings(DroidLogicTvUtils.TvString.fromString(parsedMap.get(KEY_CONTENT_RATINGS)));
+            if (parsedMap.get(KEY_SIGNAL_TYPE) != null)
+                builder.setSignalType(DroidLogicTvUtils.TvString.fromString(parsedMap.get(KEY_SIGNAL_TYPE)));
             if (parsedMap.get(KEY_AUDIO_TRACK_INDEX) != null)
                 builder.setAudioTrackIndex(Integer.parseInt(parsedMap.get(KEY_AUDIO_TRACK_INDEX)));
             if (parsedMap.get(KEY_AUDIO_COMPENSATION) != null)
@@ -503,6 +507,14 @@ public class ChannelInfo {
 
     public String getContentRatings() {
         return mContentRatings;
+    }
+
+    public String getSignalType() {
+        return mSignalType;
+    }
+
+    public void setSignalType(String signalType) {
+        mSignalType = signalType;
     }
 
     public void setContentRatings(String contentRatings) {
@@ -845,6 +857,7 @@ public class ChannelInfo {
             mChannel.mPcrPid = -1;
             mChannel.mFrequency = -1;
             mChannel.mContentRatings = "";
+            mChannel.mSignalType = "";
             mChannel.mBandwidth = -1;
             mChannel.mSymbolRate = -1;
             mChannel.mModulation = -1;
@@ -1021,6 +1034,11 @@ public class ChannelInfo {
 
         public Builder setContentRatings(String contentRatings) {
             mChannel.mContentRatings = contentRatings;
+            return this;
+        }
+
+        public Builder setSignalType(String signalType) {
+            mChannel.mSignalType = signalType;
             return this;
         }
 
@@ -1292,6 +1310,7 @@ public class ChannelInfo {
                 "\n Hidden = " + mHidden +
                 "\n HideGuide = " + mHideGuide +
                 "\n Ratings = " + mContentRatings +
+                "\n SignalType = " + mSignalType +
                 "\n vct = " + mVct +
                 "\n EitVers = " + Arrays.toString(mEitVersions);
     }

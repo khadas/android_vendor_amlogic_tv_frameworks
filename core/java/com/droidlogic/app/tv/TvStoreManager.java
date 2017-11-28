@@ -9,7 +9,6 @@ import android.util.Log;
 import android.os.Bundle;
 import android.content.Context;
 import android.media.tv.TvContract;
-import android.provider.Settings;
 
 public abstract class TvStoreManager {
     public static final String TAG = "TvStoreManager";
@@ -238,6 +237,7 @@ public abstract class TvStoreManager {
                .setHidden(event.hidden)
                .setHideGuide(event.hideGuide)
                .setVct(event.vct)
+               .setSignalType(DroidLogicTvUtils.getCurrentSignalType(mContext))
                .build();
     }
 
@@ -315,6 +315,7 @@ public abstract class TvStoreManager {
                .setHidden(event.hidden)
                .setHideGuide(event.hideGuide)
                .setContentRatings(null)
+               .setSignalType(DroidLogicTvUtils.getCurrentSignalType(mContext))
                .build();
     }
 
@@ -720,7 +721,6 @@ public abstract class TvStoreManager {
 
         case TvControlManager.EVENT_ATV_PROG_DATA:
             Log.d(TAG, "atv prog data");
-
             checkOrPatchBeginLost(event);
 
             if (isFinalStoreStage && !mScanMode.isATVManualScan())

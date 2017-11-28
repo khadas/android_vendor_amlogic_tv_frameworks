@@ -262,6 +262,16 @@ public class DroidLogicTvUtils
     public static final String TV_KEY_DTV_NUMBER_MODE = "tv_dtv_number_mode";
     public static final String TV_KEY_DTV_TYPE = "tv_dtv_type";
 
+    public static final String SIGNAL_TYPE_AIR = "air";
+    public static final String SIGNAL_TYPE_CABLE = "cable";
+    public static final String SIGNAL_TYPE_DTMB = "dtmb";
+    public static final String SIGNAL_TYPE_DVB_C = "dvb-c";
+    public static final String SIGNAL_TYPE_DVB_T = "dvb-t";
+    public static final String SIGNAL_TYPE_DVB_T2 = "dvb-t2";
+    public static final String SIGNAL_TYPE_ISDB_T = "isdb-t";
+    public static final String ALL_CHANNELS_NUMBER = "all_channels_number";
+    public static final String DTV_TYPE_SWITCHED = "dtv_type_switched";
+
     private static final UriMatcher sUriMatcher;
     public static final int NO_MATCH = UriMatcher.NO_MATCH;
     public static final int MATCH_CHANNEL = 1;
@@ -282,6 +292,28 @@ public class DroidLogicTvUtils
         sUriMatcher.addURI(TvContract.AUTHORITY, "program/#", MATCH_PROGRAM_ID);
         sUriMatcher.addURI(TvContract.AUTHORITY, "watched_program", MATCH_WATCHED_PROGRAM);
         sUriMatcher.addURI(TvContract.AUTHORITY, "watched_program/#", MATCH_WATCHED_PROGRAM_ID);
+    }
+
+    public static String getCurrentSignalType(Context context) {
+        String mCurrentSignalType = Settings.System.getString(context.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_TYPE);
+
+        if (mCurrentSignalType.equals(TvContract.Channels.TYPE_ATSC_T)) {
+          mCurrentSignalType = DroidLogicTvUtils.SIGNAL_TYPE_AIR;
+        } else if (mCurrentSignalType.equals(TvContract.Channels.TYPE_ATSC_C)) {
+          mCurrentSignalType = DroidLogicTvUtils.SIGNAL_TYPE_CABLE;
+        } else if (mCurrentSignalType.equals(TvContract.Channels.TYPE_DTMB)) {
+          mCurrentSignalType = DroidLogicTvUtils.SIGNAL_TYPE_DTMB;
+        } else if (mCurrentSignalType.equals(TvContract.Channels.TYPE_DVB_C)) {
+          mCurrentSignalType = DroidLogicTvUtils.SIGNAL_TYPE_DVB_C;
+        } else if (mCurrentSignalType.equals(TvContract.Channels.TYPE_DVB_T)) {
+          mCurrentSignalType = DroidLogicTvUtils.SIGNAL_TYPE_DVB_T;
+        } else if (mCurrentSignalType.equals(TvContract.Channels.TYPE_DVB_T2)) {
+          mCurrentSignalType = DroidLogicTvUtils.SIGNAL_TYPE_DVB_T2;
+        } else if (mCurrentSignalType.equals(TvContract.Channels.TYPE_ISDB_T)) {
+          mCurrentSignalType = DroidLogicTvUtils.SIGNAL_TYPE_ISDB_T;
+        }
+        Log.d(TAG, "getCurrentSignalType = " + mCurrentSignalType);
+        return mCurrentSignalType;
     }
 
     public static int matchsWhich(Uri uri) {
