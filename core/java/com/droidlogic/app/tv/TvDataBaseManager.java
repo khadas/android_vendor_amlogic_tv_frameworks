@@ -1406,7 +1406,7 @@ public class TvDataBaseManager {
             Log.d(TAG, "getDescription is old is null new not null");
             return false;
         } else if (!Objects.equals(Program.contentRatingsToString(oldProgram.getContentRatings()),
-                newProgram.getContentRatings())) {
+            Program.contentRatingsToString(newProgram.getContentRatings()))) {
             Log.d(TAG, "ratings not eq");
             return false;
         } else {
