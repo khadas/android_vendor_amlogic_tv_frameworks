@@ -428,9 +428,11 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_HIDDEN, String.valueOf(channel.getHidden()));
         map.put(ChannelInfo.KEY_HIDE_GUIDE, String.valueOf(channel.getHideGuide()));
         map.put(ChannelInfo.KEY_CONTENT_RATINGS, DroidLogicTvUtils.TvString.toString(channel.getContentRatings()));
+        map.put(ChannelInfo.KEY_SIGNAL_TYPE, DroidLogicTvUtils.TvString.toString(channel.getSignalType()));
         map.put(ChannelInfo.KEY_VCT, "\""+channel.getVct()+"\"");
         map.put(ChannelInfo.KEY_EITV, Arrays.toString(channel.getEitVersions()));
         String output = DroidLogicTvUtils.mapToJson(map);
+        Log.d(TAG, "DTV mapToJson = " + output);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
         values.put(ChannelInfo.COLUMN_LCN, channel.getLCN());
@@ -450,6 +452,7 @@ public class TvDataBaseManager {
         values.put(Channels.COLUMN_SERVICE_TYPE, channel.getServiceType());
 
         String output = DroidLogicTvUtils.mapToJson(buildAtvChannelMap(channel));
+        Log.d(TAG, "ATV mapToJson = " + output);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
         return values;
@@ -487,6 +490,7 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_SUBT_LANGS, DroidLogicTvUtils.TvString.toString(channel.getSubtitleLangs()));
         map.put(ChannelInfo.KEY_SUBT_TRACK_INDEX, String.valueOf(channel.getSubtitleTrackIndex()));
         map.put(ChannelInfo.KEY_CONTENT_RATINGS, DroidLogicTvUtils.TvString.toString(channel.getContentRatings()));
+        map.put(ChannelInfo.KEY_SIGNAL_TYPE, DroidLogicTvUtils.TvString.toString(channel.getSignalType()));
         return map;
     }
 
