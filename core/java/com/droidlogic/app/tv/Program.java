@@ -113,6 +113,10 @@ public final class Program implements Comparable<Program> {
         return mContentRatings;
     }
 
+    public void setContentRatings(TvContentRating[] rating) {
+        mContentRatings = rating;
+    }
+
     public String getPosterArtUri() {
         return mPosterArtUri;
     }
