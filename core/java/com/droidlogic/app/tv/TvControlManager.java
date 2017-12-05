@@ -4403,11 +4403,13 @@ public class TvControlManager {
         base = r.readInt() - 1;
         bpl.ID = 1 ;
         bpl.freq= r.readInt();
+        bpl.channelNum = r.readInt();
         FList.add(bpl);
         for (int i = 1; i < size; i++) {
             FreqList pl = new FreqList();
             pl.ID = r.readInt() - base;
             pl.freq= r.readInt();
+            pl.channelNum = r.readInt();
             FList.add(pl);
         }
         cmd.recycle();
@@ -4429,11 +4431,13 @@ public class TvControlManager {
         base = r.readInt() - 1;
         bpl.ID = 1 ;
         bpl.freq= r.readInt();
+        bpl.channelNum = r.readInt();
         FList.add(bpl);
         for (int i = 1; i < size; i++) {
             FreqList pl = new FreqList();
             pl.ID = r.readInt() - base;
             pl.freq= r.readInt();
+            pl.channelNum = r.readInt();
             FList.add(pl);
         }
         cmd.recycle();
@@ -5652,6 +5656,7 @@ public class TvControlManager {
     public class FreqList {
         public int ID;
         public int freq;
+        public int channelNum;
     }
 
     /**
