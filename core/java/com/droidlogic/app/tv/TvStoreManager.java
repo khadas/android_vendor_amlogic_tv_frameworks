@@ -10,6 +10,9 @@ import android.os.Bundle;
 import android.content.Context;
 import android.media.tv.TvContract;
 
+import com.droidlogic.app.tv.TvControlManager;
+import com.droidlogic.app.tv.TvControlManager.FreqList;
+import com.droidlogic.app.tv.TvControlManager.TvMode;
 public abstract class TvStoreManager {
     public static final String TAG = "TvStoreManager";
 
@@ -25,7 +28,7 @@ public abstract class TvStoreManager {
 
     private TvControlManager.ScanMode mScanMode = null;
     private TvControlManager.SortMode mSortMode = null;
-
+    private TvControlManager mTvControlManager = null;
     private ArrayList<TvControlManager.ScannerLcnInfo> mLcnInfo = null;
 
     /*for store in search*/
@@ -35,6 +38,12 @@ public abstract class TvStoreManager {
 
     private ArrayList<ChannelInfo> mChannelsOld = null;
     private ArrayList<ChannelInfo> mChannelsNew = null;
+    private ArrayList<ChannelInfo> mChannelsExist = null;
+
+    private ArrayList<FreqList> mATSC_T = null;
+    private ArrayList<FreqList> mATSC_C_STD = null;
+    private ArrayList<FreqList> mATSC_C_LRC = null;
+    private ArrayList<FreqList> mATSC_HRC = null;
 
     private boolean on_channel_store_tschanged = true;
 
@@ -50,7 +59,7 @@ public abstract class TvStoreManager {
         mInitialLcnNumber = mInitialDisplayNumber;
 
         mTvDataBaseManager = new TvDataBaseManager(mContext);
-
+        mTvControlManager = TvControlManager.getInstance();
         display_number_start = mInitialDisplayNumber;
         lcn_overflow_start = mInitialLcnNumber;
     }
@@ -162,7 +171,13 @@ public abstract class TvStoreManager {
             Log.d(TAG, "Store> channel next:" + mDisplayNumber);
         }
     }
-
+    private void reinitChannels() {
+        if (mChannelsExist == null) {
+            mChannelsExist = mTvDataBaseManager.getChannelList(mInputId, TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO);
+            mChannelsExist.addAll(mTvDataBaseManager.getChannelList(mInputId, TvContract.Channels.SERVICE_TYPE_AUDIO));
+            mChannelsExist.addAll(mTvDataBaseManager.getChannelList(mInputId, TvContract.Channels.SERVICE_TYPE_OTHER));
+        }
+    }
     private ChannelInfo createDtvChannelInfo(TvControlManager.ScannerEvent event) {
         String name = null;
         String serviceType;
@@ -639,13 +654,86 @@ public abstract class TvStoreManager {
         on_channel_store_tschanged = true;
         mChannelsOld = null;
         mChannelsNew = null;
+        mChannelsExist = null;
     }
 
+   private boolean getIsSameDisplayNumber(ChannelInfo chan) {
+          int size = mChannelsExist.size();
+          for (int i = 0; i < size; i++) {
+           if (chan.getDisplayNumber().equals(mChannelsExist.get(i).getDisplayNumber()) && (chan.getFrequency() != mChannelsExist.get(i).getFrequency())) {
+               return true;
+           }
+         }
+       return false;
+    }
+
+   private int getDvbPhysicalNumFromListByFre(ArrayList<FreqList> mlist, int freq, int diff) {
+        int size = mlist.size();
+        for (int i = 0; i < size; i++) {
+            if (freq == mlist.get(i).freq) {
+                return i + 2;
+            }
+        }
+        for (int i = 0; i < size; i++) {
+            if (mlist.get(i).freq - diff < freq && freq < mlist.get(i).freq + diff) {
+                return i + 2;
+            }
+        }
+       return -1;
+    }
+
+    private int getDvbPhysicalNumByFre(TvMode tvMode, int freq) {
+
+        int diff = 3000000;
+        String type = tvMode.toType();
+        int physicalNum = -1;
+        Log.d(TAG, "type:" + type + " freq :" + freq);
+        if (type.equals(TvContract.Channels.TYPE_ATSC_T)) {
+          tvMode.setList(0);
+          if (mATSC_T == null) {
+              mATSC_T = mTvControlManager.DTVGetScanFreqList(tvMode.getMode());
+          }
+          physicalNum = getDvbPhysicalNumFromListByFre(mATSC_T, freq, diff);
+          return physicalNum;
+        }
+        if (type.equals(TvContract.Channels.TYPE_ATSC_C)) {
+          tvMode.setList(1);
+          if (mATSC_C_STD == null) {
+            mATSC_C_STD = mTvControlManager.DTVGetScanFreqList(tvMode.getMode());
+          }
+          physicalNum = getDvbPhysicalNumFromListByFre(mATSC_C_STD, freq, diff);
+          if (physicalNum != -1) {
+            //error
+            return physicalNum;
+          }
+          tvMode.setList(2);
+          if (mATSC_C_LRC == null) {
+            mATSC_C_LRC = mTvControlManager.DTVGetScanFreqList(tvMode.getMode());
+          }
+          physicalNum = getDvbPhysicalNumFromListByFre(mATSC_C_LRC, freq, diff);
+          if (physicalNum != -1) {
+            //error
+            return physicalNum;
+          }
+          tvMode.setList(3);
+          if (mATSC_HRC == null) {
+            mATSC_HRC = mTvControlManager.DTVGetScanFreqList(tvMode.getMode());
+          }
+          physicalNum = getDvbPhysicalNumFromListByFre(mATSC_HRC, freq, diff);
+          if (physicalNum != -1) {
+            //error
+            return physicalNum;
+          }
+        }
+        return physicalNum;
+    }
     public void onStoreEvent(TvControlManager.ScannerEvent event) {
         ChannelInfo channel = null;
         String name = null;
         Bundle bundle = null;
-
+        TvMode mode = null;
+        int freq = 0;
+        int physicalNum = -1;
         Log.d(TAG, "onEvent:" + event.type + " :" + mDisplayNumber);
 
         switch (event.type) {
@@ -680,8 +768,11 @@ public abstract class TvStoreManager {
             }
 
             if (mScanMode.isDTVManulScan())
-                initChannelsExist();
-
+               initChannelsExist();
+             /*get exist channel info list*/
+             reinitChannels();
+            TvControlManager.FEParas fep =
+                new TvControlManager.FEParas(DroidLogicTvUtils.getObjectString(event.paras, "fe"));
             channel = createDtvChannelInfo(event);
 
             if (mDisplayNumber2 != null)
@@ -703,9 +794,18 @@ public abstract class TvStoreManager {
                 }
             }
 
-            Log.d(TAG, "reset number to " + channel.getDisplayNumber());
-
+            if (getIsSameDisplayNumber(channel) == true) {
+              //is same
+               mode = fep.getMode();
+               freq = fep.getFrequency();
+               physicalNum = getDvbPhysicalNumByFre(mode, freq);
+               if (physicalNum > 0)
+                 channel.setDisplayNumber(""+physicalNum+"-"+channel.getServiceId());
+              Log.d(TAG, "----Channels physicalNum set DisplayName:" + physicalNum + " getDisplayNumber:" + channel.getDisplayNumber());
+            }
             channel.print();
+            /*add seach channel*/
+            mChannelsExist.add(channel);
             cacheChannel(event, channel);
 
             if (mDisplayNumber2 != null) {
