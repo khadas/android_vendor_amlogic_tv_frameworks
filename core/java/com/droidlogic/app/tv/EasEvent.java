@@ -5,11 +5,6 @@ import android.util.Log;
 
 public class EasEvent {
     private static final String TAG = "EasEvent";
-    private static final long GPS_UTC_OFFSET_IN_SECONDS = 315964800;
-    private static final int EAS_TEXT_MESSAGE           = 0;
-    private static final int EAS_LOW_PRIORITY           = 3;
-    private static final int EAS_MEDIUM_PRIORITY        = 7;
-    private static final int EAS_HIGH_PRIORITY          = 11;
     public int    tableId;                       //table id
     public int    extension;                     //subtable id
     public int    version;                       //version_number
@@ -62,6 +57,14 @@ public class EasEvent {
         public int[]  data;                      //content
     }
 
+    public void printEasEventInfo(){
+        Log.i(TAG,"[EasEventInfo]"+
+            "\n alertMessageTimeRemaining = "+alertMessageTimeRemaining+
+            "\n alertPriority = "+alertPriority+
+            "\n detailsMajorChannelNumber = "+detailsMajorChannelNumber+
+            "\n detailsMinorChannelNumber = "+detailsMinorChannelNumber);
+    }
+
     public void readEasEvent(Parcel p) {
         Log.i(TAG,"readEasEvent");
         int i, j, k;
@@ -76,10 +79,10 @@ public class EasEvent {
         for (j=0;j<3;j++) {
             easOrigCode[j] = p.readInt();
         }
-        int scnt = p.readInt();
-        if (scnt != 0) {
-            easEventCode = new int[scnt];
-            for (j=0;j<scnt;j++)
+        easEventCodeLen = p.readInt();
+        if (easEventCodeLen != 0) {
+            easEventCode = new int[easEventCodeLen];
+            for (j=0;j<easEventCodeLen;j++)
                 easEventCode[j] = p.readInt();
         }
         alertMessageTimeRemaining = p.readInt();
@@ -90,20 +93,20 @@ public class EasEvent {
         detailsMajorChannelNumber = p.readInt();
         detailsMinorChannelNumber = p.readInt();
         audioOOBSourceID = p.readInt();
-        scnt = p.readInt();
-        if (scnt != 0) {
-            location = new Location[scnt];
-            for (j=0;j<scnt;j++) {
+        locationCount = p.readInt();
+        if (locationCount != 0) {
+            location = new Location[locationCount];
+            for (j=0;j<locationCount;j++) {
                 location[j] = new Location();
                 location[j].stateCode = p.readInt();
                 location[j].countySubdiv = p.readInt();
                 location[j].countyCode = p.readInt();
             }
         }
-        scnt = p.readInt();
-        if (scnt != 0) {
-            exceptionList = new ExceptionList[scnt];
-            for (j=0;j<scnt;j++) {
+        exceptionCount = p.readInt();
+        if (exceptionCount != 0) {
+            exceptionList = new ExceptionList[exceptionCount];
+            for (j=0;j<exceptionCount;j++) {
                 exceptionList[j] = new ExceptionList();
                 exceptionList[j].inBandRefer = p.readInt();
                 exceptionList[j].exceptionMajorChannelNumber = p.readInt();
@@ -111,10 +114,10 @@ public class EasEvent {
                 exceptionList[j].exceptionOOBSourceID = p.readInt();
             }
         }
-        scnt = p.readInt();
-        if (scnt != 0) {
-            multiText = new MultiStr[scnt];
-            for (j=0;j<scnt;j++) {
+        multiTextCount = p.readInt();
+        if (multiTextCount != 0) {
+            multiText = new MultiStr[multiTextCount];
+            for (j=0;j<multiTextCount;j++) {
                 multiText[j] = new MultiStr();
                 multiText[j].lang = new int[3];
                 multiText[j].lang[0] = p.readInt();
@@ -130,10 +133,10 @@ public class EasEvent {
                 }
             }
         }
-        scnt = p.readInt();
-        if (scnt != 0) {
-            descriptor = new Descriptor[scnt];
-            for (j=0;j<scnt;j++) {
+        descriptorTextCount = p.readInt();
+        if (descriptorTextCount != 0) {
+            descriptor = new Descriptor[descriptorTextCount];
+            for (j=0;j<descriptorTextCount;j++) {
                 descriptor[j] = new Descriptor();
                 descriptor[j].tag = p.readInt();
                 descriptor[j].length = p.readInt();
