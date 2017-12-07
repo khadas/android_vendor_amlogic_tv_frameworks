@@ -77,6 +77,7 @@ public class DroidContentRatingsParser {
     private static final boolean DEBUG = false;
 
     public static final String DOMAIN_RRT_RATINGS = "com.droidlogic.app.tv";
+    public static final int FIXED_REGION_lEVEL_2 = 2;
 
     private static final String TAG_RATING_SYSTEM_DEFINITIONS = "rating-system-definitions";
     private static final String TAG_RATING_SYSTEM_DEFINITION = "rating-system-definition";
@@ -170,6 +171,7 @@ public class DroidContentRatingsParser {
                     break;
                 case ATTR_RATING:
                     //Log.w(TAG, "         attr:"+attr+", value:"+parser.getAttributeValue(i));
+                    builder.setRegion(StringToInt(parser.getAttributeValue(i)));
                     break;
                 case ATTR_COUNTRY:
                    // Log.w(TAG, "         attr:"+attr+", value:"+parser.getAttributeValue(i));
@@ -190,6 +192,16 @@ public class DroidContentRatingsParser {
             }
         }
         return builder;
+    }
+
+    private int StringToInt(String value) {
+        int getvalue = -1;
+        try {
+            getvalue = Integer.valueOf(value);
+        } catch (NumberFormatException e){
+            throw new NumberFormatException("string is not integer: " + value);
+        }
+        return getvalue;
     }
 
     private RatingDefinition parseRatingDefinition_t(XmlPullParser parser)
@@ -227,6 +239,7 @@ public class DroidContentRatingsParser {
     public class ContentRatingSystemT {
         private String mName;
         private String mCountry;
+        private int mRegion;
         private final List<RatingDefinition> mRatings =  new ArrayList<>();
 
         public void ContentRatingSystemT(){
@@ -244,6 +257,14 @@ public class DroidContentRatingsParser {
             mCountry = "NULL";
         else
             mCountry = country;
+        }
+
+        public void setRegion(int region) {
+            mRegion = region;
+        }
+
+        public int getRegion() {
+            return mRegion;
         }
 
         public String getName() {
