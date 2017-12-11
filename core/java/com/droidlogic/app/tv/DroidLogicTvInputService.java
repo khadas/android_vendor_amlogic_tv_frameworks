@@ -677,4 +677,10 @@ public class DroidLogicTvInputService extends TvInputService implements
     private float getUptimeSeconds() {
        return  (float)SystemClock.uptimeMillis() / 1000;
     }
+
+    public void notifyAppEasStatus(boolean isStarted){
+        Log.d(TAG, "notifyAppEasStatus:"+isStarted);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DroidLogicTvUtils.SIG_INFO_EAS_STATUS, isStarted ? 1 : 0);
+        mSession.notifySessionEvent(DroidLogicTvUtils.SIG_INFO_EAS_EVENT, bundle);};
 }

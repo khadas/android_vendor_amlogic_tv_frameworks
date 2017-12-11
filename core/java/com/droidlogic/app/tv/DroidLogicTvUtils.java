@@ -105,6 +105,8 @@ public class DroidLogicTvUtils
     public static final int SIG_INFO_TYPE_ADTV  = 5;
     public static final int SIG_INFO_TYPE_OTHER  = 6;
 
+    public static final String SIG_INFO_EAS_EVENT = "dtv_eas_event";
+    public static final String SIG_INFO_EAS_STATUS = "eas_status";
     /**
      * source input type need to switch
      */

@@ -22,20 +22,12 @@ public class EasManager {
             return false;
         }
 
-        if (easEvent.alertPriority == 0) {
+        if (easEvent.alertPriority == EAS_TEXT_MESSAGE) {
             return false;
         }
 
         preEasEvent = easEvent;
         return true;
-    }
-
-    public boolean isEasEventNeedChannel(){
-        if (curEasEvent != null && curEasEvent.alertPriority >= EAS_HIGH_PRIORITY) {
-            return true;
-        }else {
-            return false;
-        }
     }
  }
 

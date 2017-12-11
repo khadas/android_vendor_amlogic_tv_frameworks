@@ -561,15 +561,12 @@ public class TvControlManager {
                      if (mEasListener != null) {
                         Log.i(TAG,"mEaslister is not null");
                         int sectionCount = p.readInt();
+                        Log.i(TAG,"eas section count = "+sectionCount);
                         for (int count = 0; count<sectionCount; count++) {
                             EasEvent curEasEvent = new EasEvent();
                             curEasEvent.readEasEvent(p);
                             if (easManager.isEasEventNeedProcess(curEasEvent)) {
-                                if (easManager.isEasEventNeedChannel()) {
-                                    mEasListener.processDetailsChannelAlert(curEasEvent);
-                                }else {
-                                    mEasListener.processTextAlert(curEasEvent);
-                                }
+                                mEasListener.processDetailsChannelAlert(curEasEvent);
                             }
                         }
                      }
@@ -4794,7 +4791,6 @@ public class TvControlManager {
     }
     public interface EasEventListener {
         void processDetailsChannelAlert(EasEvent ev);
-        void processTextAlert(EasEvent ev);
     }
 
     public class VFrameEvent{
