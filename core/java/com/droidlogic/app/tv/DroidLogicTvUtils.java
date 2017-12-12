@@ -296,6 +296,10 @@ public class DroidLogicTvUtils
 
     public static String getCurrentSignalType(Context context) {
         String mCurrentSignalType = Settings.System.getString(context.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_TYPE);
+        if (mCurrentSignalType == null) {
+            mCurrentSignalType = TvContract.Channels.TYPE_ATSC_T;
+            Settings.System.putString(context.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_TYPE, mCurrentSignalType);
+        }
 
         if (mCurrentSignalType.equals(TvContract.Channels.TYPE_ATSC_T)) {
           mCurrentSignalType = DroidLogicTvUtils.SIGNAL_TYPE_AIR;
