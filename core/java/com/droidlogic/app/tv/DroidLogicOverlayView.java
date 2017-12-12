@@ -47,6 +47,10 @@ public abstract class DroidLogicOverlayView extends FrameLayout {
         mTextView.setText(resId);
     }
 
+    public void setText(CharSequence text) {
+        mTextView.setText(text);
+    }
+
     public void setTextVisibility(boolean visible) {
         mTextView.setVisibility(visible ? VISIBLE : GONE);
     }
