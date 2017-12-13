@@ -59,6 +59,7 @@ public class ChannelInfo {
     public static final String KEY_AUDIO_LANGS = "audio_langs";
     public static final String KEY_AUDIO_EXTS = "audio_exts";
     public static final String KEY_AUDIO_TRACK_INDEX = "audio_track_index";
+    public static final String KEY_AUDIO_OUTPUT_MODE = "audio_out_mode";
     public static final String KEY_AUDIO_COMPENSATION = "audio_compensation";
     public static final String KEY_AUDIO_CHANNEL = "audio_channel";
     public static final String KEY_AUDIO_STD = "audio_std";
@@ -140,6 +141,7 @@ public class ChannelInfo {
     private int mAudioTrackIndex; //-1:not select, -2:off, >=0:index
     private int mAudioCompensation;
     private int mAudioChannel;
+    private int mAudioOutPutMode;//-1:not set 0:mono 1:stereo 2:sap
 
     private int mPcrPid;
 
@@ -287,6 +289,8 @@ public class ChannelInfo {
                 builder.setSignalType(DroidLogicTvUtils.TvString.fromString(parsedMap.get(KEY_SIGNAL_TYPE)));
             if (parsedMap.get(KEY_AUDIO_TRACK_INDEX) != null)
                 builder.setAudioTrackIndex(Integer.parseInt(parsedMap.get(KEY_AUDIO_TRACK_INDEX)));
+            if (parsedMap.get(KEY_AUDIO_OUTPUT_MODE) != null)
+                builder.setAudioOutPutMode(Integer.parseInt(parsedMap.get(KEY_AUDIO_OUTPUT_MODE)));
             if (parsedMap.get(KEY_AUDIO_COMPENSATION) != null)
                 builder.setAudioCompensation(Integer.parseInt(parsedMap.get(KEY_AUDIO_COMPENSATION)));
             if (parsedMap.get(KEY_AUDIO_CHANNEL) != null)
@@ -487,6 +491,10 @@ public class ChannelInfo {
 
     public int getAudioTrackIndex() {
         return mAudioTrackIndex;
+    }
+
+    public int getAudioOutPutMode() {
+        return mAudioOutPutMode;
     }
 
     public int getAudioCompensation() {
@@ -721,6 +729,10 @@ public class ChannelInfo {
         mAudioTrackIndex = index;
     }
 
+    public void setAudioOutPutMode(int mode) {
+        mAudioOutPutMode = mode;
+    }
+
     public void setAudioCompensation(int value) {
         mAudioCompensation = value;
     }
@@ -851,6 +863,7 @@ public class ChannelInfo {
             mChannel.mAudioStd = -1;
             mChannel.mIsAutoStd = -1;
             mChannel.mAudioTrackIndex = -1;
+            mChannel.mAudioOutPutMode = -1;
             mChannel.mAudioCompensation = -1;
             mChannel.mAudioChannel = 0;
 
@@ -1009,6 +1022,11 @@ public class ChannelInfo {
 
         public Builder setAudioTrackIndex(int index) {
             mChannel.mAudioTrackIndex = index;
+            return this;
+        }
+
+        public Builder setAudioOutPutMode(int mode) {
+            mChannel.mAudioOutPutMode = mode;
             return this;
         }
 
@@ -1282,6 +1300,7 @@ public class ChannelInfo {
                 "\n AudioStd = " + mAudioStd +
                 "\n IsAutoStd = " + mIsAutoStd +
                 "\n AudioTrackIndex = " + mAudioTrackIndex +
+                "\n mAudioOutPutMode = " + mAudioOutPutMode +
                 "\n AudioCompensation = " + mAudioCompensation +
                 "\n AudioChannel = " + mAudioChannel +
                 "\n PcrPid = " + mPcrPid +
