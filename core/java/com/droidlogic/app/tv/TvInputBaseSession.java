@@ -176,6 +176,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (mOverlayView != null) {
             mOverlayView.setImageVisibility(false);
             mOverlayView.setTextVisibility(false);
+            mOverlayView.setSubtitleVisibility(false);
         }
     }
 
