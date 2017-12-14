@@ -252,7 +252,8 @@ public abstract class TvStoreManager {
                .setHidden(event.hidden)
                .setHideGuide(event.hideGuide)
                .setVct(event.vct)
-               .setSignalType(DroidLogicTvUtils.getCurrentSignalType(mContext))
+               .setSignalType(DroidLogicTvUtils.getCurrentSignalType(mContext) == DroidLogicTvUtils.SIGNAL_TYPE_ERROR
+                ? TvContract.Channels.TYPE_ATSC_T : DroidLogicTvUtils.getCurrentSignalType(mContext))
                .build();
     }
 
@@ -330,7 +331,8 @@ public abstract class TvStoreManager {
                .setHidden(event.hidden)
                .setHideGuide(event.hideGuide)
                .setContentRatings(null)
-               .setSignalType(DroidLogicTvUtils.getCurrentSignalType(mContext))
+               .setSignalType(DroidLogicTvUtils.getCurrentSignalType(mContext) == DroidLogicTvUtils.SIGNAL_TYPE_ERROR
+                ? TvContract.Channels.TYPE_ATSC_T : DroidLogicTvUtils.getCurrentSignalType(mContext))
                .build();
     }
 
