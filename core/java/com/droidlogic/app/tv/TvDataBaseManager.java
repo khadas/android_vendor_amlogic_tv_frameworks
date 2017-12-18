@@ -432,7 +432,6 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_VCT, "\""+channel.getVct()+"\"");
         map.put(ChannelInfo.KEY_EITV, Arrays.toString(channel.getEitVersions()));
         String output = DroidLogicTvUtils.mapToJson(map);
-        Log.d(TAG, "DTV mapToJson = " + output);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
         values.put(ChannelInfo.COLUMN_LCN, channel.getLCN());
@@ -452,7 +451,6 @@ public class TvDataBaseManager {
         values.put(Channels.COLUMN_SERVICE_TYPE, channel.getServiceType());
 
         String output = DroidLogicTvUtils.mapToJson(buildAtvChannelMap(channel));
-        Log.d(TAG, "ATV mapToJson = " + output);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
         return values;
@@ -1258,7 +1256,7 @@ public class TvDataBaseManager {
 
         Collections.sort(newPrograms, new ComparatorValues());
         Collections.sort(oldPrograms, new ComparatorValues());
-        Log.d(TAG, "updatePrograms sort programs ");
+        //Log.d(TAG, "updatePrograms sort programs ");
         Program firstNewProgram = null;
         for (Program program : newPrograms) {
             if (isAtsc && !isATSCSpecialProgram(program)) {
@@ -1267,9 +1265,9 @@ public class TvDataBaseManager {
             }
         }
 
-        for (Program p : newPrograms) {
-            Log.d(TAG, "epg todo:cid("+p.getChannelId()+")eid("+p.getProgramId()+")desc("+p.getTitle()+")desc2("+p.getDescription()+")time("+p.getStartTimeUtcMillis()+"-"+p.getEndTimeUtcMillis()+")");
-        }
+//        for (Program p : newPrograms) {
+//            Log.d(TAG, "epg todo:cid("+p.getChannelId()+")eid("+p.getProgramId()+")desc("+p.getTitle()+")desc2("+p.getDescription()+")time("+p.getStartTimeUtcMillis()+"-"+p.getEndTimeUtcMillis()+")");
+//        }
 
         int oldProgramsIndex = 0;
         int newProgramsIndex = 0;
@@ -1314,7 +1312,7 @@ public class TvDataBaseManager {
                             ops.add(ContentProviderOperation.newDelete(TvContract.buildProgramUri(program.getId()))
                                                         .build());
                             */
-                            Log.d(TAG, "\tepg etm:cid("+program.getChannelId()+")eid("+program.getProgramId()+")");
+                            //Log.d(TAG, "\tepg etm:cid("+program.getChannelId()+")eid("+program.getProgramId()+")");
                             break;
                         }
                     }
@@ -1324,7 +1322,7 @@ public class TvDataBaseManager {
                     // Exact match. No need to update. Move on to the next programs.
                     oldProgramsIndex++;
                     newProgramsIndex++;
-                    Log.d(TAG, "\tepg match:cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
+                    //Log.d(TAG, "\tepg match:cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")");
                 } else if (needsUpdate(oldProgram, newProgram)) {
                     // Partial match. Update the old program with the new one.
                     // NOTE: Use 'update' in this case instead of 'insert' and 'delete'. There could
