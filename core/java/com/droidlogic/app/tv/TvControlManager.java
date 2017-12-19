@@ -702,6 +702,17 @@ public class TvControlManager {
     }
 
     /**
+     * @Function: GetHotPlugDetect
+     * @Description: Get hotplug detect enable status
+     * @Param:
+     * @Return: true refer to on, and false refers to off
+     */
+    public boolean GetHotPlugDetectEnableStatus() {
+        int ret = sendCmd(HDMIAV_HOTPLUGDETECT_ONOFF);
+        return (ret == 1 ? true:false);
+    }
+
+    /**
      * @Function: GetLastSourceInput
      * @Description: Get last source input
      * @Param:
