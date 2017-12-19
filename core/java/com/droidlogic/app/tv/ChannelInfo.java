@@ -30,6 +30,7 @@ public class ChannelInfo {
         Channels.COLUMN_VIDEO_FORMAT,
         Channels.COLUMN_INTERNAL_PROVIDER_DATA,
         Channels.COLUMN_BROWSABLE,
+        TvContract.Channels.COLUMN_LOCKED,
         COLUMN_LCN,
         COLUMN_LCN1,
         COLUMN_LCN2
@@ -381,6 +382,10 @@ public class ChannelInfo {
         index = cursor.getColumnIndex(Channels.COLUMN_BROWSABLE);
         if (index >= 0)
             builder.setBrowsable(cursor.getInt(index)==1 ? true : false);
+
+        index = cursor.getColumnIndex(Channels.COLUMN_LOCKED);
+        if (index >= 0)
+            builder.setLocked(cursor.getInt(index)==1 ? true : false);
 
         index = cursor.getColumnIndex(COLUMN_LCN);
         if (index >= 0)
@@ -747,6 +752,10 @@ public class ChannelInfo {
 
     public void setBrowsable(boolean enable) {
         mBrowsable = enable;
+    }
+
+    public void setLocked(boolean enable) {
+        mLocked = enable;
     }
 
     public void setFavourite(boolean enable) {
