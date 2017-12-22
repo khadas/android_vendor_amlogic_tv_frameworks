@@ -1367,6 +1367,8 @@ public class ChannelInfo {
         public static final int CC_CAPTION_SERVICE4 = 12;
         public static final int CC_CAPTION_SERVICE5 = 13;
         public static final int CC_CAPTION_SERVICE6 = 14;
+        /*xds vchip services*/
+        public static final int CC_CAPTION_VCHIP_ONLY = 15;
 
         public int mType;
         public int mPid;
