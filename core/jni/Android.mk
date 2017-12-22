@@ -3,7 +3,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
 
-LIB_TV_BINDER_PATH := $(wildcard vendor/amlogic/tv/frameworks/libtvbinder)
+LIB_TV_BINDER_PATH := $(wildcard $(BOARD_AML_VENDOR_PATH)/tv/frameworks/libtvbinder)
 
 LOCAL_SRC_FILES:= \
         com_droidlogic_app_tv_TvControlManager.cpp
