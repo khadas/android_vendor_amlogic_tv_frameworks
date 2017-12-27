@@ -792,7 +792,17 @@ public abstract class TvStoreManager {
                   //one_part_number = (major_channel_number & 0x00f) << 10 + mino_channel_number
                   int one_part_number = ((event.majorChannelNumber & 0x00f) << 10) + event.minorChannelNumber;
                   Log.d(TAG, "set one_part_number:"+ one_part_number + " maj:" + event.majorChannelNumber + " min:" +event.minorChannelNumber);
-                  channel.setDisplayNumber(""+one_part_number);
+                  if (one_part_number == 0) {
+                      mode = fep.getMode();
+                      freq = fep.getFrequency();
+                      physicalNum = getDvbPhysicalNumByFre(mode, freq);
+                      if (physicalNum > 0)
+                         channel.setDisplayNumber(""+physicalNum+"-"+channel.getServiceId());
+                       else
+                        channel.setDisplayNumber("0"+"-"+channel.getServiceId());
+                  } else {
+                      channel.setDisplayNumber(""+one_part_number);
+                  }
                 }
             }
 
