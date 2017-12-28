@@ -754,6 +754,125 @@ public class TvDataBaseManager {
         }
     }
 
+    public void updateOrinsertChannelInList(ArrayList<ChannelInfo> updatelist, ArrayList<ChannelInfo> insertlist, boolean isdtv) {
+        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+        for (ChannelInfo one : updatelist) {
+            long id = one.getId();
+            if (id == -1) {
+                id = queryChannelIdInDb(one);
+                Log.d(TAG, "updateOrinsertChannelInList find id = " + id);
+            }
+            if (id < 0) {
+                ops.add(creatOperation(isdtv, false, id, one));
+            } else {
+                ops.add(creatOperation(isdtv, true, id, one));
+            }
+            Log.d(TAG, "updateOrinsertChannelInList add update = " + one.getDisplayNumber());
+        }
+        for (ChannelInfo one : insertlist) {
+            ops.add(creatOperation(isdtv, false, -1, one));
+            Log.d(TAG, "updateOrinsertChannelInList add insert = " + one.getDisplayNumber());
+        }
+        try {
+            mContentResolver.applyBatch(TvContract.AUTHORITY, ops);
+        } catch (RemoteException | OperationApplicationException e) {
+            Log.e(TAG, "updateOrinsertChannelInList Failed = " + e.getMessage());
+        }
+        ops.clear();
+    }
+
+    private ContentProviderOperation creatOperation(boolean isdtv, boolean isupdate, long id, ChannelInfo ch) {
+        if (isdtv) {
+            if (isupdate) {
+                return ContentProviderOperation.newUpdate(
+                                    TvContract.buildChannelUri(id))
+                                    .withValues(buildDtvChannelData(ch))
+                                    .build();
+            } else {
+                return ContentProviderOperation.newInsert(
+                                    TvContract.Channels.CONTENT_URI)
+                                    .withValues(buildDtvChannelData(ch))
+                                    .build();
+            }
+        } else {
+            if (isupdate) {
+                return ContentProviderOperation.newUpdate(
+                                    TvContract.buildChannelUri(id))
+                                    .withValues(buildAtvChannelData(ch))
+                                    .build();
+            } else {
+                return ContentProviderOperation.newInsert(
+                                    TvContract.Channels.CONTENT_URI)
+                                    .withValues(buildAtvChannelData(ch))
+                                    .build();
+            }
+        }
+    }
+
+    public long queryChannelIdInDb(ChannelInfo channel) {
+        long id = -1;//-1 means not init; -2 means not exist
+        if (channel != null) {
+             id = channel.getId();
+            if (id > -1) {
+                return id;
+            }
+        } else {
+            return id;
+        }
+        Uri channelsUri = TvContract.buildChannelsUriForInput(channel.getInputId());
+        String[] projection = {Channels._ID,
+            Channels.COLUMN_SERVICE_ID,
+            Channels.COLUMN_ORIGINAL_NETWORK_ID,
+            Channels.COLUMN_TRANSPORT_STREAM_ID,
+            Channels.COLUMN_DISPLAY_NUMBER,
+            Channels.COLUMN_DISPLAY_NAME,
+            Channels.COLUMN_INTERNAL_PROVIDER_DATA};
+
+        Cursor cursor = null;
+        try {
+            boolean found = false;
+            cursor = mContentResolver.query(channelsUri, projection, Channels.COLUMN_SERVICE_TYPE + "=?", new String[]{channel.getServiceType()}, null);
+            while (cursor != null && cursor.moveToNext()) {
+                long rowId = cursor.getLong(findPosition(projection, Channels._ID));
+
+                if (channel.getId() == -1) {
+                    int serviceId = cursor.getInt(findPosition(projection, Channels.COLUMN_SERVICE_ID));
+                    int originalNetworkId = cursor.getInt(findPosition(projection, Channels.COLUMN_ORIGINAL_NETWORK_ID));
+                    int transportStreamId = cursor.getInt(findPosition(projection, Channels.COLUMN_TRANSPORT_STREAM_ID));
+                    String name = cursor.getString(findPosition(projection, Channels.COLUMN_DISPLAY_NAME));
+                    int frequency = 0;
+                    int index = cursor.getColumnIndex(Channels.COLUMN_INTERNAL_PROVIDER_DATA);
+                    if (index >= 0) {
+                        Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(cursor.getString(index));
+                        frequency = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_FREQUENCY));
+                    }
+                    if ((serviceId == channel.getServiceId()
+                        && originalNetworkId == channel.getOriginalNetworkId()
+                        && transportStreamId == channel.getTransportStreamId()
+                        && frequency == channel.getFrequency()
+                        && TextUtils.equals(name, channel.getDisplayName())) || (channel.isAnalogChannel() && frequency == channel.getFrequency()))
+                        found = true;
+                }
+
+                if (found) {
+                    id = rowId;
+                    return id;
+                }
+            }
+            if (id == -1)
+                return -2;
+        } catch (Exception e) {
+            //TODO
+            Log.e(TAG, "queryChannelIdInDb Failed = " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return -1;
+    }
+
     // If a channel exists, update it. If not, insert a new one.
     public void updateOrinsertAtvChannel(ChannelInfo channel) {
         int updateRet = updateAtvChannel(channel);

@@ -677,6 +677,10 @@ public class ChannelInfo {
         mType = type;
     }
 
+    public void setId(long value) {
+        mId = value;
+    }
+
     public void setDisplayNumber(String number) {
         mDisplayNumber = number;
         mNumber = stringToInteger(number);
@@ -1280,6 +1284,17 @@ public class ChannelInfo {
 
     public boolean isAVChannel() {
         return (!mServiceType.equals(TvContract.Channels.SERVICE_TYPE_OTHER));
+    }
+
+    public boolean isSameChannel(ChannelInfo a) {
+        if (a == null)
+            return false;
+
+        return a.getServiceId() == mServiceId
+                && a.getOriginalNetworkId() == mOriginalNetworkId
+                && a.getTransportStreamId() == mTransportStreamId
+                && a.getFrequency() == mFrequency
+                && TextUtils.equals(a.getDisplayName(), mDisplayName);
     }
 
     public void print () {

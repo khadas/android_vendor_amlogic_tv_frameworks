@@ -9,6 +9,11 @@ import android.util.Log;
 import android.os.Bundle;
 import android.content.Context;
 import android.media.tv.TvContract;
+import android.os.Handler;
+import android.os.Message;
+import android.text.TextUtils;
+import android.os.SystemProperties;
+import android.os.HandlerThread;
 
 import com.droidlogic.app.tv.TvControlManager;
 import com.droidlogic.app.tv.TvControlManager.FreqList;
@@ -34,11 +39,13 @@ public abstract class TvStoreManager {
     /*for store in search*/
     private boolean isFinalStoreStage = false;
     private boolean isRealtimeStore = true;
-
+    private HandlerThread mhandlerThread;
+    private Handler mChildHandler;
 
     private ArrayList<ChannelInfo> mChannelsOld = null;
     private ArrayList<ChannelInfo> mChannelsNew = null;
     private ArrayList<ChannelInfo> mChannelsExist = null;
+    private ArrayList<ChannelInfo> mChannelsAll = null;
 
     private ArrayList<FreqList> mATSC_T = null;
     private ArrayList<FreqList> mATSC_C_STD = null;
@@ -62,6 +69,9 @@ public abstract class TvStoreManager {
         mTvControlManager = TvControlManager.getInstance();
         display_number_start = mInitialDisplayNumber;
         lcn_overflow_start = mInitialLcnNumber;
+        mhandlerThread = new HandlerThread("dealevent");
+        mhandlerThread.start();
+        mChildHandler = new Handler(mhandlerThread.getLooper(), new ChildCallback());
     }
 
     public void setInitialLcnNumber(int initialLcnNumber) {
@@ -170,12 +180,18 @@ public abstract class TvStoreManager {
             mChannelsOld.addAll(mTvDataBaseManager.getChannelList(mInputId, TvContract.Channels.SERVICE_TYPE_OTHER));
             Log.d(TAG, "Store> channel next:" + mDisplayNumber);
         }
+        if (mChannelsAll == null) {
+            mChannelsAll = new ArrayList<ChannelInfo>();
+        }
     }
     private void reinitChannels() {
         if (mChannelsExist == null) {
             mChannelsExist = mTvDataBaseManager.getChannelList(mInputId, TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO);
             mChannelsExist.addAll(mTvDataBaseManager.getChannelList(mInputId, TvContract.Channels.SERVICE_TYPE_AUDIO));
             mChannelsExist.addAll(mTvDataBaseManager.getChannelList(mInputId, TvContract.Channels.SERVICE_TYPE_OTHER));
+        }
+        if (mChannelsAll == null) {
+            mChannelsAll = new ArrayList<ChannelInfo>();
         }
     }
     private ChannelInfo createDtvChannelInfo(TvControlManager.ScannerEvent event) {
@@ -359,9 +375,14 @@ public abstract class TvStoreManager {
         if (mChannelsNew == null)
             mChannelsNew = new ArrayList();
 
-        mChannelsNew.add(channel);
+        //not add the same channel
+        int newindex = dealRepeatCacheChannels(channel);
+        if (newindex > -1) {
+            channel = mChannelsNew.get(newindex);
+            Log.d(TAG, "cacheChannel update id = " + channel.getId());
+        }
 
-        Log.d(TAG, "store save [" + channel.getDisplayNumber() + "][" + channel.getFrequency() + "][" + channel.getServiceType() + "][" + channel.getDisplayName() + "]");
+        Log.d(TAG, "store save [" + channel.getDisplayNumber() + "][" + channel.getFrequency() + "][" + channel.getServiceType() + "][" + channel.getDisplayName() + "][" + channel.getId() + "]");
 
         if (mScanMode.isDTVManulScan() || mScanMode.isATVManualScan()) {
             if (on_channel_store_tschanged) {
@@ -371,6 +392,53 @@ public abstract class TvStoreManager {
         }
     }
 
+    private int dealRepeatCacheChannels(ChannelInfo ch) {
+        if (ch == null) {
+            return -1;
+        }
+        boolean hasaddtoall = false;
+        for (int j = 0; j < mChannelsAll.size(); j++) {
+            ChannelInfo tempch = mChannelsAll.get(j);
+            if (tempch != null && tempch.isSameChannel(ch)) {
+                if (tempch.getId() < 0) {
+                    long id = mTvDataBaseManager.queryChannelIdInDb(tempch);
+                    if (id > -1) {
+                        ch.setId(id);
+                    }
+                } else {
+                    ch.setId(tempch.getId());
+                }
+
+                mChannelsAll.remove(j);
+                mChannelsAll.add(j, ch);
+                hasaddtoall = true;
+                Log.d(TAG, "dealRepeatCacheChannels exist in all  = " + mChannelsAll.get(j).getDisplayNumber() + ", id = " + mChannelsAll.get(j).getId() + ", type = " + mChannelsAll.get(j).getType());
+                if (ch.isAnalogChannel() || ch.isAtscChannel()) {
+                    return -1;//atsc and analog channel don't need to cache the same channel as dtmb channel DisplayNumber may change
+                }
+            }
+        }
+        if (!hasaddtoall) {
+            mChannelsAll.add(ch);
+            Log.d(TAG, "dealRepeatCacheChannels not exist in all  = " + ch.getDisplayNumber());
+        }
+        boolean hasaddtonew = false;
+        for (int i = 0; i < mChannelsNew.size(); i++) {
+            ChannelInfo tempch = mChannelsNew.get(i);
+            if (tempch != null && tempch.isSameChannel(ch)) {
+                Log.d(TAG, "dealRepeatCacheChannels exist in new = " + tempch.getDisplayNumber());
+                mChannelsNew.remove(i);
+                mChannelsNew.add(i, ch);
+                hasaddtonew = true;
+                return i;
+            }
+        }
+        if (!hasaddtonew) {
+            mChannelsNew.add(ch);
+            Log.d(TAG, "dealRepeatCacheChannels not exist in new = " + ch.getDisplayNumber());
+        }
+        return mChannelsNew.size() -1;
+    }
 
     private boolean isChannelInListbyId(ChannelInfo channel, ArrayList<ChannelInfo> list) {
         if (list == null)
@@ -589,6 +657,12 @@ public abstract class TvStoreManager {
 
     private void storeTvChannel(boolean isRealtimeStore, boolean isFinalStore) {
         Bundle bundle = null;
+        ArrayList<ChannelInfo> dtvchannelsnew= new ArrayList<ChannelInfo>();
+        ArrayList<ChannelInfo> atvchannelsnew= new ArrayList<ChannelInfo>();
+        ArrayList<ChannelInfo> dtvchannelsinsert;
+        ArrayList<ChannelInfo> dtvchannelsupdate;
+        ArrayList<ChannelInfo> atvchannelsinsert;
+        ArrayList<ChannelInfo> atvchannelsupdate;
 
         Log.d(TAG, "isRealtimeStore:" + isRealtimeStore + " isFinalStore:"+ isFinalStore);
 
@@ -630,10 +704,13 @@ public abstract class TvStoreManager {
                 }
 
                 if (isRealtimeStore) {
-                    if (c.isAnalogChannel())
-                        mTvDataBaseManager.updateOrinsertAtvChannelWithNumber(c);
-                    else
-                        mTvDataBaseManager.updateOrinsertDtvChannelWithNumber(c);
+                    if (c.isAnalogChannel()) {
+                        //mTvDataBaseManager.updateOrinsertAtvChannelWithNumber(c);
+                        atvchannelsnew.add(c);
+                    } else {
+                        //mTvDataBaseManager.updateOrinsertDtvChannelWithNumber(c);
+                        dtvchannelsnew.add(c);
+                    }
                 } else {
                     if (c.isAnalogChannel())
                         mTvDataBaseManager.insertAtvChannel(c, c.getDisplayNumber());
@@ -641,14 +718,24 @@ public abstract class TvStoreManager {
                         mTvDataBaseManager.insertDtvChannel(c, c.getDisplayNumber());
                 }
 
-                Log.d(TAG, ((isRealtimeStore) ? "update/insert [" : "insert [") + c.getDisplayNumber()
-                    + "][" + c.getFrequency() + "][" + c.getServiceType() + "][" + c.getDisplayName() + "]");
+                /*Log.d(TAG, ((isRealtimeStore) ? "update/insert [" : "insert [") + c.getDisplayNumber()
+                    + "][" + c.getFrequency() + "][" + c.getServiceType() + "][" + c.getDisplayName() + "]");*/
 
                 if (isFinalStore) {
                     bundle = getDisplayNumBunlde(c.getNumber());
                     onEvent(DroidLogicTvUtils.SIG_INFO_C_DISPLAYNUM_EVENT, bundle);
                 }
             }
+        }
+        if (atvchannelsnew != null && atvchannelsnew.size() > 0) {
+            atvchannelsupdate = getNeedUpdateChannel(atvchannelsnew);
+            atvchannelsinsert= getNeedInsertChannel(atvchannelsnew);
+            mTvDataBaseManager.updateOrinsertChannelInList(atvchannelsupdate, atvchannelsinsert, false);
+        }
+        if (dtvchannelsnew != null && dtvchannelsnew.size() > 0) {
+            dtvchannelsupdate = getNeedUpdateChannel(dtvchannelsnew);
+            dtvchannelsinsert= getNeedInsertChannel(dtvchannelsnew);
+            mTvDataBaseManager.updateOrinsertChannelInList(dtvchannelsupdate, dtvchannelsinsert, true);
         }
 
         lcn_overflow_start = mInitialLcnNumber;
@@ -657,6 +744,45 @@ public abstract class TvStoreManager {
         mChannelsOld = null;
         mChannelsNew = null;
         mChannelsExist = null;
+    }
+
+    private ArrayList<ChannelInfo> getNeedUpdateChannel(ArrayList<ChannelInfo> list) {
+        ArrayList<ChannelInfo> needupdate = new ArrayList<ChannelInfo>();
+        for (int i = 0; i < list.size(); i++) {
+            for (int j = 0; j < mChannelsAll.size(); j++) {
+                ChannelInfo tempch = mChannelsAll.get(j);
+                if (tempch != null && TextUtils.equals(tempch.getDisplayNumber(), list.get(i).getDisplayNumber()) && tempch.getFrequency() == list.get(i).getFrequency()) {
+                    ChannelInfo updateinfo = list.get(i);
+                    if (tempch.getId() > -1) {
+                        updateinfo.setId(tempch.getId());
+                    }
+                    needupdate.add(updateinfo);
+                }
+            }
+        }
+        Log.d(TAG, "getNeedUpdateChannel size = " + needupdate.size());
+        return needupdate;
+    }
+
+    private ArrayList<ChannelInfo> getNeedInsertChannel(ArrayList<ChannelInfo> list) {
+        ArrayList<ChannelInfo> needinsert = new ArrayList<ChannelInfo>();
+        boolean exist = false;
+        for (int i = 0; i < list.size(); i++) {
+            for (int j = 0; j < mChannelsAll.size(); j++) {
+                ChannelInfo tempch = mChannelsAll.get(j);
+                if (tempch != null && TextUtils.equals(tempch.getDisplayNumber(), list.get(i).getDisplayNumber()) && tempch.getFrequency() == list.get(i).getFrequency()) {
+                    exist = true;
+                    break;
+                }
+            }
+            if (!exist) {
+                needinsert.add(list.get(i));
+            } else {
+                exist = false;
+            }
+        }
+        Log.d(TAG, "getNeedInsertChannel size = " + needinsert.size());
+        return needinsert;
     }
 
    private boolean getIsSameDisplayNumber(ChannelInfo chan) {
@@ -730,6 +856,17 @@ public abstract class TvStoreManager {
         return physicalNum;
     }
     public void onStoreEvent(TvControlManager.ScannerEvent event) {
+        sendStoreEvent(event);
+    }
+
+    private void sendStoreEvent(TvControlManager.ScannerEvent event) {
+        Message msg = new Message();
+        msg.arg1 = event.type;
+        msg.obj = event;
+        mChildHandler.sendMessage(msg);
+    }
+
+    public void dealStoreEvent(TvControlManager.ScannerEvent event) {
         ChannelInfo channel = null;
         String name = null;
         Bundle bundle = null;
@@ -860,7 +997,7 @@ public abstract class TvStoreManager {
             break;
 
         case TvControlManager.EVENT_SCAN_PROGRESS:
-            Log.d(TAG, event.precent + "%\tfreq[" + event.freq + "] lock[" + event.lock + "] strength[" + event.strength + "] quality[" + event.quality + "]");
+            Log.d(TAG, event.precent + "%\tfreq[" + event.freq + "] lock[" + event.lock + "] strength[" + event.strength + "] quality[" + event.quality + "] mode[" + event.mode + "]");
 
             checkOrPatchBeginLost(event);
 
@@ -925,6 +1062,7 @@ public abstract class TvStoreManager {
             }
 
             mScanMode = null;
+            mChannelsAll = null;
 
             onScanExit();
 
@@ -937,5 +1075,12 @@ public abstract class TvStoreManager {
         }
     }
 
+    private class ChildCallback implements Handler.Callback {
+        @Override
+        public boolean handleMessage(Message msg) {
+            dealStoreEvent((TvControlManager.ScannerEvent)msg.obj);
+            return false;
+        }
+    }
 }
 
