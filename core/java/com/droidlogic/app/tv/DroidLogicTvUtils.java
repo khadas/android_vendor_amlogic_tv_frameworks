@@ -764,33 +764,26 @@ public class DroidLogicTvUtils
                 if (dimension == -1 || value == -1)
                     continue;
                 if (region == 1) {//US ratings
-                    if (dimension == 7
-                            /*&& ratingDescription != null
-                            && ratingDescription.startsWith("MPAA-")*/
-                            ) {
-                        TvContentRating r = TvContentRating.createRating(RatingDomain, "US_MV",
-                                DroidLogicTvUtils.US_ContentRatingDimensions[dimension][value]);
-                        RatingList.add(r);
-                        Log.d(TAG, "add rating:"+r.flattenToString());
-                    } else /*if (ratingDescription != null
-                                && ratingDescription.startsWith("TV-")
-                            )*/ {
-                        ArrayList<String> subRatings = new ArrayList<String>();
-                        for (int j = 1; j < ratings.length(); j++) {
-                            JSONObject subRatingValues = ratings.optJSONObject(j);
-                            int subDimension = subRatingValues.optInt("d", -1);
-                            int subValue = subRatingValues.optInt("r", -1);
-                            if (subDimension == -1 || subValue == -1)
-                                continue;
-                            subRatings.add(DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue]);
+                    for (int j = 0; j < ratings.length(); j++) {
+                        JSONObject subRatingValues = ratings.optJSONObject(j);
+                        int subDimension = subRatingValues.optInt("d", -1);
+                        int subValue = subRatingValues.optInt("r", -1);
+
+                        if (subDimension == -1 || subValue == -1)
+                            continue;
+                        if (subDimension == 7) {
+                            TvContentRating r = TvContentRating.createRating(RatingDomain, "US_MV",
+                                    DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue]);
+                            RatingList.add(r);
+                            Log.d(TAG, "mv add rating:"+r.flattenToString());
+                        } else {
+                            if (subDimension == 255)
+                                subDimension = 0;
+                            TvContentRating r = TvContentRating.createRating(RatingDomain, "US_TV",
+                                    DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue]);
+                            RatingList.add(r);
+                            Log.d(TAG, "tv add rating:"+r.flattenToString());
                         }
-                        if (dimension == 255)
-                            dimension = 0;
-                        TvContentRating r = TvContentRating.createRating(RatingDomain, "US_TV",
-                                DroidLogicTvUtils.US_ContentRatingDimensions[dimension][value],
-                                subRatings.toArray(new String[subRatings.size()]));
-                        RatingList.add(r);
-                        Log.d(TAG, "add rating:"+r.flattenToString());
                     }
                 } else if (region == 2) {//Canadian ratings
                     for (int j = 0; j < ratings.length(); j++) {
