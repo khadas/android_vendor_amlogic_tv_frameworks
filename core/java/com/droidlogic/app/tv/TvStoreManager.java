@@ -806,7 +806,7 @@ public abstract class TvStoreManager {
                 }
             }
 
-            if (getIsSameDisplayNumber(channel) == true) {
+            /*if (getIsSameDisplayNumber(channel) == true) {
               //is same
                mode = fep.getMode();
                freq = fep.getFrequency();
@@ -814,7 +814,7 @@ public abstract class TvStoreManager {
                if (physicalNum > 0)
                  channel.setDisplayNumber(""+physicalNum+"-"+channel.getServiceId());
               Log.d(TAG, "----Channels physicalNum set DisplayName:" + physicalNum + " getDisplayNumber:" + channel.getDisplayNumber());
-            }
+            }*/
             channel.print();
             /*add seach channel*/
             mChannelsExist.add(channel);
