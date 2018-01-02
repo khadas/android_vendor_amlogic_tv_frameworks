@@ -682,5 +682,8 @@ public class DroidLogicTvInputService extends TvInputService implements
         Log.d(TAG, "notifyAppEasStatus:"+isStarted);
         Bundle bundle = new Bundle();
         bundle.putInt(DroidLogicTvUtils.SIG_INFO_EAS_STATUS, isStarted ? 1 : 0);
-        mSession.notifySessionEvent(DroidLogicTvUtils.SIG_INFO_EAS_EVENT, bundle);};
+        if (mSession != null) {
+            mSession.notifySessionEvent(DroidLogicTvUtils.SIG_INFO_EAS_EVENT, bundle);
+        }
+    }
 }
