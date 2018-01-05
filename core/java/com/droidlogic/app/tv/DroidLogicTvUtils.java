@@ -759,6 +759,8 @@ public class DroidLogicTvUtils
             JSONArray ratings = g.optJSONArray("rx");
             if (ratings != null) {
                 JSONObject ratingValues = ratings.optJSONObject(0);
+                if (null == ratingValues)
+                    continue;
                 int dimension = ratingValues.optInt("d", -1);
                 int value = ratingValues.optInt("r", -1);
                 if (dimension == -1 || value == -1)
