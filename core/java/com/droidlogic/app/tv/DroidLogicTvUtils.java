@@ -773,6 +773,11 @@ public class DroidLogicTvUtils
 
                         if (subDimension == -1 || subValue == -1)
                             continue;
+                        if (subDimension > 7 ||
+                            subValue >= DroidLogicTvUtils.US_ContentRatingDimensions[subDimension].length ||
+                            TextUtils.isEmpty(DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue])) {
+                            continue;
+                        }
                         if (subDimension == 7) {
                             TvContentRating r = TvContentRating.createRating(RatingDomain, "US_MV",
                                     DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue]);
@@ -795,12 +800,20 @@ public class DroidLogicTvUtils
                         if (Dimension == -1 || Value == -1)
                              continue;
                         if (Dimension == 0) {
+                        if (Value >= DroidLogicTvUtils.CA_EN_ContentRatingDimensions.length ||
+                             TextUtils.isEmpty(DroidLogicTvUtils.CA_EN_ContentRatingDimensions[Value])) {
+                             continue;
+                        }
                             //canadian english language rating
                             TvContentRating r = TvContentRating.createRating(RatingDomain, "CA_TV_EN",
                                     DroidLogicTvUtils.CA_EN_ContentRatingDimensions[Value]);
                             RatingList.add(r);
                             Log.d(TAG, "add rating:"+r.flattenToString());
                         } else if (Dimension == 1) {
+                            if (Value >= DroidLogicTvUtils.CA_FR_ContentRatingDimensions.length ||
+                                 TextUtils.isEmpty(DroidLogicTvUtils.CA_FR_ContentRatingDimensions[Value])) {
+                                 continue;
+                            }
                             //canadian frech language rating
                             TvContentRating r = TvContentRating.createRating(RatingDomain, "CA_TV_FR",
                                     DroidLogicTvUtils.CA_FR_ContentRatingDimensions[Value]);
