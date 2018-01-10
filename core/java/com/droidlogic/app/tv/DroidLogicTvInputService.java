@@ -508,7 +508,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         Log.d(TAG, "startTvPlay inputId=" + mCurrentInputId + " surface=" + mSurface);
         if (mHardware != null && mSurface != null && mSurface.isValid()) {
             //mHardware.setSurface(mSurface, mConfigs[0]);
-            selectHdmiDevice(mDeviceId);
+            //selectHdmiDevice(mDeviceId);
             return ACTION_SUCCESS;
         }
         return ACTION_FAILED;
@@ -600,9 +600,14 @@ public class DroidLogicTvInputService extends TvInputService implements
         } else {
             return null;
         }
-        Log.d(TAG, "createTvInputInfo, id:" + info.getId());
-        updateInfoListIfNeededLocked(phyaddr, info, false);
-        selectHdmiDevice(sourceType);
+        Log.d(TAG, "createTvInputInfo, id:" + deviceInfo.toString()+",deviceId:"+deviceInfo.getDeviceId());
+        updateInfoListIfNeededLocked(getHardwareDeviceId(parentId), info, false);
+        //selectHdmiDevice(sourceType);
+
+        DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(this);
+        int logicalAddr = hdmi_cec.getLogicalAddress (sourceType);
+        if (deviceInfo != null && deviceInfo.getDevicePowerStatus() != HdmiControlManager.POWER_STATUS_UNKNOWN && logicalAddr != 5)
+            selectHdmiDevice(sourceType);
 
         return info;
     }
