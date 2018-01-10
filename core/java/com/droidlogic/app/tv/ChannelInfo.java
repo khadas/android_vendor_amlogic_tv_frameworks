@@ -30,6 +30,7 @@ public class ChannelInfo {
         Channels.COLUMN_VIDEO_FORMAT,
         Channels.COLUMN_INTERNAL_PROVIDER_DATA,
         Channels.COLUMN_BROWSABLE,
+        TvContract.Channels.COLUMN_LOCKED,
         COLUMN_LCN,
         COLUMN_LCN1,
         COLUMN_LCN2
@@ -59,6 +60,7 @@ public class ChannelInfo {
     public static final String KEY_AUDIO_LANGS = "audio_langs";
     public static final String KEY_AUDIO_EXTS = "audio_exts";
     public static final String KEY_AUDIO_TRACK_INDEX = "audio_track_index";
+    public static final String KEY_AUDIO_OUTPUT_MODE = "audio_out_mode";
     public static final String KEY_AUDIO_COMPENSATION = "audio_compensation";
     public static final String KEY_AUDIO_CHANNEL = "audio_channel";
     public static final String KEY_AUDIO_STD = "audio_std";
@@ -95,8 +97,12 @@ public class ChannelInfo {
     public static final String KEY_ACCESS_CONTROL = "access";
     public static final String KEY_HIDDEN = "hidden";
     public static final String KEY_HIDE_GUIDE = "hideGuide";
+    public static final String KEY_VCT = "vct";
+    public static final String KEY_EITV = "eitv";
 
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
+    public static final String KEY_CONTENT_RATINGS = "content_ratings";
+    public static final String KEY_SIGNAL_TYPE = "signal_type";
 
     public static final String LABEL_ATV = "ATV";
     public static final String LABEL_DTV = "DTV";
@@ -136,6 +142,7 @@ public class ChannelInfo {
     private int mAudioTrackIndex; //-1:not select, -2:off, >=0:index
     private int mAudioCompensation;
     private int mAudioChannel;
+    private int mAudioOutPutMode;//-1:not set 0:mono 1:stereo 2:sap
 
     private int mPcrPid;
 
@@ -176,6 +183,11 @@ public class ChannelInfo {
     private int mAccessControlled;
     private int mHidden;
     private int mHideGuide;
+    private String mVct;
+    private int[] mEitVersions;
+
+    private String mContentRatings;
+    private String mSignalType;
 
     private ChannelInfo() {}
 
@@ -272,9 +284,14 @@ public class ChannelInfo {
                 builder.setVideoPid(Integer.parseInt(parsedMap.get(KEY_VIDEO_PID)));
             if (parsedMap.get(KEY_PCR_ID) != null)
                 builder.setPcrPid(Integer.parseInt(parsedMap.get(KEY_PCR_ID)));
-
+            if (parsedMap.get(KEY_CONTENT_RATINGS) != null)
+                builder.setContentRatings(DroidLogicTvUtils.TvString.fromString(parsedMap.get(KEY_CONTENT_RATINGS)));
+            if (parsedMap.get(KEY_SIGNAL_TYPE) != null)
+                builder.setSignalType(DroidLogicTvUtils.TvString.fromString(parsedMap.get(KEY_SIGNAL_TYPE)));
             if (parsedMap.get(KEY_AUDIO_TRACK_INDEX) != null)
                 builder.setAudioTrackIndex(Integer.parseInt(parsedMap.get(KEY_AUDIO_TRACK_INDEX)));
+            if (parsedMap.get(KEY_AUDIO_OUTPUT_MODE) != null)
+                builder.setAudioOutPutMode(Integer.parseInt(parsedMap.get(KEY_AUDIO_OUTPUT_MODE)));
             if (parsedMap.get(KEY_AUDIO_COMPENSATION) != null)
                 builder.setAudioCompensation(Integer.parseInt(parsedMap.get(KEY_AUDIO_COMPENSATION)));
             if (parsedMap.get(KEY_AUDIO_CHANNEL) != null)
@@ -348,11 +365,27 @@ public class ChannelInfo {
                 builder.setHidden(Integer.parseInt(parsedMap.get(KEY_HIDDEN)));
             if (parsedMap.get(KEY_HIDE_GUIDE) != null)
                 builder.setHideGuide(Integer.parseInt(parsedMap.get(KEY_HIDE_GUIDE)));
+            if (parsedMap.get(KEY_VCT) != null)
+                builder.setVct(parsedMap.get(KEY_VCT));
+            if (parsedMap.get(KEY_EITV) != null) {
+                String[] svs = parsedMap.get(KEY_EITV).replace("[", "").replace("]", "").split(",");
+                int vn = (svs[0].compareTo("null") == 0)? 0 : svs.length;
+                if (vn > 0) {
+                    int[] vs = new int[vn];
+                    for (int i = 0; i < vn; i++)
+                        vs[i] = Integer.parseInt(svs[i]);
+                    builder.setEitVersions(vs);
+                }
+            }
         }
 
         index = cursor.getColumnIndex(Channels.COLUMN_BROWSABLE);
         if (index >= 0)
             builder.setBrowsable(cursor.getInt(index)==1 ? true : false);
+
+        index = cursor.getColumnIndex(Channels.COLUMN_LOCKED);
+        if (index >= 0)
+            builder.setLocked(cursor.getInt(index)==1 ? true : false);
 
         index = cursor.getColumnIndex(COLUMN_LCN);
         if (index >= 0)
@@ -465,6 +498,10 @@ public class ChannelInfo {
         return mAudioTrackIndex;
     }
 
+    public int getAudioOutPutMode() {
+        return mAudioOutPutMode;
+    }
+
     public int getAudioCompensation() {
         return mAudioCompensation;
     }
@@ -479,6 +516,22 @@ public class ChannelInfo {
 
     public int getFrequency() {
         return mFrequency;
+    }
+
+    public String getContentRatings() {
+        return mContentRatings;
+    }
+
+    public String getSignalType() {
+        return mSignalType;
+    }
+
+    public void setSignalType(String signalType) {
+        mSignalType = signalType;
+    }
+
+    public void setContentRatings(String contentRatings) {
+        mContentRatings = contentRatings;
     }
 
     public int getBandwidth() {
@@ -589,6 +642,14 @@ public class ChannelInfo {
         return mHideGuide;
     }
 
+    public String getVct() {
+        return mVct;
+    }
+
+    public int[] getEitVersions() {
+        return mEitVersions;
+    }
+
     public boolean isBrowsable() {
         return this.mBrowsable;
     }
@@ -614,6 +675,10 @@ public class ChannelInfo {
 
     public void setType(String type) {
         mType = type;
+    }
+
+    public void setId(long value) {
+        mId = value;
     }
 
     public void setDisplayNumber(String number) {
@@ -673,6 +738,10 @@ public class ChannelInfo {
         mAudioTrackIndex = index;
     }
 
+    public void setAudioOutPutMode(int mode) {
+        mAudioOutPutMode = mode;
+    }
+
     public void setAudioCompensation(int value) {
         mAudioCompensation = value;
     }
@@ -687,6 +756,10 @@ public class ChannelInfo {
 
     public void setBrowsable(boolean enable) {
         mBrowsable = enable;
+    }
+
+    public void setLocked(boolean enable) {
+        mLocked = enable;
     }
 
     public void setFavourite(boolean enable) {
@@ -753,6 +826,10 @@ public class ChannelInfo {
         mLCN2 = lcn;
     }
 
+    public void setEitVersions(int[] versions) {
+        mEitVersions = versions;
+    }
+
     public void copyFrom(ChannelInfo channel) {
         if (this == channel)
             return;
@@ -799,11 +876,14 @@ public class ChannelInfo {
             mChannel.mAudioStd = -1;
             mChannel.mIsAutoStd = -1;
             mChannel.mAudioTrackIndex = -1;
+            mChannel.mAudioOutPutMode = -1;
             mChannel.mAudioCompensation = -1;
             mChannel.mAudioChannel = 0;
 
             mChannel.mPcrPid = -1;
             mChannel.mFrequency = -1;
+            mChannel.mContentRatings = "";
+            mChannel.mSignalType = "";
             mChannel.mBandwidth = -1;
             mChannel.mSymbolRate = -1;
             mChannel.mModulation = -1;
@@ -838,6 +918,8 @@ public class ChannelInfo {
             mChannel.mAccessControlled = 0;
             mChannel.mHidden = 0;
             mChannel.mHideGuide = 0;
+            mChannel.mVct = null;
+            mChannel.mEitVersions = null;
         }
 
         public Builder setId(long id) {
@@ -956,6 +1038,11 @@ public class ChannelInfo {
             return this;
         }
 
+        public Builder setAudioOutPutMode(int mode) {
+            mChannel.mAudioOutPutMode = mode;
+            return this;
+        }
+
         public Builder setAudioCompensation(int c) {
             mChannel.mAudioCompensation = c;
             return this;
@@ -973,6 +1060,16 @@ public class ChannelInfo {
 
         public Builder setFrequency(int freq) {
             mChannel.mFrequency = freq;
+            return this;
+        }
+
+        public Builder setContentRatings(String contentRatings) {
+            mChannel.mContentRatings = contentRatings;
+            return this;
+        }
+
+        public Builder setSignalType(String signalType) {
+            mChannel.mSignalType = signalType;
             return this;
         }
 
@@ -1121,6 +1218,16 @@ public class ChannelInfo {
             return this;
         }
 
+        public Builder setVct(String vct) {
+            mChannel.mVct = vct;
+            return this;
+        }
+
+        public Builder setEitVersions(int[] versions) {
+            mChannel.mEitVersions = versions;
+            return this;
+        }
+
         public ChannelInfo build() {
             return mChannel;
         }
@@ -1179,6 +1286,17 @@ public class ChannelInfo {
         return (!mServiceType.equals(TvContract.Channels.SERVICE_TYPE_OTHER));
     }
 
+    public boolean isSameChannel(ChannelInfo a) {
+        if (a == null)
+            return false;
+
+        return a.getServiceId() == mServiceId
+                && a.getOriginalNetworkId() == mOriginalNetworkId
+                && a.getTransportStreamId() == mTransportStreamId
+                && a.getFrequency() == mFrequency
+                && TextUtils.equals(a.getDisplayName(), mDisplayName);
+    }
+
     public void print () {
         Log.d(TAG, toString());
     }
@@ -1206,6 +1324,7 @@ public class ChannelInfo {
                 "\n AudioStd = " + mAudioStd +
                 "\n IsAutoStd = " + mIsAutoStd +
                 "\n AudioTrackIndex = " + mAudioTrackIndex +
+                "\n mAudioOutPutMode = " + mAudioOutPutMode +
                 "\n AudioCompensation = " + mAudioCompensation +
                 "\n AudioChannel = " + mAudioChannel +
                 "\n PcrPid = " + mPcrPid +
@@ -1232,7 +1351,11 @@ public class ChannelInfo {
                 "\n mSourceId = " + mSourceId +
                 "\n AccessControled = " + mAccessControlled +
                 "\n Hidden = " + mHidden +
-                "\n HideGuide = " + mHideGuide;
+                "\n HideGuide = " + mHideGuide +
+                "\n Ratings = " + mContentRatings +
+                "\n SignalType = " + mSignalType +
+                "\n vct = " + mVct +
+                "\n EitVers = " + Arrays.toString(mEitVersions);
     }
 
     public static class Subtitle {
@@ -1259,6 +1382,8 @@ public class ChannelInfo {
         public static final int CC_CAPTION_SERVICE4 = 12;
         public static final int CC_CAPTION_SERVICE5 = 13;
         public static final int CC_CAPTION_SERVICE6 = 14;
+        /*xds vchip services*/
+        public static final int CC_CAPTION_VCHIP_ONLY = 15;
 
         public int mType;
         public int mPid;

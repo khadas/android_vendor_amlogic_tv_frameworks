@@ -11,9 +11,10 @@ import android.widget.TextView;
 public abstract class DroidLogicOverlayView extends FrameLayout {
     private static final String TAG = "DroidLogicOverlayView";
 
-	protected ImageView mImageView;
-	protected TextView mTextView;
-	protected View mSubtitleView;
+    protected ImageView mImageView;
+    protected TextView mTextView;
+    protected View mSubtitleView;
+    protected TextView mEasTextView;
 
     public DroidLogicOverlayView(Context context) {
         this(context, null);
@@ -45,6 +46,14 @@ public abstract class DroidLogicOverlayView extends FrameLayout {
 
     public void setText(int resId) {
         mTextView.setText(resId);
+    }
+
+    public void setTextForEas(CharSequence text){
+        mEasTextView.setText(text);
+    }
+
+    public void setEasTextVisibility(boolean visible) {
+        mEasTextView.setVisibility(visible ? VISIBLE : GONE);
     }
 
     public void setTextVisibility(boolean visible) {

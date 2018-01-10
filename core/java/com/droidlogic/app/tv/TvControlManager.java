@@ -43,6 +43,7 @@ import android.text.TextUtils;
 //import android.media.audiofx.Hpeq;
 
 import static com.droidlogic.app.tv.TvControlCommand.*;
+import com.droidlogic.app.tv.EasEvent;
 
 public class TvControlManager {
     private static final String TAG = "TvControlManager";
@@ -116,8 +117,15 @@ public class TvControlManager {
     private ScanningFrameStableListener mScanningFrameStableListener = null;
     private VframBMPEventListener mVframBMPListener = null;
     private EpgEventListener mEpgListener = null;
+    private RRT5SourceUpdateListener mRrtListener = null;
     private AVPlaybackListener mAVPlaybackListener = null;
+    private EasEventListener mEasListener = null;
 
+    private int rrt5XmlLoadStatus = 0;
+    public static  int EVENT_RRT_SCAN_START          = 1;
+    public static  int EVENT_RRT_SCAN_END            = 3;
+
+    private EasManager easManager = new EasManager();
     private static TvControlManager mInstance;
 
     private native final void native_setup(Object tv_this);
@@ -207,6 +215,26 @@ public class TvControlManager {
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         request.writeInt(cmd);
+
+        for (int i = 0; i < values.length; i++) {
+            request.writeString(values[i]);
+        }
+        request.setDataPosition(0);
+        processCmd(request, reply);
+        reply.setDataPosition(0);
+        int ret = reply.readInt();
+
+        request.recycle();
+        reply.recycle();
+        return ret;
+    }
+
+    public int sendCmdStringArray(int cmd, int id, String[] values) {
+        libtv_log_open();
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        request.writeInt(cmd);
+        request.writeInt(id);
 
         for (int i = 0; i < values.length; i++) {
             request.writeString(values[i]);
@@ -326,6 +354,7 @@ public class TvControlManager {
             scan_ev.accessControlled = p.readInt();
             scan_ev.hidden = p.readInt();
             scan_ev.hideGuide = p.readInt();
+            scan_ev.vct = p.readString();
         }
 
         @Override
@@ -502,9 +531,48 @@ public class TvControlManager {
                         mCloseCaptionListener.onCloseCaptionProcess(dataArray, cmdArray);
                     }
                     break;
-                default:
-                    Log.e(TAG, "Unknown message type " + msg.what);
+
+                case RECORDER_EVENT_CALLBACK:
+                    p = ((Parcel) (msg.obj));
+                    if (mRecorderEventListener != null) {
+                        RecorderEvent ev = new RecorderEvent();
+                        ev.Id = p.readString();
+                        ev.Status = p.readInt();
+                        ev.Error = p.readInt();
+                        mRecorderEventListener.onRecoderEvent(ev);
+                    }
                     break;
+
+                case RRT_EVENT_CALLBACK:
+                    p = ((Parcel) (msg.obj));
+                    if (mRrtListener != null) {
+                        int result = p.readInt();
+                        Log.e(TAG, "RRT_EVENT_CALLBACK:" + result);
+                        rrt5XmlLoadStatus = result;
+                        mRrtListener.onRRT5InfoUpdated(result);
+                    }
+                    break;
+
+                case EAS_EVENT_CALLBACK:
+                     Log.i(TAG,"get EAS_event_callBack");
+                     p = ((Parcel) (msg.obj));
+                     if (mEasListener != null) {
+                        Log.i(TAG,"mEaslister is not null");
+                        int sectionCount = p.readInt();
+                        Log.i(TAG,"eas section count = "+sectionCount);
+                        for (int count = 0; count<sectionCount; count++) {
+                            EasEvent curEasEvent = new EasEvent();
+                            curEasEvent.readEasEvent(p);
+                            if (easManager.isEasEventNeedProcess(curEasEvent)) {
+                                mEasListener.processDetailsChannelAlert(curEasEvent);
+                            }
+                        }
+                     }
+
+                     break;
+                 default:
+                     Log.e(TAG, "Unknown message type " + msg.what);
+                     break;
             }
         }
     }
@@ -626,6 +694,17 @@ public class TvControlManager {
 
     public int GetTvRunStatus() {
         return sendCmd(GET_TV_STATUS);
+    }
+
+    /**
+     * @Function: GetHotPlugDetect
+     * @Description: Get hotplug detect enable status
+     * @Param:
+     * @Return: true refer to on, and false refers to off
+     */
+    public boolean GetHotPlugDetectEnableStatus() {
+        int ret = sendCmd(HDMIAV_HOTPLUGDETECT_ONOFF);
+        return (ret == 1 ? true:false);
     }
 
     /**
@@ -1243,6 +1322,52 @@ public class TvControlManager {
 
     public int GetAudioOutmode(){
         return sendCmd(GET_AUDIO_OUTMODE);
+    }
+
+    public int GetAudioStreamOutmode(){
+        return sendCmd(GET_AUDIO_STREAM_OUTMODE);
+    }
+
+    public static final int AM_AUDIO_TV = 0;
+    public static final int AM_AUDIO_AV1 = 1;
+    public static final int AM_AUDIO_AV2 = 2;
+    public static final int AM_AUDIO_YPBPR1 = 3;
+    public static final int AM_AUDIO_YPBPR2 = 4;
+    public static final int AM_AUDIO_HDMI1 = 5;
+    public static final int AM_AUDIO_HDMI2 = 6;
+    public static final int AM_AUDIO_HDMI3 = 7;
+    public static final int AM_AUDIO_HDMI4 = 8;
+    public static final int AM_AUDIO_VGA = 9;
+    public static final int AM_AUDIO_MPEG = 10;
+    public static final int AM_AUDIO_DTV = 11;
+    public static final int AM_AUDIO_SVIDEO = 12;
+    public static final int AM_AUDIO_IPTV = 13;
+    public static final int AM_AUDIO_DUMMY = 14;
+    public static final int AM_AUDIO_SPDIF = 15;
+    public static final int AM_AUDIO_ADTV = 16;
+
+    public int SetAmAudioVolume(int volume, int source) {
+        int val[] = new int[]{volume};
+        if (source == AM_AUDIO_MPEG) {
+            SystemProperties.set("persist.media.player.volume",
+                    String.valueOf(volume));
+        }
+
+        return sendCmdIntArray(SET_AMAUDIO_VOLUME, val);
+    }
+
+    public int GetAmAudioVolume() {
+        return sendCmd(GET_AMAUDIO_VOLUME);
+    }
+
+    public int SaveAmAudioVolume(int volume, int source) {
+        int val[] = new int[]{volume, source};
+        return sendCmdIntArray(SAVE_AMAUDIO_VOLUME, val);
+    }
+
+    public int GetSaveAmAudioVolume(int source) {
+        int val[] = new int[]{source};
+        return sendCmdIntArray(GET_SAVE_AMAUDIO_VOLUME, val);
     }
 
     public enum Noise_Reduction_Mode {
@@ -4248,11 +4373,13 @@ public class TvControlManager {
         base = r.readInt() - 1;
         bpl.ID = 1 ;
         bpl.freq= r.readInt();
+        bpl.channelNum = r.readInt();
         FList.add(bpl);
         for (int i = 1; i < size; i++) {
             FreqList pl = new FreqList();
             pl.ID = r.readInt() - base;
             pl.freq= r.readInt();
+            pl.channelNum = r.readInt();
             FList.add(pl);
         }
         cmd.recycle();
@@ -4274,11 +4401,13 @@ public class TvControlManager {
         base = r.readInt() - 1;
         bpl.ID = 1 ;
         bpl.freq= r.readInt();
+        bpl.channelNum = r.readInt();
         FList.add(bpl);
         for (int i = 1; i < size; i++) {
             FreqList pl = new FreqList();
             pl.ID = r.readInt() - base;
             pl.freq= r.readInt();
+            pl.channelNum = r.readInt();
             FList.add(pl);
         }
         cmd.recycle();
@@ -4446,6 +4575,7 @@ public class TvControlManager {
         public int accessControlled;
         public int hidden;
         public int hideGuide;
+        public String vct;
     }
 
     public class ScannerLcnInfo {
@@ -4456,7 +4586,6 @@ public class TvControlManager {
         public int[] lcn;
         public int[] valid;
     }
-
 
     public static class ScanMode {
         private int scanMode;
@@ -4559,6 +4688,75 @@ public class TvControlManager {
 
     public interface EpgEventListener {
         void onEvent(EpgEvent ev);
+    }
+
+    //rrt
+    public void SetRRT5SourceUpdateListener(RRT5SourceUpdateListener l) {
+        mRrtListener = l;
+    }
+
+    public interface RRT5SourceUpdateListener {
+        void onRRT5InfoUpdated(int status);
+    }
+
+    public int updateRRTRes(int freq, int module, int mode) {
+        if (rrt5XmlLoadStatus == EVENT_RRT_SCAN_START) {
+            Log.d(TAG, "abandon updateRRTRes,becasue current status is : " + rrt5XmlLoadStatus);
+            return -1;
+        }
+        Log.d(TAG, "updateRRTRes,freq: " + freq+",module:"+module+",mode:"+mode);
+        int val[] = new int[]{freq, module, mode};
+        rrt5XmlLoadStatus = EVENT_RRT_SCAN_START;
+        return sendCmdIntArray(DTV_UPDATE_RRT, val);
+    }
+
+    public class RrtSearchInfo {
+        public String rating_region_name;
+        public String dimensions_name;
+        public String rating_value_text;
+    }
+
+    public RrtSearchInfo SearchRrtInfo(int rating_region_id, int dimension_id, int value_id) {
+         Parcel cmd = Parcel.obtain();
+         Parcel r = Parcel.obtain();
+         Log.d(TAG, "rating_region_id: " + rating_region_id);
+         Log.d(TAG, "dimension_id: " + dimension_id);
+         Log.d(TAG, "value_id: " + value_id);
+         cmd.writeInt(DTV_SEARCH_RRT);
+         cmd.writeInt(rating_region_id);
+         cmd.writeInt(dimension_id);
+         cmd.writeInt(value_id);
+         sendCmdToTv(cmd, r);
+
+         RrtSearchInfo tmpRet = new RrtSearchInfo();
+         int cnt = r.readInt();
+         if (cnt != 0) {
+             tmpRet.dimensions_name = r.readString();
+         }
+
+         cnt = r.readInt();
+         if (cnt != 0) {
+             tmpRet.rating_region_name = r.readString();
+         }
+
+         cnt = r.readInt();
+         if (cnt != 0) {
+             tmpRet.rating_value_text = r.readString();
+         }
+         cmd.recycle();
+         r.recycle();
+
+         Log.d(TAG, "rating_region_name: " + tmpRet.dimensions_name);
+         Log.d(TAG, "dimensions_name: " + tmpRet.rating_region_name);
+         Log.d(TAG, "rating_value_text: " + tmpRet.rating_value_text);
+         return tmpRet;
+    }
+
+    public void setEasListener(EasEventListener l) {
+        mEasListener = l;
+    }
+    public interface EasEventListener {
+        void processDetailsChannelAlert(EasEvent ev);
     }
 
     public class VFrameEvent{
@@ -5427,6 +5625,7 @@ public class TvControlManager {
     public class FreqList {
         public int ID;
         public int freq;
+        public int channelNum;
     }
 
     /**
@@ -6153,6 +6352,10 @@ public class TvControlManager {
     public final static int EVENT_AV_SCRAMBLED                  = 3;
     public final static int EVENT_AV_UNSUPPORT                  = 4;
     public final static int EVENT_AV_VIDEO_AVAILABLE            = 5;
+    public final static int EVENT_AV_TIMESHIFT_REC_FAIL = 6;
+    public final static int EVENT_AV_TIMESHIFT_PLAY_FAIL = 7;
+    public final static int EVENT_AV_TIMESHIFT_START_TIME_CHANGED = 8;
+    public final static int EVENT_AV_TIMESHIFT_CURRENT_TIME_CHANGED = 9;
     public final static int AUDIO_UNMUTE_FOR_TV                 = 0;
     public final static int AUDIO_MUTE_FOR_TV                   = 1;
 
@@ -6473,5 +6676,87 @@ public class TvControlManager {
         r.recycle();
         return ret;
     }
+
+    // frontend event
+    public class RecorderEvent {
+        //frontend events
+        public static final int EVENT_RECORDER_START         = 1;
+        public static final int EVENT_RECORDER_STOP    = 2;
+
+        public int Status;
+        public int Error;
+        public String Id;
+    }
+    public interface RecorderEventListener {
+        void onRecoderEvent(RecorderEvent ev);
+    };
+
+    private RecorderEventListener mRecorderEventListener = null;
+    public void SetRecorderEventListener(RecorderEventListener l) {
+        libtv_log_open();
+        mRecorderEventListener = l;
+    }
+
+
+    public static final int RECORDING_CMD_STOP = 0;
+    public static final int RECORDING_CMD_PREPARE = 1;
+    public static final int RECORDING_CMD_START = 2;
+
+    public int sendRecordingCmd(int cmd, String id, String param) {
+        String para[] = new String[]{id, param};
+        return sendCmdStringArray(DTV_RECORDING_CMD, cmd, para);
+    }
+
+    public int prepareRecording(String id, String param) {
+        return sendRecordingCmd(RECORDING_CMD_PREPARE, id, param);
+    }
+
+    public int startRecording(String id, String param) {
+        return sendRecordingCmd(RECORDING_CMD_START, id, param);
+    }
+
+    public int stopRecording(String id, String param) {
+        return sendRecordingCmd(RECORDING_CMD_STOP, id, param);
+    }
+
+    public static final int PLAY_CMD_STOP = 0;
+    public static final int PLAY_CMD_START = 1;
+    public static final int PLAY_CMD_PAUSE = 2;
+    public static final int PLAY_CMD_RESUME = 3;
+    public static final int PLAY_CMD_SEEK = 4;
+    public static final int PLAY_CMD_SETPARAM = 5;
+
+    public int sendPlayCmd(int cmd, String id, String param) {
+        String para[] = new String[]{id, param};
+        return sendCmdStringArray(DTV_PLAY_CMD, cmd, para);
+    }
+
+    public int startPlay(String id, String param) {
+        //SystemProperties.set ("media.audio.enable_asso", (adPrepare)? "1" : "0");
+        //SystemProperties.set ("media.audio.mix_asso", String.valueOf(adMixingLevel));
+        return sendPlayCmd(PLAY_CMD_START, id, param);
+    }
+
+    public int stopPlay(String id, String param) {
+        return sendPlayCmd(PLAY_CMD_STOP, id, param);
+    }
+
+    public int pausePlay(String id) {
+        return sendPlayCmd(PLAY_CMD_PAUSE, id, null);
+    }
+
+    public int resumePlay(String id) {
+        return sendPlayCmd(PLAY_CMD_RESUME, id, null);
+    }
+
+    public int seekPlay(String id, String param) {
+        return sendPlayCmd(PLAY_CMD_SEEK, id, param);
+    }
+
+    public int setPlayParam(String id, String param) {
+        return sendPlayCmd(PLAY_CMD_SETPARAM, id, param);
+    }
+
+
 }
 

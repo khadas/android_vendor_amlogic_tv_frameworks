@@ -105,6 +105,8 @@ public class DroidLogicTvUtils
     public static final int SIG_INFO_TYPE_ADTV  = 5;
     public static final int SIG_INFO_TYPE_OTHER  = 6;
 
+    public static final String SIG_INFO_EAS_EVENT = "dtv_eas_event";
+    public static final String SIG_INFO_EAS_STATUS = "eas_status";
     /**
      * source input type need to switch
      */
@@ -192,6 +194,13 @@ public class DroidLogicTvUtils
     /*auto tracks call*/
     public static final String ACTION_DTV_AUTO_TRACKS = "dtv_auto_tracks";
 
+   /*when it's on ,block all program without rating*/
+   public static final String ACTION_BLOCK_NORATING = "block_norating";
+   public static final String PARAM_NORATING_ENABLE = "enable_norating";
+   public static final int NORATING_OFF = 0;
+   public static final int NORATING_ON = 1;
+   public static final int NORATING_UNLOCK_CURRENT = 2;
+
     /*set type call*/
     public static final String ACTION_DTV_SET_TYPE = "dtv_set_type";
     public static final String PARA_TYPE = "dtv_type";
@@ -224,6 +233,8 @@ public class DroidLogicTvUtils
     public static final int OPEN_DEV_FOR_SCAN_DTV = 2;
     public static final int CLOSE_DEV_FOR_SCAN = 3;
 
+    public static final String SYSTEM_CAPTION_STYLE_ENABLE = "accessibility_captioning_style_enabled";
+
     /**
      * used for TvSettings to switch hdmi source
      * {@link #SOURCE_NAME}
@@ -248,9 +259,14 @@ public class DroidLogicTvUtils
     public static final String TV_ATV_CHANNEL_INDEX = "tv_atv_channel_index";
     public static final String TV_DTV_CHANNEL_INDEX  = "tv_dtv_channel_index";
     public static final String TV_CURRENT_CHANNEL_IS_RADIO = "tv_current_channel_is_radio";
+    public static final String BLOCK_NORATING = "block_norating";
 
     public static final String TV_KEY_DTV_NUMBER_MODE = "tv_dtv_number_mode";
     public static final String TV_KEY_DTV_TYPE = "tv_dtv_type";
+
+    public static final String SIGNAL_TYPE_ERROR = "error";
+    public static final String ALL_CHANNELS_NUMBER = "all_channels_number";
+    public static final String DTV_TYPE_SWITCHED = "dtv_type_switched";
 
     private static final UriMatcher sUriMatcher;
     public static final int NO_MATCH = UriMatcher.NO_MATCH;
@@ -272,6 +288,16 @@ public class DroidLogicTvUtils
         sUriMatcher.addURI(TvContract.AUTHORITY, "program/#", MATCH_PROGRAM_ID);
         sUriMatcher.addURI(TvContract.AUTHORITY, "watched_program", MATCH_WATCHED_PROGRAM);
         sUriMatcher.addURI(TvContract.AUTHORITY, "watched_program/#", MATCH_WATCHED_PROGRAM_ID);
+    }
+
+    public static String getCurrentSignalType(Context context) {
+        String dtvType = Settings.System.getString(context.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_TYPE);
+        if (dtvType == null) {
+            return DroidLogicTvUtils.SIGNAL_TYPE_ERROR;
+        } else {
+            Log.d(TAG, "getCurrentSignalType = " + dtvType);
+            return dtvType;
+        }
     }
 
     public static int matchsWhich(Uri uri) {
@@ -688,9 +714,10 @@ public class DroidLogicTvUtils
             "CA_TV_FR_E", "CA_TV_FR_G", "CA_TV_FR_8", "CA_TV_FR_13", "CA_TV_FR_16", "CA_TV_FR_18"
         };
 
+
     public static TvContentRating[] parseDRatings(String jsonString) {
         String RatingDomain = "com.android.tv";
-
+        Log.d(TAG, "parseDRatings:"+jsonString);
         if (jsonString == null || jsonString.isEmpty())
             return null;
 
@@ -732,38 +759,38 @@ public class DroidLogicTvUtils
             JSONArray ratings = g.optJSONArray("rx");
             if (ratings != null) {
                 JSONObject ratingValues = ratings.optJSONObject(0);
+                if (null == ratingValues)
+                    continue;
                 int dimension = ratingValues.optInt("d", -1);
                 int value = ratingValues.optInt("r", -1);
                 if (dimension == -1 || value == -1)
                     continue;
                 if (region == 1) {//US ratings
-                    if (dimension == 7
-                            /*&& ratingDescription != null
-                            && ratingDescription.startsWith("MPAA-")*/
-                            ) {
-                        TvContentRating r = TvContentRating.createRating(RatingDomain, "US_MV",
-                                DroidLogicTvUtils.US_ContentRatingDimensions[dimension][value]);
-                        RatingList.add(r);
-                        Log.d(TAG, "add rating:"+r.flattenToString());
-                    } else /*if (ratingDescription != null
-                                && ratingDescription.startsWith("TV-")
-                            )*/ {
-                        ArrayList<String> subRatings = new ArrayList<String>();
-                        for (int j = 1; j < ratings.length(); j++) {
-                            JSONObject subRatingValues = ratings.optJSONObject(j);
-                            int subDimension = subRatingValues.optInt("d", -1);
-                            int subValue = subRatingValues.optInt("r", -1);
-                            if (subDimension == -1 || subValue == -1)
-                                continue;
-                            subRatings.add(DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue]);
+                    for (int j = 0; j < ratings.length(); j++) {
+                        JSONObject subRatingValues = ratings.optJSONObject(j);
+                        int subDimension = subRatingValues.optInt("d", -1);
+                        int subValue = subRatingValues.optInt("r", -1);
+
+                        if (subDimension == -1 || subValue == -1)
+                            continue;
+                        if (subDimension > 7 ||
+                            subValue >= DroidLogicTvUtils.US_ContentRatingDimensions[subDimension].length ||
+                            TextUtils.isEmpty(DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue])) {
+                            continue;
                         }
-                        if (dimension == 255)
-                            dimension = 0;
-                        TvContentRating r = TvContentRating.createRating(RatingDomain, "US_TV",
-                                DroidLogicTvUtils.US_ContentRatingDimensions[dimension][value],
-                                subRatings.toArray(new String[subRatings.size()]));
-                        RatingList.add(r);
-                        Log.d(TAG, "add rating:"+r.flattenToString());
+                        if (subDimension == 7) {
+                            TvContentRating r = TvContentRating.createRating(RatingDomain, "US_MV",
+                                    DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue]);
+                            RatingList.add(r);
+                            Log.d(TAG, "mv add rating:"+r.flattenToString());
+                        } else {
+                            if (subDimension == 255)
+                                subDimension = 0;
+                            TvContentRating r = TvContentRating.createRating(RatingDomain, "US_TV",
+                                    DroidLogicTvUtils.US_ContentRatingDimensions[subDimension][subValue]);
+                            RatingList.add(r);
+                            Log.d(TAG, "tv add rating:"+r.flattenToString());
+                        }
                     }
                 } else if (region == 2) {//Canadian ratings
                     for (int j = 0; j < ratings.length(); j++) {
@@ -773,12 +800,20 @@ public class DroidLogicTvUtils
                         if (Dimension == -1 || Value == -1)
                              continue;
                         if (Dimension == 0) {
+                        if (Value >= DroidLogicTvUtils.CA_EN_ContentRatingDimensions.length ||
+                             TextUtils.isEmpty(DroidLogicTvUtils.CA_EN_ContentRatingDimensions[Value])) {
+                             continue;
+                        }
                             //canadian english language rating
                             TvContentRating r = TvContentRating.createRating(RatingDomain, "CA_TV_EN",
                                     DroidLogicTvUtils.CA_EN_ContentRatingDimensions[Value]);
                             RatingList.add(r);
                             Log.d(TAG, "add rating:"+r.flattenToString());
                         } else if (Dimension == 1) {
+                            if (Value >= DroidLogicTvUtils.CA_FR_ContentRatingDimensions.length ||
+                                 TextUtils.isEmpty(DroidLogicTvUtils.CA_FR_ContentRatingDimensions[Value])) {
+                                 continue;
+                            }
                             //canadian frech language rating
                             TvContentRating r = TvContentRating.createRating(RatingDomain, "CA_TV_FR",
                                     DroidLogicTvUtils.CA_FR_ContentRatingDimensions[Value]);
@@ -829,7 +864,7 @@ public class DroidLogicTvUtils
         if ((dlsv & VBI_RATING_S) == VBI_RATING_S)
             subRatings.add("US_TV_S");
         if ((dlsv & VBI_RATING_V) == VBI_RATING_V)
-            subRatings.add("US_TV_V");
+            subRatings.add(TextUtils.equals(ratings[auth][id], "US_TV_Y7")? "US_TV_FV" : "US_TV_V");
 
         return TvContentRating.createRating(RatingDomain, region[auth],
                    ratings[auth][id],
