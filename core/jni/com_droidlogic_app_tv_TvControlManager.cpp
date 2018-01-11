@@ -187,7 +187,7 @@ void JNITvContext::notify(int32_t msgType, const Parcel &p)
     }
     if (msgType == SUBTITLE_UPDATE_CALLBACK) {
         if (pSubBmp) {
-            SkAutoLockPixels alp(*pSubBmp);
+            //SkAutoLockPixels alp(*pSubBmp);
             char *pDst = (char *) pSubBmp->getPixels();
             char *pBuf = (char *) mSubMemBase->pointer();
             for (int i = 0; i < pSubBmp->width() * pSubBmp->height() * 4; i++) {
@@ -312,7 +312,7 @@ static void com_droidlogic_app_tv_TvControlManager_create_subtitle_bitmap(JNIEnv
     if (MemHeap->getHeapID() < 0) {
         return;
     }
-    context->pSubBmp->lockPixels();
+    //context->pSubBmp->lockPixels();
     context->mSubMemBase = new MemoryBase(MemHeap, 0, context->pSubBmp->width()*context->pSubBmp->height() * 4);
 
 
