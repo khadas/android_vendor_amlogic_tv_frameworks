@@ -97,8 +97,8 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         return mDeviceId;
     }
 
-    public void doRelease() {
-        Log.d(TAG, "doRelease");
+    public void performDoReleaseSession() {
+        Log.d(TAG, "performDoReleaseSession,session:"+this);
         //setAudiodMute(false);
         mContext.unregisterReceiver(mBroadcastReceiver);
         setOverlayViewEnabled(false);
@@ -110,11 +110,6 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     public void doAppPrivateCmd(String action, Bundle bundle) {}
     public void doUnblockContent(TvContentRating rating) {}
-
-    @Override
-    public void onRelease() {
-        doRelease();
-    }
 
     @Override
     public void onSurfaceChanged(int format, int width, int height) {

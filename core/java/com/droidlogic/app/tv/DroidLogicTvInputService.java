@@ -70,6 +70,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     private String mChildClassName;
     private SurfaceHandler mSessionHandler;
     private static final int MSG_DO_TUNE = 0;
+    private static final int MSG_DO_RELEASE = 1;
     private static final int MSG_DO_SET_SURFACE = 3;
     private static final int RETUNE_TIMEOUT = 20; // 1 second
     private static int mSelectPort = -1;
@@ -165,8 +166,10 @@ public class DroidLogicTvInputService extends TvInputService implements
      * @param session {@link HdmiInputSession} or {@link AVInputSession}
      */
     protected void registerInputSession(TvInputBaseSession session) {
-        Log.d(TAG, "registerInputSession");
+        Log.d(TAG, "registerInputSession:"+session);
         mSession = session;
+        if (session == null)
+            return;
         mCurrentSessionId = session.mId;
         Log.d(TAG, "inputId["+mCurrentInputId+"]");
         Log.d(TAG, "xsession["+session+"]");
@@ -309,7 +312,10 @@ public class DroidLogicTvInputService extends TvInputService implements
 
         if (DEBUG)
             Log.d(TAG, "onSigChange" + status.ordinal() + status.toString());
-
+        if (mSession == null) {
+            Log.w(TAG, "mSession is null ,discard this signal!");
+            return;
+        }
         onSigChanged(signal_info);
 
         if (status == TVInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOSIG
@@ -411,13 +417,14 @@ public class DroidLogicTvInputService extends TvInputService implements
         Log.d(TAG, "scanning frame stable!");
         Bundle bundle = new Bundle();
         bundle.putInt(DroidLogicTvUtils.SIG_INFO_C_FREQ, event.CurScanningFrq);
-        mSession.notifySessionEvent(DroidLogicTvUtils.SIG_INFO_C_SCANNING_FRAME_STABLE_EVENT, bundle);
+        if (mSession != null)
+            mSession.notifySessionEvent(DroidLogicTvUtils.SIG_INFO_C_SCANNING_FRAME_STABLE_EVENT, bundle);
     }
 
     public void onUpdateCurrentChannel(ChannelInfo channel, boolean store) {}
 
     protected  boolean setSurfaceInService(Surface surface, TvInputBaseSession session ) {
-        Log.d(TAG, "SetSurface");
+        Log.d(TAG, "setSurfaceInService,session:"+session);
         Message message = mSessionHandler.obtainMessage();
         message.what = MSG_DO_SET_SURFACE;
 
@@ -431,12 +438,17 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     protected  boolean doTuneInService(Uri channelUri, int sessionId) {
-        Log.d(TAG, "[source_switch_time]:" +getUptimeSeconds() + "s, onTune channelUri=" + channelUri);
+        Log.d(TAG, "doTuneInService,[source_switch_time]:" +getUptimeSeconds() + "s, onTune channelUri=" + channelUri);
         if (mSession != null)
             mSession.hideUI();
 
         mSessionHandler.obtainMessage(MSG_DO_TUNE, sessionId, 0, channelUri).sendToTarget();
         return false;
+    }
+
+    protected void doReleaseInService (int sessionId) {
+        Log.d(TAG, "doReleaseInService,[source_switch_time]:" +getUptimeSeconds() + "s,sessionid:"+sessionId);
+        mSessionHandler.obtainMessage(MSG_DO_RELEASE, sessionId, 0).sendToTarget();
     }
 
     private final class SurfaceHandler extends Handler {
@@ -453,6 +465,9 @@ public class DroidLogicTvInputService extends TvInputService implements
                 SomeArgs args = (SomeArgs) message.obj;
                 doSetSurface((Surface)args.arg1, (TvInputBaseSession)args.arg2);
                 break;
+            case MSG_DO_RELEASE:
+                doSessionRelease(message.arg1);
+                break;
             }
         }
     }
@@ -465,10 +480,15 @@ public class DroidLogicTvInputService extends TvInputService implements
             Log.d(TAG, "onSetSurface get invalid surface");
             return;
         } else if (surface != null) {
+            if (mSession == null) {
+                Log.w(TAG, "session should not be null when surface is not null!!!!!");
+                int test_ww = mSession.getDeviceId();
+                return;
+            }
             if (mHardware != null && mSurface != null
                 && (mSourceType >= DroidLogicTvUtils.DEVICE_ID_HDMI1)
                 && (mSourceType <= DroidLogicTvUtils.DEVICE_ID_HDMI4)) {
-                stopTvPlay(mSession.mId);
+                    stopTvPlay(mSession.mId);
             }
             registerInputSession(session);
             setCurrentSessionById(mSession.mId);
@@ -496,12 +516,18 @@ public class DroidLogicTvInputService extends TvInputService implements
                 Message msg = mSessionHandler.obtainMessage(MSG_DO_TUNE, sessionId, 0, uri);
                 mSessionHandler.sendMessageDelayed(msg, 50);
                 timeout--;
-                return ACTION_FAILED;
-            }
+            } else
+                doTuneFinish(ACTION_FAILED, uri, sessionId);
+            return ACTION_FAILED;
         }
         mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
         doTuneFinish(ACTION_SUCCESS, uri, sessionId);
         return ACTION_SUCCESS;
+    }
+
+    private void doSessionRelease(int sessionId) {
+        Log.d(TAG, "doRelese, sessionId = " + sessionId);
+        doReleaseFinish(sessionId);
     }
 
     private int startTvPlay() {
@@ -525,6 +551,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
     public void setCurrentSessionById(int sessionId){}
     public void doTuneFinish(int result, Uri uri, int sessionId){};
+    public void doReleaseFinish(int sessionId){};
     public void tvPlayStopped(int sessionId){};
 
     protected int getCurrentSessionId() {
