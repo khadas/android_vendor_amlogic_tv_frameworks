@@ -46,6 +46,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     private TvControlManager mTvControlManager;
     protected DroidLogicOverlayView mOverlayView = null;
 
+    protected boolean isBlockNoRatingEnable = false;
+    protected boolean isUnlockCurrent_NR = false;
+
     public TvInputBaseSession(Context context, String inputId, int deviceId) {
         super(context);
         mContext = context;
@@ -54,6 +57,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
         mTvControlManager = TvControlManager.getInstance();
         mSessionHandler = new Handler(context.getMainLooper(), this);
+        int block_norating = Settings.System.getInt(mContext.getContentResolver(), DroidLogicTvUtils.BLOCK_NORATING, 0);
+        isBlockNoRatingEnable = block_norating == 0 ? false : true;
+        if (DEBUG)
+            Log.d(TAG, "isBlockNoRatingEnable = " + isBlockNoRatingEnable);
     }
 
     public void setSessionId(int id) {
@@ -74,7 +81,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     public void doRelease() {
         Log.d(TAG, "doRelease");
-        setAudiodMute(false);
+        //setAudiodMute(false);
         setOverlayViewEnabled(false);
         if (mOverlayView != null) {
             mOverlayView.releaseResource();
@@ -158,12 +165,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     @Override
     public void notifyVideoUnavailable(int reason) {
         Log.d(TAG, "notifyVideoUnavailable: "+reason);
+        super.notifyVideoUnavailable(reason);
         if (mOverlayView != null) {
-            super.notifyVideoAvailable();
             mOverlayView.setImageVisibility(true);
             mOverlayView.setTextVisibility(false);
-        } else {
-            super.notifyVideoUnavailable(reason);
         }
     }
 
@@ -171,18 +176,17 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (mOverlayView != null) {
             mOverlayView.setImageVisibility(false);
             mOverlayView.setTextVisibility(false);
+            mOverlayView.setSubtitleVisibility(false);
         }
     }
 
     private void setAudiodMute(boolean mute) {
         if (mute) {
-            SystemProperties.set("persist.sys.tvview.blocked", "true");
-            mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_MUTE_FOR_TV);
-            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_MUTE_FOR_TV);
+            //SystemProperties.set("persist.sys.tvview.blocked", "true");
+            mTvControlManager.setAmAudioPreMute(TvControlManager.AUDIO_MUTE_FOR_TV);
         } else {
-            SystemProperties.set("persist.sys.tvview.blocked", "false");
-            mTvControlManager.SetAudioMuteForTv(TvControlManager.AUDIO_UNMUTE_FOR_TV);
-            mTvControlManager.SetAudioMuteKeyStatus(TvControlManager.AUDIO_UNMUTE_FOR_TV);
+            //SystemProperties.set("persist.sys.tvview.blocked", "false");
+            mTvControlManager.setAmAudioPreMute(TvControlManager.AUDIO_UNMUTE_FOR_TV);
         }
     }
 

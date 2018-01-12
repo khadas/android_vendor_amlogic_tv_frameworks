@@ -393,9 +393,11 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     public void onSigChanged(TVInSignalInfo signal_info) { }
 
+
     @Override
     public void StorDBonEvent(TvControlManager.ScannerEvent event) {
-        mTvStoreManager.onStoreEvent(event);
+        if (mTvStoreManager != null)
+            mTvStoreManager.onStoreEvent(event);
     }
 
     public void resetScanStoreListener() {
@@ -478,6 +480,10 @@ public class DroidLogicTvInputService extends TvInputService implements
             mSurface = null;
             stopTvPlay(session.mId);
         }
+
+        if (mHardware != null && mSurface != null && mSurface.isValid()) {
+            mHardware.setSurface(mSurface, mConfigs[0]);
+        }
     }
 
     public int doTune(Uri uri, int sessionId) {
@@ -501,7 +507,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     private int startTvPlay() {
         Log.d(TAG, "startTvPlay inputId=" + mCurrentInputId + " surface=" + mSurface);
         if (mHardware != null && mSurface != null && mSurface.isValid()) {
-            mHardware.setSurface(mSurface, mConfigs[0]);
+            //mHardware.setSurface(mSurface, mConfigs[0]);
             selectHdmiDevice(mDeviceId);
             return ACTION_SUCCESS;
         }
@@ -509,6 +515,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     private int stopTvPlay(int sessionId) {
+        Log.d(TAG, "stopTvPlay:"+sessionId+" mHardware:"+mHardware);
         if (mHardware != null) {
             mHardware.setSurface(null, mConfigs[0]);
             tvPlayStopped(sessionId);
@@ -669,5 +676,14 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     private float getUptimeSeconds() {
        return  (float)SystemClock.uptimeMillis() / 1000;
+    }
+
+    public void notifyAppEasStatus(boolean isStarted){
+        Log.d(TAG, "notifyAppEasStatus:"+isStarted);
+        Bundle bundle = new Bundle();
+        bundle.putInt(DroidLogicTvUtils.SIG_INFO_EAS_STATUS, isStarted ? 1 : 0);
+        if (mSession != null) {
+            mSession.notifySessionEvent(DroidLogicTvUtils.SIG_INFO_EAS_EVENT, bundle);
+        }
     }
 }
