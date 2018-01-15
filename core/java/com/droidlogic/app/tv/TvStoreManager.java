@@ -1014,7 +1014,6 @@ public abstract class TvStoreManager {
 
             //take evt:progress as a store-loop end.
             if (!isFinalStoreStage
-                && (event.mode != TVChannelParams.MODE_ANALOG)
                 && !mScanMode.isDTVManulScan()) {
                 storeTvChannel(isRealtimeStore, isFinalStoreStage);
                 mDisplayNumber2 = mInitialDisplayNumber;//dtv pop all channels scanned every store-loop
