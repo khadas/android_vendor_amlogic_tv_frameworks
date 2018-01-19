@@ -4,17 +4,32 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES:= \
-        TvClient.cpp \
-        ITv.cpp \
-        ITvClient.cpp \
-        ITvService.cpp
+    TvServerHidlClient.cpp \
+    TvClient.cpp \
+    ITv.cpp \
+    ITvClient.cpp \
+    ITvService.cpp
 
 LOCAL_SHARED_LIBRARIES := \
-        libcutils \
-        liblog \
-        libutils \
-        libbinder \
-        libui
+    vendor.amlogic.hardware.tvserver@1.0_vendor \
+    libbase \
+    libhidlbase \
+    libhidltransport \
+    libhidlmemory \
+    android.hidl.allocator@1.0 \
+    liblog \
+    libcutils \
+    libutils \
+    libbinder
+
+LOCAL_C_INCLUDES += \
+  system/libhidl/transport/include/hidl \
+  system/libhidl/libhidlmemory/include
+
+LOCAL_C_INCLUDES += \
+   external/libcxx/include
+
+LOCAL_CPPFLAGS += -std=c++14
 
 LOCAL_MODULE:= libtvbinder
 
@@ -22,5 +37,4 @@ ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
 LOCAL_PROPRIETARY_MODULE := true
 endif
 
-#LOCAL_PRELINK_MODULE := false
 include $(BUILD_SHARED_LIBRARY)

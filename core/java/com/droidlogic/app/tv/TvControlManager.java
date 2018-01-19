@@ -1,15 +1,5 @@
 package com.droidlogic.app.tv;
 
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
-import java.util.StringTokenizer;
-import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -20,30 +10,50 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.StringTokenizer;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import android.content.Context;
+import android.graphics.ImageFormat;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.media.tv.TvContract;
+import android.os.Build;
+import android.os.Handler;
+import android.os.HwBinder;
+import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
+import android.os.Parcel;
+import android.os.RemoteException;
 import android.os.SystemProperties;
+import android.text.TextUtils;
 
 import android.util.Log;
 import android.view.View;
 import android.view.Surface;
 import android.view.SurfaceHolder;
-import android.graphics.ImageFormat;
-import android.graphics.Bitmap;
-import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.os.Parcel;
-import android.graphics.Matrix;
-
-import android.media.tv.TvContract;
-import android.text.TextUtils;
-
-//import android.media.audiofx.Srs;
-//import android.media.audiofx.Hpeq;
 
 import static com.droidlogic.app.tv.TvControlCommand.*;
 import com.droidlogic.app.tv.EasEvent;
+
+import android.hidl.manager.V1_0.IServiceManager;
+import android.hidl.manager.V1_0.IServiceNotification;
+import vendor.amlogic.hardware.tvserver.V1_0.ITvServer;
+import vendor.amlogic.hardware.tvserver.V1_0.ITvServerCallback;
+import vendor.amlogic.hardware.tvserver.V1_0.SignalInfo;
+import vendor.amlogic.hardware.tvserver.V1_0.TvHidlParcel;
+import vendor.amlogic.hardware.tvserver.V1_0.ConnectType;
+import vendor.amlogic.hardware.tvserver.V1_0.Result;
 
 public class TvControlManager {
     private static final String TAG = "TvControlManager";
@@ -130,7 +140,7 @@ public class TvControlManager {
 
     private native final void native_setup(Object tv_this);
     private native final void native_release();
-    public native void addCallbackBuffer(byte cb[]);
+    //public native void addCallbackBuffer(byte cb[]);
     public native final void unlock();
     public native final void lock();
     public native final void reconnect() throws IOException;
@@ -153,12 +163,16 @@ public class TvControlManager {
 
     private int sendCmdToTv(Parcel p, Parcel r) {
         p.setDataPosition(0);
+
+        Log.i(TAG, "sendCmdToTv cmd:" + p.readInt());
+
         int ret = processCmd(p, r);
         r.setDataPosition(0);
         return ret;
     }
 
     public int sendCmd(int cmd) {
+        Log.i(TAG, "sendCmd cmd:" + cmd);
         libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
@@ -174,6 +188,7 @@ public class TvControlManager {
     }
 
     public int sendCmdIntArray(int cmd, int[] values) {
+        Log.i(TAG, "sendCmdIntArray cmd:" + cmd);
         libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
@@ -192,6 +207,7 @@ public class TvControlManager {
     }
 
     public int sendCmdFloatArray(int cmd, float[] values) {
+        Log.i(TAG, "sendCmdFloatArray cmd:" + cmd);
         libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
@@ -211,6 +227,7 @@ public class TvControlManager {
     }
 
     public int sendCmdStringArray(int cmd, String[] values) {
+        Log.i(TAG, "sendCmdStringArray cmd:" + cmd);
         libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
@@ -230,6 +247,7 @@ public class TvControlManager {
     }
 
     public int sendCmdStringArray(int cmd, int id, String[] values) {
+        Log.i(TAG, "sendCmdStringArray cmd:" + cmd + " id:" + id);
         libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
@@ -362,7 +380,58 @@ public class TvControlManager {
             int i = 0, loop_count = 0, tmp_val = 0;
             Parcel p;
 
+            TvHidlParcel parcel = ((TvHidlParcel) (msg.obj));
             switch (msg.what) {
+                case DTV_AV_PLAYBACK_CALLBACK:
+                    if (mAVPlaybackListener != null) {
+                        int msgType= parcel.bodyInt.get(0);
+                        int programID= parcel.bodyInt.get(1);
+                        mAVPlaybackListener.onEvent(msgType, programID);
+                    }
+                    break;
+                case SOURCE_CONNECT_CALLBACK:
+                    if (mSourceConnectChangeListener != null) {
+                        mSourceConnectChangeListener.onSourceConnectChange(SourceInput.values()[parcel.bodyInt.get(0)], parcel.bodyInt.get(1));
+                    }
+                    break;
+
+                case SCAN_EVENT_CALLBACK:
+                    p = ((Parcel) (msg.obj));
+                    ScannerEvent scan_ev = new ScannerEvent();
+                    readScanEvent(scan_ev, p);
+                    if (mScannerListener != null)
+                        mScannerListener.onEvent(scan_ev);
+                    if (mStorDBListener != null)
+                        mStorDBListener.StorDBonEvent(scan_ev);
+                    break;
+
+                case RRT_EVENT_CALLBACK:
+                    p = ((Parcel) (msg.obj));
+                    if (mRrtListener != null) {
+                        int result = p.readInt();
+                        Log.e(TAG, "RRT_EVENT_CALLBACK:" + result);
+                        rrt5XmlLoadStatus = result;
+                        mRrtListener.onRRT5InfoUpdated(result);
+                    }
+                    break;
+
+                case EAS_EVENT_CALLBACK:
+                     Log.i(TAG,"get EAS_event_callBack");
+                     p = ((Parcel) (msg.obj));
+                     if (mEasListener != null) {
+                        Log.i(TAG,"mEaslister is not null");
+                        int sectionCount = p.readInt();
+                        Log.i(TAG,"eas section count = "+sectionCount);
+                        for (int count = 0; count<sectionCount; count++) {
+                            EasEvent curEasEvent = new EasEvent();
+                            curEasEvent.readEasEvent(p);
+                            if (easManager.isEasEventNeedProcess(curEasEvent)) {
+                                mEasListener.processDetailsChannelAlert(curEasEvent);
+                            }
+                        }
+                     }
+                     break;
+
                 case SUBTITLE_UPDATE_CALLBACK:
                     if (mSubtitleListener != null) {
                         mSubtitleListener.onUpdate();
@@ -379,23 +448,7 @@ public class TvControlManager {
                         ev.FrameHeight= p.readInt();
                     }
                     break;
-                case SCAN_EVENT_CALLBACK:
-                    p = ((Parcel) (msg.obj));
-                    if (mScannerListener != null) {
-                        ScannerEvent scan_ev = new ScannerEvent();
-                        readScanEvent(scan_ev, p);
-                        mScannerListener.onEvent(scan_ev);
-                        if (mStorDBListener != null) {
-                            mStorDBListener.StorDBonEvent(scan_ev);
-                        }
-                    }else if (mStorDBListener != null) {
-                        ScannerEvent scan_ev = new ScannerEvent();
-                        readScanEvent(scan_ev, p);
-                        mStorDBListener.StorDBonEvent(scan_ev);
-                    }
-                    if (mStorDBListener == null)
-                        Log.d(TAG,"mStorDBListener is null !!!");
-                    break;
+
                 case SCANNING_FRAME_STABLE_CALLBACK:
                     p = ((Parcel) (msg.obj));
                     if (mScanningFrameStableListener != null) {
@@ -418,14 +471,6 @@ public class TvControlManager {
                         mEpgListener.onEvent(ev);
                     }
                     break;
-                case DTV_AV_PLAYBACK_CALLBACK:
-                    p = ((Parcel) (msg.obj));
-                    if (mAVPlaybackListener != null) {
-                        int msgType= p.readInt();
-                        int programID= p.readInt();
-                        mAVPlaybackListener.onEvent(msgType, programID);
-                    }
-                    break ;
                 case SEARCH_CALLBACK:
                     if (mSigChanSearchListener != null) {
                         if (msgPdu != null) {
@@ -452,11 +497,6 @@ public class TvControlManager {
                 case STATUS_3D_CALLBACK:
                     if (mStatus3DChangeListener != null) {
                         mStatus3DChangeListener.onStatus3DChange(((Parcel) (msg.obj)).readInt());
-                    }
-                    break;
-                case SOURCE_CONNECT_CALLBACK:
-                    if (mSourceConnectChangeListener != null) {
-                        mSourceConnectChangeListener.onSourceConnectChange( SourceInput.values()[((Parcel) (msg.obj)).readInt()], ((Parcel) (msg.obj)).readInt());
                     }
                     break;
                 case HDMIRX_CEC_CALLBACK:
@@ -542,34 +582,6 @@ public class TvControlManager {
                         mRecorderEventListener.onRecoderEvent(ev);
                     }
                     break;
-
-                case RRT_EVENT_CALLBACK:
-                    p = ((Parcel) (msg.obj));
-                    if (mRrtListener != null) {
-                        int result = p.readInt();
-                        Log.e(TAG, "RRT_EVENT_CALLBACK:" + result);
-                        rrt5XmlLoadStatus = result;
-                        mRrtListener.onRRT5InfoUpdated(result);
-                    }
-                    break;
-
-                case EAS_EVENT_CALLBACK:
-                     Log.i(TAG,"get EAS_event_callBack");
-                     p = ((Parcel) (msg.obj));
-                     if (mEasListener != null) {
-                        Log.i(TAG,"mEaslister is not null");
-                        int sectionCount = p.readInt();
-                        Log.i(TAG,"eas section count = "+sectionCount);
-                        for (int count = 0; count<sectionCount; count++) {
-                            EasEvent curEasEvent = new EasEvent();
-                            curEasEvent.readEasEvent(p);
-                            if (easManager.isEasEventNeedProcess(curEasEvent)) {
-                                mEasListener.processDetailsChannelAlert(curEasEvent);
-                            }
-                        }
-                     }
-
-                     break;
                  default:
                      Log.e(TAG, "Unknown message type " + msg.what);
                      break;
@@ -583,19 +595,192 @@ public class TvControlManager {
     }
 
     public TvControlManager() {
-        Looper looper;
-        if ((looper = Looper.myLooper()) != null) {
+        Looper looper = Looper.myLooper();
+        if (looper != null) {
             mEventHandler = new EventHandler(looper);
         } else if ((looper = Looper.getMainLooper()) != null) {
             mEventHandler = new EventHandler(looper);
         } else {
             mEventHandler = null;
+            Log.e(TAG, "looper is null, so can not do anything");
         }
-        native_setup(new WeakReference<TvControlManager>(this));
-        String LogFlg = TvMiscConfigGet(OPEN_TV_LOG_FLG,null);
-        if ("log_open".equals(TvMiscConfigGet(OPEN_TV_LOG_FLG,null)))
+        mHALCallback = new HALCallback(this);
+        //native_setup(new WeakReference<TvControlManager>(this));
+
+        try {
+            boolean ret = IServiceManager.getService()
+                    .registerForNotifications("vendor.amlogic.hardware.tvserver@1.0::ITvServer", "", mServiceNotification);
+            if (!ret) {
+                Log.e(TAG, "Failed to register service start notification");
+            }
+        } catch (RemoteException e) {
+            Log.e(TAG, "Failed to register service start notification", e);
+        }
+        connectToProxy();
+
+        String LogFlg = TvMiscConfigGet(OPEN_TV_LOG_FLG, "");
+        if ("log_open".equals(LogFlg))
             tvLogFlg =true;
     }
+
+    private static final int TVSERVER_DEATH_COOKIE = 1000;
+
+    // Callback when the UsbPort status is changed by the kernel.
+    // Mostly due a command sent by the remote Usb device.
+    private HALCallback mHALCallback;
+
+    // Notification object used to listen to the start of the tvserver daemon.
+    private final ServiceNotification mServiceNotification = new ServiceNotification();
+
+    private ITvServer mProxy = null;
+    // Mutex for all mutable shared state.
+    private final Object mLock = new Object();
+
+    private void connectToProxy() {
+        synchronized (mLock) {
+            if (mProxy != null) {
+                return;
+            }
+
+            try {
+                mProxy = ITvServer.getService();
+                mProxy.linkToDeath(new DeathRecipient(), TVSERVER_DEATH_COOKIE);
+                mProxy.setCallback(mHALCallback, ConnectType.TYPE_EXTEND);
+            } catch (NoSuchElementException e) {
+                Log.e(TAG, "connectToProxy: tvserver HIDL service not found."
+                        + " Did the service fail to start?", e);
+            } catch (RemoteException e) {
+                Log.e(TAG, "connectToProxy: tvserver HIDL service not responding", e);
+            }
+        }
+
+        Log.i(TAG, "connect to tvserve HIDL service success");
+    }
+
+    public String getSupportInputDevices() {
+        synchronized (mLock) {
+            Mutable<String> resultVal = new Mutable<>();
+            try {
+                mProxy.getSupportInputDevices((int ret, String v) -> {
+                                resultVal.value = v;
+                            });
+                return resultVal.value;
+            } catch (RemoteException e) {
+                Log.e(TAG, "getSupportInputDevices:" + e);
+            }
+        }
+        return "";
+    }
+
+    /**
+     * @Function: GetCurrentSignalInfo
+     * @Description: Get current signal infomation
+     * @Param:
+     * @Return: refer to class tvin_info_t
+     */
+    public TVInSignalInfo GetCurrentSignalInfo() {
+        synchronized (mLock) {
+            TVInSignalInfo info = new TVInSignalInfo();
+            try {
+                SignalInfo hidlInfo = mProxy.getCurSignalInfo();
+                info.transFmt = TVInSignalInfo.TransFmt.values()[hidlInfo.transFmt];
+                info.sigFmt = TVInSignalInfo.SignalFmt.valueOf(hidlInfo.fmt);
+                info.sigStatus = TVInSignalInfo.SignalStatus.values()[hidlInfo.status];
+                info.reserved = hidlInfo.frameRate;
+                return info;
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetCurrentSignalInfo:" + e);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @Function: TvMiscConfigSet
+     * @Description: Set tv config
+     * @Param: key_str tv config name string, value_str tv config set value string
+     * @Return: 0 success, -1 fail
+     */
+    public int TvMiscConfigSet(String key_str, String value_str) {
+        synchronized (mLock) {
+            try {
+                return mProxy.setMiscCfg(key_str, value_str);
+            } catch (RemoteException e) {
+                Log.e(TAG, "TvMiscConfigSet:" + e);
+            }
+        }
+
+        return -1;
+    }
+
+    /**
+     * @Function: TvMiscConfigGet
+     * @Description: Get tv config
+     * @Param: key_str tv config name string, value_str tv config get value string
+     * @Return: 0 success, -1 fail
+     */
+    public String TvMiscConfigGet(String key_str, String def_str) {
+        synchronized (mLock) {
+            try {
+                return mProxy.getMiscCfg(key_str, def_str);
+            } catch (RemoteException e) {
+                Log.e(TAG, "TvMiscConfigGet:" + e);
+            }
+        }
+        return "";
+    }
+
+    private static class Mutable<E> {
+        public E value;
+
+        Mutable() {
+            value = null;
+        }
+
+        Mutable(E value) {
+            this.value = value;
+        }
+    }
+
+    private static class HALCallback extends ITvServerCallback.Stub {
+        TvControlManager tvCtrlMgr;
+        HALCallback(TvControlManager tcm) {
+            tvCtrlMgr = tcm;
+        }
+
+        public void notifyCallback(TvHidlParcel parcel) {
+            Log.i(TAG, "notifyCallback msg type:" + parcel.msgType);
+
+            if (tvCtrlMgr.mEventHandler != null) {
+                Message msg = tvCtrlMgr.mEventHandler.obtainMessage(parcel.msgType, 0, 0, parcel);
+                tvCtrlMgr.mEventHandler.sendMessage(msg);
+            }
+        }
+    }
+
+    final class DeathRecipient implements HwBinder.DeathRecipient {
+        DeathRecipient() {
+        }
+
+        @Override
+        public void serviceDied(long cookie) {
+            if (TVSERVER_DEATH_COOKIE == cookie) {
+                Log.e(TAG, "tvserver HIDL service died cookie: " + cookie);
+                synchronized (mLock) {
+                    mProxy = null;
+                }
+            }
+        }
+    }
+
+    final class ServiceNotification extends IServiceNotification.Stub {
+        @Override
+        public void onRegistration(String fqName, String name, boolean preexisting) {
+            Log.i(TAG, "tvserver HIDL service started " + fqName + " " + name);
+            connectToProxy();
+        }
+    }
+
 
     protected void finalize() {
         //native_release();
@@ -763,28 +948,6 @@ public class TvControlManager {
         } else {
             return SourceInput_Type.SOURCE_TYPE_MPEG;
         }
-    }
-
-    /**
-     * @Function: GetCurrentSignalInfo
-     * @Description: Get current signal infomation
-     * @Param:
-     * @Return: refer to class tvin_info_t
-     */
-    public TVInSignalInfo GetCurrentSignalInfo() {
-        libtv_log_open();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        cmd.writeInt(GET_CURRENT_SIGNAL_INFO);
-        sendCmdToTv(cmd, r);
-        TVInSignalInfo info = new TVInSignalInfo();
-        info.transFmt = TVInSignalInfo.TransFmt.values()[r.readInt()];
-        info.sigFmt = TVInSignalInfo.SignalFmt.valueOf(r.readInt());
-        info.sigStatus = TVInSignalInfo.SignalStatus.values()[r.readInt()];
-        info.reserved = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return info;
     }
 
     /**
@@ -3575,36 +3738,6 @@ public class TvControlManager {
     // SSM END
 
     //MISC
-    /**
-     * @Function: TvMiscConfigSet
-     * @Description: Set tv config
-     * @Param: key_str tv config name string, value_str tv config set value string
-     * @Return: 0 success, -1 fail
-     */
-    public int TvMiscConfigSet(String key_str, String value_str) {
-        String val[] = new String[]{key_str, value_str};
-        return sendCmdStringArray(MISC_CFG_SET, val);
-    }
-
-    /**
-     * @Function: TvMiscConfigGet
-     * @Description: Get tv config
-     * @Param: key_str tv config name string, value_str tv config get value string
-     * @Return: 0 success, -1 fail
-     */
-    public String TvMiscConfigGet(String key_str, String def_str) {
-        libtv_log_open();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        cmd.writeInt(MISC_CFG_GET);
-        cmd.writeString(key_str);
-        cmd.writeString(def_str);
-        sendCmdToTv(cmd, r);
-        String str = r.readString();
-        cmd.recycle();
-        r.recycle();
-        return str;
-    }
 
     /**
      * @Function: TvMiscSetGPIOCtrl
@@ -5582,10 +5715,10 @@ public class TvControlManager {
     }
 
     private void libtv_log_open(){
-        if (tvLogFlg) {
+        //if (tvLogFlg) {
             StackTraceElement traceElement = ((new Exception()).getStackTrace())[1];
             Log.i(TAG, traceElement.getMethodName());
-        }
+        //}
     }
 
     public enum LEFT_RIGHT_SOUND_CHANNEL {
