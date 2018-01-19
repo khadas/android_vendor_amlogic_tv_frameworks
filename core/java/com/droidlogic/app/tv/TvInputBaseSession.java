@@ -28,6 +28,14 @@ import android.provider.Settings.Global;
 import android.hardware.hdmi.HdmiDeviceInfo;
 import android.hardware.hdmi.HdmiTvClient.SelectCallback;
 
+import com.droidlogic.app.tv.DroidLogicHdmiCecManager;
+import android.media.tv.TvInputInfo;
+//import android.hardware.hdmi.HdmiClient;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
+import android.content.Intent;
+import java.util.List;
+
 public abstract class TvInputBaseSession extends TvInputService.Session implements Handler.Callback {
     private static final boolean DEBUG = true;
     private static final String TAG = "TvInputBaseSession";
@@ -49,6 +57,8 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     protected boolean isBlockNoRatingEnable = false;
     protected boolean isUnlockCurrent_NR = false;
 
+    private HdmiControlManager mHdmiControlManager ;
+
     public TvInputBaseSession(Context context, String inputId, int deviceId) {
         super(context);
         mContext = context;
@@ -57,10 +67,18 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
         mTvControlManager = TvControlManager.getInstance();
         mSessionHandler = new Handler(context.getMainLooper(), this);
+        mTvInputManager = (TvInputManager)mContext.getSystemService(Context.TV_INPUT_SERVICE);
         int block_norating = Settings.System.getInt(mContext.getContentResolver(), DroidLogicTvUtils.BLOCK_NORATING, 0);
         isBlockNoRatingEnable = block_norating == 0 ? false : true;
         if (DEBUG)
             Log.d(TAG, "isBlockNoRatingEnable = " + isBlockNoRatingEnable);
+         Log.d(TAG, "TvInputBaseSession,inputId:" + inputId+", devieId:"+deviceId);
+         mHdmiControlManager = (HdmiControlManager) mContext.getSystemService(Context.HDMI_CONTROL_SERVICE);
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        intentFilter.addAction(Intent.ACTION_SCREEN_ON);
+        mContext.registerReceiver(mBroadcastReceiver, intentFilter);
     }
 
     public void setSessionId(int id) {
@@ -79,9 +97,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         return mDeviceId;
     }
 
-    public void doRelease() {
-        Log.d(TAG, "doRelease");
+    public void performDoReleaseSession() {
+        Log.d(TAG, "performDoReleaseSession,session:"+this);
         //setAudiodMute(false);
+        mContext.unregisterReceiver(mBroadcastReceiver);
         setOverlayViewEnabled(false);
         if (mOverlayView != null) {
             mOverlayView.releaseResource();
@@ -91,11 +110,6 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     public void doAppPrivateCmd(String action, Bundle bundle) {}
     public void doUnblockContent(TvContentRating rating) {}
-
-    @Override
-    public void onRelease() {
-        doRelease();
-    }
 
     @Override
     public void onSurfaceChanged(int format, int width, int height) {
@@ -141,6 +155,19 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         mOverlayView = (DroidLogicOverlayView)inflater.inflate(resId, null);
         setOverlayViewEnabled(true);
     }
+
+    private  BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals(Intent.ACTION_SCREEN_OFF)) {
+                if (DEBUG) Log.d(TAG, "Received ACTION_SCREEN_OFF");
+                setOverlayViewEnabled(false);
+            } else if (intent.getAction().equals(Intent.ACTION_SCREEN_ON)) {
+                if (DEBUG) Log.d(TAG, "Received ACTION_SCREEN_ON");
+                setOverlayViewEnabled(true);
+            }
+        }
+    };
 
     @Override
     public View onCreateOverlayView() {
@@ -210,5 +237,52 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
                 break;
         }
         return false;
+    }
+
+    @Override
+    public void onSetMain(boolean isMain) {
+        Log.d(TAG, "onSetMain:" + isMain);
+        TvInputInfo info = mTvInputManager.getTvInputInfo(mInputId);
+        if (info == null) {
+            Log.w(TAG, "       mInputId:" + mInputId+" has no TvInputInfo");
+            return;
+        }
+        Log.d(TAG, "       mDeviceId:" + mDeviceId+",mInputId:"+mInputId+", type:"+info.getType());
+        List<TvInputInfo> inputList = mTvInputManager.getTvInputList();
+        DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(mContext);
+
+        if (isMain) {
+            if (info.getType() == TvInputInfo.TYPE_HDMI) {
+                boolean hasCecDevConnected = hdmi_cec.isHdmiCecDeviceConneted(mDeviceId);
+                boolean isCecDevAdded = false;
+                for (TvInputInfo input : inputList) {
+                    String parentId = input.getParentId();
+                    //Log.d(TAG, "       input:" + input.toString()+" ,getParentId: "+ parentId);
+                    if (parentId != null && parentId.equals(mInputId)) {
+                        isCecDevAdded = true;
+                        break;
+                    }
+                }
+                Log.d(TAG, "isCecDevAdded:" + isCecDevAdded);
+                if (hasCecDevConnected && isCecDevAdded)
+                    hdmi_cec.activeHdmiCecSource(mDeviceId);
+                else if (hasCecDevConnected && !isCecDevAdded)
+                    hdmi_cec.selectHdmiDevice(mDeviceId);
+                else  if (!hasCecDevConnected && !isCecDevAdded)
+                    hdmi_cec.activeHdmiCecSource(mDeviceId);
+                else
+                    Log.e(TAG, "ERROR occur!!!!!" );
+            } else
+                hdmi_cec.selectHdmiDevice(0);
+            } else {
+                //There seems to be no use to handle setMain(false);
+                HdmiTvClient hdmitvclient = mHdmiControlManager.getTvClient();
+                HdmiDeviceInfo activeInfo = hdmitvclient.getActiveSource();
+                if (activeInfo != null) {
+                    Log.d(TAG, "activeInfo:"+activeInfo.toString());
+                    if (activeInfo.getPhysicalAddress() == hdmi_cec.getPhysicalAddress(mDeviceId))
+                        hdmi_cec.selectHdmiDevice(0);
+                } else
+                    Log.d(TAG, "activeInfo is null");}
     }
 }
