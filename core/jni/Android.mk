@@ -9,7 +9,7 @@ LOCAL_SRC_FILES:= \
     com_droidlogic_app_tv_TvControlManager.cpp
 
 LOCAL_SHARED_LIBRARIES := \
-    vendor.amlogic.hardware.tvserver@1.0_vendor \
+    vendor.amlogic.hardware.tvserver@1.0 \
     libcutils \
     libutils \
     libbinder \
@@ -17,7 +17,6 @@ LOCAL_SHARED_LIBRARIES := \
     libnativehelper \
     libandroid_runtime \
     liblog \
-    libskia \
     libhardware
 
 LOCAL_C_INCLUDES += \
@@ -26,6 +25,7 @@ LOCAL_C_INCLUDES += \
     frameworks/base/libs/hwui \
     $(LIB_TV_BINDER_PATH)/include \
     external/skia/include \
+    libnativehelper/include/nativehelper
 
 LOCAL_MODULE:= libtv_jni
 LOCAL_PRELINK_MODULE := false

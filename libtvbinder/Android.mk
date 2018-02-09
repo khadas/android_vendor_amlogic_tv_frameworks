@@ -11,7 +11,7 @@ LOCAL_SRC_FILES:= \
     ITvService.cpp
 
 LOCAL_SHARED_LIBRARIES := \
-    vendor.amlogic.hardware.tvserver@1.0_vendor \
+    vendor.amlogic.hardware.tvserver@1.0 \
     libbase \
     libhidlbase \
     libhidltransport \
