@@ -162,18 +162,20 @@ public class TvControlManager {
     }
 
     private int sendCmdToTv(Parcel p, Parcel r) {
-        p.setDataPosition(0);
+        Log.i(TAG, "sendCmdToTv is abandoned in Android O, please use cmd HIDL way!!cmd:" + p.readInt());
 
-        Log.i(TAG, "sendCmdToTv cmd:" + p.readInt());
+        return -1;
+        /*p.setDataPosition(0);
 
         int ret = processCmd(p, r);
         r.setDataPosition(0);
-        return ret;
+        return ret;*/
     }
 
     public int sendCmd(int cmd) {
-        Log.i(TAG, "sendCmd cmd:" + cmd);
-        libtv_log_open();
+        Log.i(TAG, "sendCmd is abandoned in Android O, please use cmd HIDL way!!cmd:" + cmd);
+        return -1;
+        /*libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         request.writeInt(cmd);
@@ -184,12 +186,13 @@ public class TvControlManager {
 
         request.recycle();
         reply.recycle();
-        return ret;
+        return ret;*/
     }
 
     public int sendCmdIntArray(int cmd, int[] values) {
-        Log.i(TAG, "sendCmdIntArray cmd:" + cmd);
-        libtv_log_open();
+        Log.i(TAG, "sendCmdIntArray is abandoned in Android O, please use cmd HIDL way!!cmd:" + cmd);
+        return -1;
+        /*libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         request.writeInt(cmd);
@@ -203,12 +206,13 @@ public class TvControlManager {
 
         request.recycle();
         reply.recycle();
-        return ret;
+        return ret;*/
     }
 
     public int sendCmdFloatArray(int cmd, float[] values) {
-        Log.i(TAG, "sendCmdFloatArray cmd:" + cmd);
-        libtv_log_open();
+        Log.i(TAG, "sendCmdFloatArray is abandoned in Android O, please use cmd HIDL way!!cmd:" + cmd);
+        return -1;
+        /*libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         request.writeInt(cmd);
@@ -223,12 +227,13 @@ public class TvControlManager {
 
         request.recycle();
         reply.recycle();
-        return ret;
+        return ret;*/
     }
 
     public int sendCmdStringArray(int cmd, String[] values) {
-        Log.i(TAG, "sendCmdStringArray cmd:" + cmd);
-        libtv_log_open();
+        Log.i(TAG, "sendCmdStringArray is abandoned in Android O, please use cmd HIDL way!!cmd:" + cmd);
+        return -1;
+        /*libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         request.writeInt(cmd);
@@ -243,12 +248,13 @@ public class TvControlManager {
 
         request.recycle();
         reply.recycle();
-        return ret;
+        return ret;*/
     }
 
     public int sendCmdStringArray(int cmd, int id, String[] values) {
-        Log.i(TAG, "sendCmdStringArray cmd:" + cmd + " id:" + id);
-        libtv_log_open();
+        Log.i(TAG, "sendCmdStringArray is abandoned in Android O, please use cmd HIDL way!!cmd:" + cmd + " id:" + id);
+        return -1;
+        /*libtv_log_open();
         Parcel request = Parcel.obtain();
         Parcel reply = Parcel.obtain();
         request.writeInt(cmd);
@@ -264,7 +270,7 @@ public class TvControlManager {
 
         request.recycle();
         reply.recycle();
-        return ret;
+        return ret;*/
     }
 
     class EventHandler extends Handler {
