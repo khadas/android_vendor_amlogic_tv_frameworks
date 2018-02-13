@@ -11,7 +11,7 @@ import com.droidlogic.app.tv.ChannelInfo;
 import com.droidlogic.app.tv.DroidLogicHdmiCecManager;
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvControlManager;
-import com.droidlogic.app.tv.TVInSignalInfo;
+import com.droidlogic.app.tv.TvInSignalInfo;
 
 import com.droidlogic.app.SystemControlManager;
 
@@ -54,7 +54,7 @@ import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
 
 public class DroidLogicTvInputService extends TvInputService implements
-        TVInSignalInfo.SigInfoChangeListener, TvControlManager.StorDBEventListener,
+        TvInSignalInfo.SigInfoChangeListener, TvControlManager.StorDBEventListener,
         TvControlManager.ScanningFrameStableListener {
     private static final String TAG = DroidLogicTvInputService.class.getSimpleName();
     private static final boolean DEBUG = true;
@@ -307,8 +307,8 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     @Override
-    public void onSigChange(TVInSignalInfo signal_info) {
-        TVInSignalInfo.SignalStatus status = signal_info.sigStatus;
+    public void onSigChange(TvInSignalInfo signal_info) {
+        TvInSignalInfo.SignalStatus status = signal_info.sigStatus;
 
         if (DEBUG)
             Log.d(TAG, "onSigChange" + status.ordinal() + status.toString());
@@ -318,11 +318,11 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
         onSigChanged(signal_info);
 
-        if (status == TVInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOSIG
-                || status == TVInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NULL
-                || status == TVInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOTSUP) {
+        if (status == TvInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOSIG
+                || status == TvInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NULL
+                || status == TvInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOTSUP) {
             mSession.notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
-        } else if (status == TVInSignalInfo.SignalStatus.TVIN_SIG_STATUS_STABLE) {
+        } else if (status == TvInSignalInfo.SignalStatus.TVIN_SIG_STATUS_STABLE) {
             int device_id = mSession.getDeviceId();
             if ((mTvControlManager.GetCurrentSourceInput() != DroidLogicTvUtils.DEVICE_ID_DTV)
                 || (signal_info.reserved == 1))
@@ -339,16 +339,16 @@ public class DroidLogicTvInputService extends TvInputService implements
                     Log.d(TAG, "signal_info.fmt.toString() for hdmi=" + signal_info.sigFmt.toString());
 
                 strings = signal_info.sigFmt.toString().split("_");
-                TVInSignalInfo.SignalFmt fmt = signal_info.sigFmt;
-                if (fmt == TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X480I_60HZ
-                        || fmt == TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X480I_120HZ
-                        || fmt == TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X480I_240HZ
-                        || fmt == TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_2880X480I_60HZ
-                        || fmt == TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_2880X480I_60HZ) {
+                TvInSignalInfo.SignalFmt fmt = signal_info.sigFmt;
+                if (fmt == TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X480I_60HZ
+                        || fmt == TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X480I_120HZ
+                        || fmt == TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X480I_240HZ
+                        || fmt == TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_2880X480I_60HZ
+                        || fmt == TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_2880X480I_60HZ) {
                     strings[4] = "480I";
-                } else if (fmt == TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X576I_50HZ
-                        || fmt == TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X576I_100HZ
-                        || fmt == TVInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X576I_200HZ) {
+                } else if (fmt == TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X576I_50HZ
+                        || fmt == TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X576I_100HZ
+                        || fmt == TvInSignalInfo.SignalFmt.TVIN_SIG_FMT_HDMI_1440X576I_200HZ) {
                     strings[4] = "576I";
                 }
 
@@ -397,7 +397,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
     }
 
-    public void onSigChanged(TVInSignalInfo signal_info) { }
+    public void onSigChanged(TvInSignalInfo signal_info) { }
 
 
     @Override

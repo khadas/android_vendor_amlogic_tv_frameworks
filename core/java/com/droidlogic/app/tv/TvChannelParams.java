@@ -8,44 +8,36 @@ import android.database.Cursor;
 import android.content.Context;
 import android.util.Log;
 
-/**
- *频道参数
- */
-public class TVChannelParams  implements Parcelable {
-    private static String TAG = "TVChannelParams";
+public class TvChannelParams  implements Parcelable {
+    private static String TAG = "TvChannelParams";
     public static final int FE_HAS_SIGNAL   = 0x01;
     public static final int FE_HAS_CARRIER  = 0x02;
     public static final int FE_HAS_VITERBI  = 0x04;
     public static final int FE_HAS_SYNC     = 0x08;
-    /**锁定*/
+
     public static final int FE_HAS_LOCK     = 0x10;
-    /**超时*/
+
     public static final int FE_TIMEDOUT     = 0x20;
     public static final int FE_REINIT       = 0x40;
 
-    /**QPSK模式*/
     public static final int MODE_QPSK = 0;
-    /**QAM模式*/
+
     public static final int MODE_QAM  = 1;
-    /**OFDM模式*/
+
     public static final int MODE_OFDM = 2;
-    /**ATSC模式*/
+
     public static final int MODE_ATSC = 3;
-    /**模拟模式*/
+
     public static final int MODE_ANALOG = 4;
-    /**DTMB模式*/
+
     public static final int MODE_DTMB = 5;
-    /**ISDBT模式*/
+
     public static final int MODE_ISDBT = 6;
 
     public static final int OFDM_MODE_DVBT=0;
     public static final int OFDM_MODE_DVBT2=1;
 
-    /**
-     *由字符串获得调制模式
-     *@param str 字符串
-     *@return 返回调制模式
-     */
+
     public static int getModeFromString(String str){
         if (str.equals("dvbt"))
             return MODE_OFDM;
@@ -63,57 +55,57 @@ public class TVChannelParams  implements Parcelable {
         return -1;
     }
 
-    /**8MHz带宽*/
+
     public static final int BANDWIDTH_8_MHZ = 0;
-    /**7MHz带宽*/
+
     public static final int BANDWIDTH_7_MHZ = 1;
-    /**6MHz带宽*/
+
     public static final int BANDWIDTH_6_MHZ = 2;
-    /**自动带宽检测*/
+
     public static final int BANDWIDTH_AUTO  = 3;
-    /**5MHZ带宽*/
+
     public static final int BANDWIDTH_5_MHZ = 4;
-    /**10MHZ带宽*/
+
     public static final int BANDWIDTH_10_MHZ = 5;
 
-    /**QPSK调制*/
+
     public static final int MODULATION_QPSK    = 0;
-    /**QAM16调制*/
+
     public static final int MODULATION_QAM_16  = 1;
-    /**QAM32调制*/
+
     public static final int MODULATION_QAM_32  = 2;
-    /**QAM64调制*/
+
     public static final int MODULATION_QAM_64  = 3;
-    /**QAM128调制*/
+
     public static final int MODULATION_QAM_128 = 4;
-    /**QAM256调制*/
+
     public static final int MODULATION_QAM_256 = 5;
-    /**QAM调制(自动检测)*/
+
     public static final int MODULATION_QAM_AUTO= 6;
-    /**VSB8调制*/
+
     public static final int MODULATION_VSB_8   = 7;
-    /**VSB16调制*/
+
     public static final int MODULATION_VSB_16  = 8;
-    /**PSK8调制*/
+
     public static final int MODULATION_PSK_8   = 9;
-    /**APSK16调制*/
+
     public static final int MODULATION_APSK_16 = 10;
-    /**APSK32调制*/
+
     public static final int MODULATION_APSK_32 = 11;
-    /**DQPSK调制*/
+
     public static final int MODULATION_DQPSK   = 12;
 
-    /**单声道*/
+
     public static final int AUDIO_MONO   = 0x0000;
-    /**立体声*/
+
     public static final int AUDIO_STEREO = 0x0001;
-    /**语言2*/
+
     public static final int AUDIO_LANG2  = 0x0002;
     /**SAP*/
     public static final int AUDIO_SAP    = 0x0002;
-    /**语言1*/
+
     public static final int AUDIO_LANG1  = 0x0003;
-    /**语言1/2*/
+
     public static final int AUDIO_LANG1_LANG2 = 0x0004;
 
     /**PAL B*/
@@ -193,12 +185,10 @@ public class TVChannelParams  implements Parcelable {
     public static final int COLOR_NTSC  =0x08000000;
     public static final int COLOR_SECAM =0x10000000;
 
-    /**水平极性*/
     public static final int SAT_POLARISATION_H = 0;
-    /**垂直极限*/
+
     public static final int SAT_POLARISATION_V = 1;
 
-    /**ISDBT LAYER全输出*/
     public static final int ISDBT_LAYER_ALL = 0;
     /**ISDBT LAYER A*/
     public static final int ISDBT_LAYER_A = 0;
@@ -217,16 +207,16 @@ public class TVChannelParams  implements Parcelable {
     public int standard;
     public int afc_data;
     public int sat_id;
-    public TVSatelliteParams tv_satparams;
+    public TvSatelliteParams tv_satparams;
     public int sat_polarisation;
     public int isdbtLayer;
 
-    public static final Parcelable.Creator<TVChannelParams> CREATOR = new Parcelable.Creator<TVChannelParams>(){
-        public TVChannelParams createFromParcel(Parcel in) {
-            return new TVChannelParams(in);
+    public static final Parcelable.Creator<TvChannelParams> CREATOR = new Parcelable.Creator<TvChannelParams>(){
+        public TvChannelParams createFromParcel(Parcel in) {
+            return new TvChannelParams(in);
         }
-        public TVChannelParams[] newArray(int size) {
-            return new TVChannelParams[size];
+        public TvChannelParams[] newArray(int size) {
+            return new TvChannelParams[size];
         }
     };
 
@@ -251,7 +241,7 @@ public class TVChannelParams  implements Parcelable {
             sat_id = in.readInt();
             int satparams_notnull = in.readInt();
             if (satparams_notnull == 1)
-                tv_satparams = new TVSatelliteParams(in);
+                tv_satparams = new TvSatelliteParams(in);
             sat_polarisation = in.readInt();
         }
         if (mode == MODE_ISDBT) {
@@ -293,23 +283,17 @@ public class TVChannelParams  implements Parcelable {
         }
     }
 
-    public TVChannelParams(Parcel in){
+    public TvChannelParams(Parcel in){
         readFromParcel(in);
     }
 
-    public TVChannelParams(int mode){
+    public TvChannelParams(int mode){
         this.mode = mode;
     }
 
-    /**
-     *创建DVBC参数
-     *@param frequency 频率Hz为单位
-     *@param modulation 调制方式
-     *@param symbolRate 符号率
-     *@return 返回新创建的参数
-     */
-    public static TVChannelParams dvbcParams(int frequency, int modulation, int symbolRate){
-        TVChannelParams tp = new TVChannelParams(MODE_QAM);
+
+    public static TvChannelParams dvbcParams(int frequency, int modulation, int symbolRate){
+        TvChannelParams tp = new TvChannelParams(MODE_QAM);
 
         tp.frequency  = frequency;
         tp.modulation = modulation;
@@ -318,14 +302,8 @@ public class TVChannelParams  implements Parcelable {
         return tp;
     }
 
-    /**
-     *创建DVBT参数
-     *@param frequency 频率Hz为单位
-     *@param bandwidth 带宽
-     *@return 返回新创建的参数
-     */
-    public static TVChannelParams dvbtParams(int frequency, int bandwidth){
-        TVChannelParams tp = new TVChannelParams(MODE_OFDM);
+    public static TvChannelParams dvbtParams(int frequency, int bandwidth){
+        TvChannelParams tp = new TvChannelParams(MODE_OFDM);
         tp.frequency = frequency;
         tp.bandwidth = bandwidth;
         tp.ofdm_mode = OFDM_MODE_DVBT;
@@ -333,14 +311,9 @@ public class TVChannelParams  implements Parcelable {
         return tp;
     }
 
-    /**
-     *创建DVBT2参数
-     *@param frequency 频率Hz为单位
-     *@param bandwidth 带宽
-     *@return 返回新创建的参数
-     */
-    public static TVChannelParams dvbt2Params(int frequency, int bandwidth){
-        TVChannelParams tp = new TVChannelParams(MODE_OFDM);
+
+    public static TvChannelParams dvbt2Params(int frequency, int bandwidth){
+        TvChannelParams tp = new TvChannelParams(MODE_OFDM);
         Log.d(TAG,"---new DVBT2 channel params---");
         tp.frequency = frequency;
         tp.bandwidth = bandwidth;
@@ -348,16 +321,9 @@ public class TVChannelParams  implements Parcelable {
         return tp;
     }
 
-    /**
-     *创建DVBS参数
-     *@param frequency 频率Hz为单位
-     *@param symbolRate 符号率
-     *@param sat_id Tp属于的卫星id
-     *@param sat_polarisation Tp极性
-     *@return 返回新创建的参数
-     */
-    /*	public static TVChannelParams dvbsParams(Context context, int frequency, int symbolRate, int sat_id, int sat_polarisation){
-        TVChannelParams tp = new TVChannelParams(MODE_QPSK);
+
+    /*	public static TvChannelParams dvbsParams(Context context, int frequency, int symbolRate, int sat_id, int sat_polarisation){
+        TvChannelParams tp = new TvChannelParams(MODE_QPSK);
 
         tp.frequency  = frequency;
         tp.symbolRate = symbolRate;
@@ -370,28 +336,18 @@ public class TVChannelParams  implements Parcelable {
         return tp;
         }
      */
-    /**
-     *创建ATSC参数
-     *@param frequency 频率Hz为单位
-     *@return 返回新创建的参数
-     */
-    public static TVChannelParams atscParams(int frequency, int modulation){
-        TVChannelParams tp = new TVChannelParams(MODE_ATSC);
+
+    public static TvChannelParams atscParams(int frequency, int modulation){
+        TvChannelParams tp = new TvChannelParams(MODE_ATSC);
 
         tp.frequency  = frequency;
         tp.modulation = modulation;
         return tp;
     }
 
-    /**
-     *创建模拟参数
-     *@param frequency 频率Hz为单位
-     *@param std 视频标准
-     *@param audio 伴音选择
-     *@return 返回新创建的参数
-     */
-    public static TVChannelParams analogParams(int frequency, int std, int audio,int afc_flag){
-        TVChannelParams tp = new TVChannelParams(MODE_ANALOG);
+
+    public static TvChannelParams analogParams(int frequency, int std, int audio,int afc_flag){
+        TvChannelParams tp = new TvChannelParams(MODE_ANALOG);
 
         tp.frequency = frequency;
         tp.audio     = audio;
@@ -400,14 +356,8 @@ public class TVChannelParams  implements Parcelable {
         return tp;
     }
 
-    /**
-     *创建DTMB参数
-     *@param frequency 频率Hz为单位
-     *@param bandwidth 带宽
-     *@return 返回新创建的参数
-     */
-    public static TVChannelParams dtmbParams(int frequency, int bandwidth){
-        TVChannelParams tp = new TVChannelParams(MODE_DTMB);
+    public static TvChannelParams dtmbParams(int frequency, int bandwidth){
+        TvChannelParams tp = new TvChannelParams(MODE_DTMB);
 
         tp.frequency = frequency;
         tp.bandwidth = bandwidth;
@@ -415,14 +365,9 @@ public class TVChannelParams  implements Parcelable {
         return tp;
     }
 
-    /**
-     *创建ISDBT参数
-     *@param frequency 频率Hz为单位
-     *@param bandwidth 带宽
-     *@return 返回新创建的参数
-     */
-    public static TVChannelParams isdbtParams(int frequency, int bandwidth){
-        TVChannelParams tp = new TVChannelParams(MODE_ISDBT);
+
+    public static TvChannelParams isdbtParams(int frequency, int bandwidth){
+        TvChannelParams tp = new TvChannelParams(MODE_ISDBT);
 
         tp.frequency = frequency;
         tp.bandwidth = bandwidth;
@@ -560,10 +505,6 @@ public class TVChannelParams  implements Parcelable {
         return TvControlManager.ATV_AUDIO_STD_AUTO;
     }
 
-    /**
-     *修改模拟音频
-     *@return true 表示已经修改,false表示制式已经设置无需修改
-     */
     public boolean setATVAudio(int audio){
         if (this.audio == audio)
             return false;
@@ -572,11 +513,6 @@ public class TVChannelParams  implements Parcelable {
         return true;
     }
 
-    /**
-     *修改模拟视频制式
-     *@param fmt 视频制式
-     *@return true 表示已经修改制式,false表示制式已经设置无需修改
-     */
     public boolean setATVVideoFormat(int fmt){
         int afmt = AudioStd2Enum(standard);
         int std = getTunerStd(fmt, afmt);
@@ -588,11 +524,6 @@ public class TVChannelParams  implements Parcelable {
         return true;
     }
 
-    /**
-     *修改模拟音频制式
-     *@param fmt 音频制式
-     *@return true 表示已经修改制式,false表示制式已经设置无需修改
-     */
     public boolean setATVAudioFormat(int fmt){
         int vfmt = VideoStd2Enum(standard);
         int std = getTunerStd(vfmt, fmt);
@@ -604,18 +535,12 @@ public class TVChannelParams  implements Parcelable {
         return true;
     }
 
-    /**
-     *取得参数模式
-     *@return 返回模式
-     */
+
     public int getMode(){
         return mode;
     }
 
-    /**
-     *判断参数是否为DVB模式
-     *@return true表示是DVB模式，false表示不是DVB模式
-     */
+
     public boolean isDVBMode(){
         if ((mode == MODE_QPSK) || (mode == MODE_QAM) ||
                 (mode == MODE_OFDM) || (mode == MODE_DTMB)) {
@@ -625,10 +550,6 @@ public class TVChannelParams  implements Parcelable {
         return false;
     }
 
-    /**
-     *判断是参数否为DVBC模式
-     *@return true表示是DVBC模式，false表示不是DVBC模式
-     */
     public boolean isDVBCMode(){
         if (mode == MODE_QAM) {
             return true;
@@ -637,10 +558,7 @@ public class TVChannelParams  implements Parcelable {
         return false;
     }
 
-    /**
-     *判断是参数否为DVBT模式
-     *@return true表示是DVBT模式，false表示不是DVBT模式
-     */
+
     public boolean isDVBTMode(){
         if (mode == MODE_OFDM) {
             return true;
@@ -649,10 +567,7 @@ public class TVChannelParams  implements Parcelable {
         return false;
     }
 
-    /**
-     *判断是参数否为DVBS模式
-     *@return true表示是DVBS模式，false表示不是DVBS模式
-     */
+
     public boolean isDVBSMode(){
         if (mode == MODE_QPSK) {
             return true;
@@ -661,10 +576,7 @@ public class TVChannelParams  implements Parcelable {
         return false;
     }
 
-    /**
-     *判断参数是否为ATSC模式
-     *@return true表示是ATSC模式，false表示不是ATSC模式
-     */
+
     public boolean isATSCMode(){
         if (mode == MODE_ATSC) {
             return true;
@@ -673,10 +585,6 @@ public class TVChannelParams  implements Parcelable {
         return false;
     }
 
-    /**
-     *判断参数是否为模拟模式
-     *@return true表示是模拟模式，false表示不是模拟模式
-     */
     public boolean isAnalogMode(){
         if (mode == MODE_ANALOG) {
             return true;
@@ -685,10 +593,7 @@ public class TVChannelParams  implements Parcelable {
         return false;
     }
 
-    /**
-     *判断是参数否为DTMB模式
-     *@return true表示是DTMB模式，false表示不是DTMB模式
-     */
+
     public boolean isDTMBMode(){
         if (mode == MODE_DTMB) {
             return true;
@@ -697,10 +602,7 @@ public class TVChannelParams  implements Parcelable {
         return false;
     }
 
-    /**
-     *判断是参数否为ISDBT模式
-     *@return true表示是ISDBT模式，false表示不是ISDBT模式
-     */
+
     public boolean isISDBTMode(){
         if (mode == MODE_ISDBT) {
             return true;
@@ -709,34 +611,22 @@ public class TVChannelParams  implements Parcelable {
         return false;
     }
 
-    /**
-     *取得频率(单位Hz)
-     @return 返回频率
-     */
+
     public int getFrequency(){
         return frequency;
     }
 
-    /**
-     *取得OFDM_MODE
-     @return 返回OFDM_MODE
-     */
+
     public int getOFDM_Mode(){
         return ofdm_mode;
     }
 
-    /**
-     *设置频率(单位Hz)
-     @param frequency频率
-     */
+
     public void setFrequency(int frequency){
         this.frequency = frequency;
     }
 
-    /**
-     *取得伴音模式(模拟模式)
-     *@return 返回伴音模式
-     */
+
     public int getAudioMode(){
         if (!isAnalogMode())
             throw new UnsupportedOperationException();
@@ -744,10 +634,7 @@ public class TVChannelParams  implements Parcelable {
         return audio;
     }
 
-    /**
-     *取得视频标准(模拟模式)
-     *@return 返回视频标准
-     */
+
     public int getStandard(){
         if (!isAnalogMode())
             throw new UnsupportedOperationException();
@@ -755,10 +642,7 @@ public class TVChannelParams  implements Parcelable {
         return standard;
     }
 
-    /**
-     *取得带宽(OFDM模式或者DTMB模式)
-     *@return 返回带宽
-     */
+
     public int getBandwidth(){
         if (mode != MODE_OFDM && mode != MODE_DTMB)
             throw new UnsupportedOperationException();
@@ -766,10 +650,6 @@ public class TVChannelParams  implements Parcelable {
         return bandwidth;
     }
 
-    /**
-     *取得调制方式(QAM模式)
-     *@return 返回调试方式
-     */
     public int getModulation(){
         if (mode != MODE_QAM)
             throw new UnsupportedOperationException();
@@ -777,10 +657,7 @@ public class TVChannelParams  implements Parcelable {
         return modulation;
     }
 
-    /**
-     *取得符号率(QPSK/QAM模式)
-     *@return 返回符号率
-     */
+
     public int getSymbolRate(){
         if (!((mode == MODE_QPSK) || (mode == MODE_QAM)))
             throw new UnsupportedOperationException();
@@ -788,10 +665,7 @@ public class TVChannelParams  implements Parcelable {
         return symbolRate;
     }
 
-    /**
-     *设置符号率(QPSK/QAM模式)
-     *@param symbolRate 符号率
-     */
+
     public void setSymbolRate(int symbolRate){
         if (!((mode == MODE_QPSK) || (mode == MODE_QAM)))
             throw new UnsupportedOperationException();
@@ -799,10 +673,7 @@ public class TVChannelParams  implements Parcelable {
         this.symbolRate = symbolRate;
     }
 
-    /**
-     *取得卫星id(QPSK模式)
-     *@return 返回卫星id
-     */
+
     public int getSatId(){
         if (mode != MODE_QPSK)
             throw new UnsupportedOperationException();
@@ -810,10 +681,7 @@ public class TVChannelParams  implements Parcelable {
         return sat_id;
     }
 
-    /**
-     *取得极性(QPSK模式)
-     *@return 返回极性
-     */
+
     public int getPolarisation(){
         if (mode != MODE_QPSK)
             throw new UnsupportedOperationException();
@@ -821,10 +689,7 @@ public class TVChannelParams  implements Parcelable {
         return this.sat_polarisation;
     }
 
-    /**
-     *取得频率(单位Hz)
-     @return 返回频率
-     */
+
     public int getISDBTLayer(){
         if (mode != MODE_ISDBT)
             throw new UnsupportedOperationException();
@@ -832,10 +697,7 @@ public class TVChannelParams  implements Parcelable {
         return isdbtLayer;
     }
 
-    /**
-     *设置Layer(ISDBT模式)
-     *@param layer layer值
-     */
+
     public void setISDBTLayer(int layer){
         if (mode != MODE_ISDBT)
             throw new UnsupportedOperationException();
@@ -843,10 +705,7 @@ public class TVChannelParams  implements Parcelable {
         this.isdbtLayer = isdbtLayer;
     }
 
-    /**
-     *设置极性(QPSK模式)
-     *@param sat_polarisation 极性
-     */
+
     public void setPolarisation(int sat_polarisation){
         if (mode != MODE_QPSK)
             throw new UnsupportedOperationException();
@@ -854,12 +713,8 @@ public class TVChannelParams  implements Parcelable {
         this.sat_polarisation = sat_polarisation;
     }
 
-    /**
-     *检测前端参数和当前参数是否相等
-     *@param params 前端参数
-     *@return 如果相等返回true，不等返回false
-     */
-    public boolean equals(TVChannelParams params){
+
+    public boolean equals(TvChannelParams params){
         if (this.mode != params.mode)
             return false;
 
@@ -881,7 +736,7 @@ public class TVChannelParams  implements Parcelable {
         return true;
     }
 
-    public boolean equals_frontendevt(TVChannelParams params){
+    public boolean equals_frontendevt(TvChannelParams params){
         if (this.mode != params.mode)
             return false;
 
@@ -899,7 +754,7 @@ public class TVChannelParams  implements Parcelable {
         return 0;
     }
 
-    public static Parcelable.Creator<TVChannelParams> getCreator() {
+    public static Parcelable.Creator<TvChannelParams> getCreator() {
         return CREATOR;
     }
 }

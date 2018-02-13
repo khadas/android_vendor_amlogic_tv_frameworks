@@ -200,7 +200,7 @@ public abstract class TvStoreManager {
         String serviceType;
 
         try {
-            name = TVMultilingualText.getText(event.programName);
+            name = TvMultilingualText.getText(event.programName);
         } catch (Exception e) {
             e.printStackTrace();
             name = "????";
@@ -306,7 +306,7 @@ public abstract class TvStoreManager {
                .setServiceType(TvContract.Channels.SERVICE_TYPE_AUDIO_VIDEO)//default is SERVICE_TYPE_AUDIO_VIDEO
                .setServiceId(0)
                .setDisplayNumber(Integer.toString(mDisplayNumber))
-               .setDisplayName(TVMultilingualText.getText(ATVName))
+               .setDisplayName(TvMultilingualText.getText(ATVName))
                .setLogoUrl(null)
                .setOriginalNetworkId(0)
                .setTransportStreamId(0)
@@ -1020,7 +1020,7 @@ public abstract class TvStoreManager {
             }
 
             bundle = getScanEventBundle(event);
-            if ((event.mode == TVChannelParams.MODE_ANALOG) && (event.lock == 0x11)) {
+            if ((event.mode == TvChannelParams.MODE_ANALOG) && (event.lock == 0x11)) {
                 bundle.putInt(DroidLogicTvUtils.SIG_INFO_C_DISPLAYNUM, mDisplayNumber);
                 mDisplayNumber++;//count for progress stage
             }

@@ -587,11 +587,11 @@ public class ChannelInfo {
     }
 
     public String getDisplayNameLocal() {
-        return TVMultilingualText.getText(getDisplayNameMulti());
+        return TvMultilingualText.getText(getDisplayNameMulti());
     }
 
     public String getDisplayName(String local) {
-        return TVMultilingualText.getText(getDisplayNameMulti(), local);
+        return TvMultilingualText.getText(getDisplayNameMulti(), local);
     }
 
     public int getFreeCa() {

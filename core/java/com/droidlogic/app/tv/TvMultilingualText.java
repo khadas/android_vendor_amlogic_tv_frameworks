@@ -10,11 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 /**
- *TVMultilingualText
+ *TvMultilingualText
  *multilingual text parsing
  */
-public class TVMultilingualText{
-    private static final String TAG="TVMultilingualText";
+public class TvMultilingualText{
+    private static final String TAG="TvMultilingualText";
 
     private class MultilingualText{
         protected String language;
@@ -100,7 +100,7 @@ public class TVMultilingualText{
         }
         String[] langText = formatText.split(split);
         for (int i=0; langText!=null && i<langText.length; i++) {
-            TVMultilingualText inst = new TVMultilingualText();
+            TvMultilingualText inst = new TvMultilingualText();
             MultilingualText text = inst.new MultilingualText(langText[i]);
 
             if (useFirst || text.getLangage().equalsIgnoreCase(lang)) {
@@ -188,7 +188,7 @@ public class TVMultilingualText{
         }
         for (int i=0; i<jsonArray.length(); i++) {
             JSONObject j = jsonArray.optJSONObject(i);
-            TVMultilingualText inst = new TVMultilingualText();
+            TvMultilingualText inst = new TvMultilingualText();
             MultilingualTextJ text = inst.new MultilingualTextJ(j);
             if (useFirst || text.getLangage().equalsIgnoreCase(lang)) {
                 ret = text.getText();

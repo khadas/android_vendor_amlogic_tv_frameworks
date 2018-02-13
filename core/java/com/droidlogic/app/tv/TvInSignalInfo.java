@@ -1,6 +1,6 @@
 package com.droidlogic.app.tv;
 
-public class TVInSignalInfo {
+public class TvInSignalInfo {
     public enum TransFmt {
         TVIN_TFMT_2D,
         TVIN_TFMT_3D_LRH_OLOR,
@@ -322,12 +322,12 @@ public class TVInSignalInfo {
     public SignalStatus sigStatus;
     public int reserved;
 
-    public TVInSignalInfo() {
+    public TvInSignalInfo() {
     }
 
     // set listener when not need to listen set null
     public interface SigInfoChangeListener {
-        void onSigChange(TVInSignalInfo sigInfo);
+        void onSigChange(TvInSignalInfo sigInfo);
     };
 
     public interface SigChannelSearchListener {

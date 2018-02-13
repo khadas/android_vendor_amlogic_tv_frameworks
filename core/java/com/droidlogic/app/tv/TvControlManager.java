@@ -110,8 +110,8 @@ public class TvControlManager {
 
     private long mNativeContext; // accessed by native methods
     private EventHandler mEventHandler;
-    private TVInSignalInfo.SigInfoChangeListener mSigInfoChangeLister = null;
-    private TVInSignalInfo.SigChannelSearchListener mSigChanSearchListener = null;
+    private TvInSignalInfo.SigInfoChangeListener mSigInfoChangeLister = null;
+    private TvInSignalInfo.SigChannelSearchListener mSigChanSearchListener = null;
     private Status3DChangeListener mStatus3DChangeListener = null;
     private AdcCalibrationListener mAdcCalibrationListener = null;
     private SourceSwitchListener mSourceSwitchListener = null;
@@ -490,10 +490,10 @@ public class TvControlManager {
                     break;
                 case SIGLE_DETECT_CALLBACK:
                     if (mSigInfoChangeLister != null) {
-                        TVInSignalInfo sigInfo = new TVInSignalInfo();
-                        sigInfo.transFmt = TVInSignalInfo.TransFmt.values()[(((Parcel) (msg.obj)).readInt())];
-                        sigInfo.sigFmt = TVInSignalInfo.SignalFmt.valueOf(((Parcel) (msg.obj)).readInt());
-                        sigInfo.sigStatus = TVInSignalInfo.SignalStatus.values()[(((Parcel) (msg.obj)).readInt())];
+                        TvInSignalInfo sigInfo = new TvInSignalInfo();
+                        sigInfo.transFmt = TvInSignalInfo.TransFmt.values()[(((Parcel) (msg.obj)).readInt())];
+                        sigInfo.sigFmt = TvInSignalInfo.SignalFmt.valueOf(((Parcel) (msg.obj)).readInt());
+                        sigInfo.sigStatus = TvInSignalInfo.SignalStatus.values()[(((Parcel) (msg.obj)).readInt())];
                         sigInfo.reserved = ((Parcel) (msg.obj)).readInt();
                         mSigInfoChangeLister.onSigChange(sigInfo);
                     }
@@ -684,14 +684,14 @@ public class TvControlManager {
      * @Param:
      * @Return: refer to class tvin_info_t
      */
-    public TVInSignalInfo GetCurrentSignalInfo() {
+    public TvInSignalInfo GetCurrentSignalInfo() {
         synchronized (mLock) {
-            TVInSignalInfo info = new TVInSignalInfo();
+            TvInSignalInfo info = new TvInSignalInfo();
             try {
                 SignalInfo hidlInfo = mProxy.getCurSignalInfo();
-                info.transFmt = TVInSignalInfo.TransFmt.values()[hidlInfo.transFmt];
-                info.sigFmt = TVInSignalInfo.SignalFmt.valueOf(hidlInfo.fmt);
-                info.sigStatus = TVInSignalInfo.SignalStatus.values()[hidlInfo.status];
+                info.transFmt = TvInSignalInfo.TransFmt.values()[hidlInfo.transFmt];
+                info.sigFmt = TvInSignalInfo.SignalFmt.valueOf(hidlInfo.fmt);
+                info.sigStatus = TvInSignalInfo.SignalStatus.values()[hidlInfo.status];
                 info.reserved = hidlInfo.frameRate;
                 return info;
             } catch (RemoteException e) {
@@ -1154,7 +1154,7 @@ public class TvControlManager {
      * @Param: value saturation, source refer to enum SourceInput, fmt current fmt refer to tvin_sig_fmt_e, is_save 1 to save
      * @Return: 0 success, -1 fail
      */
-    public int SetSaturation(int value, SourceInput source, TVInSignalInfo.SignalFmt fmt, int is_save) {
+    public int SetSaturation(int value, SourceInput source, TvInSignalInfo.SignalFmt fmt, int is_save) {
         int val[] = new int[]{value, source.toInt(), fmt.toInt(), is_save};
         return sendCmdIntArray(SET_SATURATION, val);
     }
@@ -1187,7 +1187,7 @@ public class TvControlManager {
      * @Param: value saturation, source refer to enum SourceInput, fmt current fmt refer to tvin_sig_fmt_e, is_save 1 to save
      * @Return: 0 success, -1 fail
      */
-    public int SetHue(int value, SourceInput source, TVInSignalInfo.SignalFmt fmt, int is_save) {
+    public int SetHue(int value, SourceInput source, TvInSignalInfo.SignalFmt fmt, int is_save) {
         int val[] = new int[]{value, source.toInt(), fmt.toInt(), is_save};
         return sendCmdIntArray(SET_HUE, val);
     }
@@ -1439,7 +1439,7 @@ public class TvControlManager {
      * @Param: value mode refer to enum Display_Mode, source refer to enum SourceInput, fmt refer to tvin_sig_fmt_e, is_save 1 to save
      * @Return: 0 success, -1 fail
      */
-    public int SetDisplayMode(Display_Mode display_mode, SourceInput source, TVInSignalInfo.SignalFmt fmt, int is_save) {
+    public int SetDisplayMode(Display_Mode display_mode, SourceInput source, TvInSignalInfo.SignalFmt fmt, int is_save) {
         int val[] = new int[]{display_mode.toInt(), source.toInt(), fmt.toInt(), is_save};
         return sendCmdIntArray(SET_DISPLAY_MODE, val);
     }
@@ -1928,8 +1928,8 @@ public class TvControlManager {
      * @Param: trans_fmt refer to enum tvin_trans_fmt, cutwin_t refer to class tvin_cutwin_t
      * @Return: 0 success, -1 fail
      */
-    public int FactorySetOverscanParams(SourceInput source_type, TVInSignalInfo.SignalFmt fmt,
-            TVInSignalInfo.TransFmt trans_fmt, tvin_cutwin_t cutwin_t) {
+    public int FactorySetOverscanParams(SourceInput source_type, TvInSignalInfo.SignalFmt fmt,
+            TvInSignalInfo.TransFmt trans_fmt, tvin_cutwin_t cutwin_t) {
         int val[] = new int[]{source_type.toInt(), fmt.toInt(), trans_fmt.ordinal(),
             cutwin_t.hs, cutwin_t.he, cutwin_t.vs, cutwin_t.ve};
         return sendCmdIntArray(FACTORY_SETOVERSCAN, val);
@@ -1942,8 +1942,8 @@ public class TvControlManager {
      * @Param: trans_fmt refer to enum tvin_trans_fmt
      * @Return: cutwin_t value for overscan refer to class tvin_cutwin_t
      */
-    public tvin_cutwin_t FactoryGetOverscanParams(SourceInput source_type, TVInSignalInfo.SignalFmt fmt,
-            TVInSignalInfo.TransFmt trans_fmt) {
+    public tvin_cutwin_t FactoryGetOverscanParams(SourceInput source_type, TvInSignalInfo.SignalFmt fmt,
+            TvInSignalInfo.TransFmt trans_fmt) {
         libtv_log_open();
         Parcel cmd = Parcel.obtain();
         Parcel r = Parcel.obtain();
@@ -4046,25 +4046,25 @@ public class TvControlManager {
     public static String baseModeToType(int baseMode) {
         String type = "";
         switch (baseMode) {
-            case TVChannelParams.MODE_DTMB:
+            case TvChannelParams.MODE_DTMB:
                 type = TvContract.Channels.TYPE_DTMB;
                 break;
-            case TVChannelParams.MODE_QPSK:
+            case TvChannelParams.MODE_QPSK:
                 type = TvContract.Channels.TYPE_DVB_S;
                 break;
-            case TVChannelParams.MODE_QAM:
+            case TvChannelParams.MODE_QAM:
                 type = TvContract.Channels.TYPE_DVB_C;
                 break;
-            case TVChannelParams.MODE_OFDM:
+            case TvChannelParams.MODE_OFDM:
                 type = TvContract.Channels.TYPE_DVB_T;
                 break;
-            case TVChannelParams.MODE_ATSC:
+            case TvChannelParams.MODE_ATSC:
                 type = TvContract.Channels.TYPE_ATSC_C;
                 break;
-            case TVChannelParams.MODE_ANALOG:
+            case TvChannelParams.MODE_ANALOG:
                 type = TvContract.Channels.TYPE_PAL;
                 break;
-            case TVChannelParams.MODE_ISDBT:
+            case TvChannelParams.MODE_ISDBT:
                 type = TvContract.Channels.TYPE_ISDB_T;
                 break;
             default:
@@ -4142,33 +4142,33 @@ public class TvControlManager {
         public String toType() {
             String type = "";
             switch (getBase()) {
-                case TVChannelParams.MODE_DTMB:
+                case TvChannelParams.MODE_DTMB:
                     type = TvContract.Channels.TYPE_DTMB;
                     break;
-                case TVChannelParams.MODE_QPSK:
+                case TvChannelParams.MODE_QPSK:
                     type = TvContract.Channels.TYPE_DVB_S;
                     if (getGen() == 1)
                         type = TvContract.Channels.TYPE_DVB_S2;
                     break;
-                case TVChannelParams.MODE_QAM:
+                case TvChannelParams.MODE_QAM:
                     type = TvContract.Channels.TYPE_DVB_C;
                     if (getGen() == 1)
                         type = TvContract.Channels.TYPE_DVB_C2;
                     break;
-                case TVChannelParams.MODE_OFDM:
+                case TvChannelParams.MODE_OFDM:
                     type = TvContract.Channels.TYPE_DVB_T;
                     if (getGen() == 1)
                         type = TvContract.Channels.TYPE_DVB_T2;
                     break;
-                case TVChannelParams.MODE_ATSC:
+                case TvChannelParams.MODE_ATSC:
                     type = TvContract.Channels.TYPE_ATSC_T;
                     if (getGen() == 1)
                         type = TvContract.Channels.TYPE_ATSC_C;
                     break;
-                case TVChannelParams.MODE_ANALOG:
+                case TvChannelParams.MODE_ANALOG:
                     type = TvContract.Channels.TYPE_PAL;
                     break;
-                case TVChannelParams.MODE_ISDBT:
+                case TvChannelParams.MODE_ISDBT:
                     type = TvContract.Channels.TYPE_ISDB_T;
                     break;
                 default:
@@ -4177,26 +4177,26 @@ public class TvControlManager {
             return type;
         }
         private int typeToBaseMode(String type) {
-            int mode = TVChannelParams.MODE_DTMB;
+            int mode = TvChannelParams.MODE_DTMB;
             if (TextUtils.equals(type, TvContract.Channels.TYPE_DTMB)) {
-                mode = TVChannelParams.MODE_DTMB;
+                mode = TvChannelParams.MODE_DTMB;
             } else if (TextUtils.equals(type, TvContract.Channels.TYPE_DVB_S)
                 || (TextUtils.equals(type, TvContract.Channels.TYPE_DVB_S2))) {
-                mode = TVChannelParams.MODE_QPSK;
+                mode = TvChannelParams.MODE_QPSK;
             } else if (TextUtils.equals(type, TvContract.Channels.TYPE_DVB_C)
                 || (TextUtils.equals(type, TvContract.Channels.TYPE_DVB_C2))) {
-                mode = TVChannelParams.MODE_QAM;
+                mode = TvChannelParams.MODE_QAM;
             } else if (TextUtils.equals(type, TvContract.Channels.TYPE_DVB_T)
                 || (TextUtils.equals(type, TvContract.Channels.TYPE_DVB_T2))) {
-                mode = TVChannelParams.MODE_OFDM;
+                mode = TvChannelParams.MODE_OFDM;
             } else if (TextUtils.equals(type, TvContract.Channels.TYPE_ATSC_T)
                 || (TextUtils.equals(type, TvContract.Channels.TYPE_ATSC_C))) {
-                mode = TVChannelParams.MODE_ATSC;
+                mode = TvChannelParams.MODE_ATSC;
             } else if (TextUtils.equals(type, TvContract.Channels.TYPE_PAL)
                 || (TextUtils.equals(type, TvContract.Channels.TYPE_NTSC))) {
-                mode = TVChannelParams.MODE_ANALOG;
+                mode = TvChannelParams.MODE_ANALOG;
             } else if (TextUtils.equals(type, TvContract.Channels.TYPE_ISDB_T)) {
-                mode = TVChannelParams.MODE_ISDBT;
+                mode = TvChannelParams.MODE_ISDBT;
             }
             return mode;
         }
@@ -6507,12 +6507,12 @@ public class TvControlManager {
         mAVPlaybackListener = l;
     }
 
-    public void SetSigInfoChangeListener(TVInSignalInfo.SigInfoChangeListener l) {
+    public void SetSigInfoChangeListener(TvInSignalInfo.SigInfoChangeListener l) {
         libtv_log_open();
         mSigInfoChangeLister = l;
     }
 
-    public void SetSigChannelSearchListener(TVInSignalInfo.SigChannelSearchListener l) {
+    public void SetSigChannelSearchListener(TvInSignalInfo.SigChannelSearchListener l) {
         libtv_log_open();
         mSigChanSearchListener = l;
     }
