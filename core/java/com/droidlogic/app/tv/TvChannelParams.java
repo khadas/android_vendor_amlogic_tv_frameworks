@@ -10,15 +10,13 @@ import android.util.Log;
 
 public class TvChannelParams  implements Parcelable {
     private static String TAG = "TvChannelParams";
-    public static final int FE_HAS_SIGNAL   = 0x01;
-    public static final int FE_HAS_CARRIER  = 0x02;
-    public static final int FE_HAS_VITERBI  = 0x04;
-    public static final int FE_HAS_SYNC     = 0x08;
-
-    public static final int FE_HAS_LOCK     = 0x10;
-
-    public static final int FE_TIMEDOUT     = 0x20;
-    public static final int FE_REINIT       = 0x40;
+    public static final int TV_FE_HAS_SIGNAL   = 0x01;
+    public static final int TV_FE_HAS_CARRIER  = 0x02;
+    public static final int TV_FE_HAS_VITERBI  = 0x04;
+    public static final int TV_FE_HAS_SYNC     = 0x08;
+    public static final int TV_FE_HAS_LOCK     = 0x10;
+    public static final int TV_FE_TIMEDOUT     = 0x20;
+    public static final int TV_FE_REINIT       = 0x40;
 
     public static final int MODE_QPSK = 0;
 
