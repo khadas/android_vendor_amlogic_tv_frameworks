@@ -44,22 +44,22 @@ public class TvDataBaseManager {
     private static final SparseArray<String> CHANNEL_MODE_TO_TYPE_MAP = new SparseArray<String>();
 
     static {
-        CHANNEL_MODE_TO_TYPE_MAP.put(TVChannelParams.MODE_DTMB, Channels.TYPE_DTMB);
-        CHANNEL_MODE_TO_TYPE_MAP.put(TVChannelParams.MODE_QPSK, Channels.TYPE_DVB_S);
-        CHANNEL_MODE_TO_TYPE_MAP.put(TVChannelParams.MODE_QAM, Channels.TYPE_DVB_C);
-        CHANNEL_MODE_TO_TYPE_MAP.put(TVChannelParams.MODE_OFDM, Channels.TYPE_DVB_T);
-        CHANNEL_MODE_TO_TYPE_MAP.put(TVChannelParams.MODE_ATSC, Channels.TYPE_ATSC_C);
-        CHANNEL_MODE_TO_TYPE_MAP.put(TVChannelParams.MODE_ANALOG, Channels.TYPE_PAL);
-        CHANNEL_MODE_TO_TYPE_MAP.put(TVChannelParams.MODE_ISDBT, Channels.TYPE_ISDB_T);
+        CHANNEL_MODE_TO_TYPE_MAP.put(TvChannelParams.MODE_DTMB, Channels.TYPE_DTMB);
+        CHANNEL_MODE_TO_TYPE_MAP.put(TvChannelParams.MODE_QPSK, Channels.TYPE_DVB_S);
+        CHANNEL_MODE_TO_TYPE_MAP.put(TvChannelParams.MODE_QAM, Channels.TYPE_DVB_C);
+        CHANNEL_MODE_TO_TYPE_MAP.put(TvChannelParams.MODE_OFDM, Channels.TYPE_DVB_T);
+        CHANNEL_MODE_TO_TYPE_MAP.put(TvChannelParams.MODE_ATSC, Channels.TYPE_ATSC_C);
+        CHANNEL_MODE_TO_TYPE_MAP.put(TvChannelParams.MODE_ANALOG, Channels.TYPE_PAL);
+        CHANNEL_MODE_TO_TYPE_MAP.put(TvChannelParams.MODE_ISDBT, Channels.TYPE_ISDB_T);
     }
 
     private static final Map<String, Integer> CHANNEL_TYPE_TO_MODE_MAP = new HashMap<String, Integer>();
 
     static {
-        CHANNEL_TYPE_TO_MODE_MAP.put(Channels.TYPE_DTMB, TVChannelParams.MODE_DTMB);
-        CHANNEL_TYPE_TO_MODE_MAP.put(Channels.TYPE_DVB_C, TVChannelParams.MODE_QAM);
-        CHANNEL_TYPE_TO_MODE_MAP.put(Channels.TYPE_DVB_T, TVChannelParams.MODE_OFDM);
-        CHANNEL_TYPE_TO_MODE_MAP.put(Channels.TYPE_PAL, TVChannelParams.MODE_ANALOG);
+        CHANNEL_TYPE_TO_MODE_MAP.put(Channels.TYPE_DTMB, TvChannelParams.MODE_DTMB);
+        CHANNEL_TYPE_TO_MODE_MAP.put(Channels.TYPE_DVB_C, TvChannelParams.MODE_QAM);
+        CHANNEL_TYPE_TO_MODE_MAP.put(Channels.TYPE_DVB_T, TvChannelParams.MODE_OFDM);
+        CHANNEL_TYPE_TO_MODE_MAP.put(Channels.TYPE_PAL, TvChannelParams.MODE_ANALOG);
     }
 
     private Context mContext;

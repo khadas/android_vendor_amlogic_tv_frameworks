@@ -753,7 +753,7 @@ public class DroidLogicTvUtils
             if (g == null)
                 continue;
 
-            String ratingDescription = TVMultilingualText.getTextJ(g.optString("rs"));
+            String ratingDescription = TvMultilingualText.getTextJ(g.optString("rs"));
             int region = g.optInt("g", -1);
 
             JSONArray ratings = g.optJSONArray("rx");
