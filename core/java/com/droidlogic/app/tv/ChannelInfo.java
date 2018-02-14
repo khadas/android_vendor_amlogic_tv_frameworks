@@ -1234,6 +1234,10 @@ public class ChannelInfo {
     }
 
     private static int stringToInteger(String string) {
+        if (TextUtils.isEmpty(string)) {
+            return -1;
+        }
+
         String s = string.replaceAll("\\D", "");
         if (!TextUtils.isEmpty(s))
             return Integer.valueOf(s);
