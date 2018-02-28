@@ -285,106 +285,105 @@ public class TvControlManager {
             msgPdu = new int[1200];
         }
 
-        private void readScanEvent(ScannerEvent scan_ev, Parcel p) {
+        private void readScanEvent(ScannerEvent scan_ev, TvHidlParcel p) {
             int i, j;
-            scan_ev.type = p.readInt();
+            scan_ev.type = p.bodyInt.get(0);
             Log.d(TAG, "scan ev type:"+ scan_ev.type);
 
-            scan_ev.precent = p.readInt();
-            scan_ev.totalcount = p.readInt();
-            scan_ev.lock = p.readInt();
-            scan_ev.cnum = p.readInt();
-            scan_ev.freq = p.readInt();
-            scan_ev.programName = p.readString();
-            scan_ev.srvType = p.readInt();
-            scan_ev.paras = p.readString();
-            scan_ev.strength = p.readInt();
-            scan_ev.quality = p.readInt();
-            scan_ev.videoStd = p.readInt();
-            scan_ev.audioStd = p.readInt();
-            scan_ev.isAutoStd = p.readInt();
+            scan_ev.precent = p.bodyInt.get(1);
+            scan_ev.totalcount = p.bodyInt.get(2);
+            scan_ev.lock = p.bodyInt.get(3);
+            scan_ev.cnum = p.bodyInt.get(4);
+            scan_ev.freq = p.bodyInt.get(5);
+            scan_ev.programName = p.bodyString.get(0);
+            scan_ev.srvType = p.bodyInt.get(6);
+            scan_ev.paras = p.bodyString.get(1);
+            scan_ev.strength = p.bodyInt.get(7);
+            scan_ev.quality = p.bodyInt.get(8);
+            scan_ev.videoStd = p.bodyInt.get(9);
+            scan_ev.audioStd = p.bodyInt.get(10);
+            scan_ev.isAutoStd = p.bodyInt.get(11);
 
-            scan_ev.mode = p.readInt();
-            scan_ev.sr = p.readInt();
-            scan_ev.mod = p.readInt();
-            scan_ev.bandwidth = p.readInt();
-            scan_ev.reserved = p.readInt();
-            scan_ev.ts_id = p.readInt();
-            scan_ev.orig_net_id = p.readInt();
-            scan_ev.serviceID = p.readInt();
-            scan_ev.vid = p.readInt();
-            scan_ev.vfmt = p.readInt();
-            int acnt = p.readInt();
+            scan_ev.mode = p.bodyInt.get(12);
+            scan_ev.sr = p.bodyInt.get(13);
+            scan_ev.mod = p.bodyInt.get(14);
+            scan_ev.bandwidth = p.bodyInt.get(15);
+            scan_ev.reserved = p.bodyInt.get(16);
+            scan_ev.ts_id = p.bodyInt.get(17);
+            scan_ev.orig_net_id = p.bodyInt.get(18);
+            scan_ev.serviceID = p.bodyInt.get(19);
+            scan_ev.vid = p.bodyInt.get(20);
+            scan_ev.vfmt = p.bodyInt.get(21);
+            int acnt = p.bodyInt.get(22);
             if (acnt != 0) {
                 scan_ev.aids = new int[acnt];
                 for (i=0;i<acnt;i++)
-                    scan_ev.aids[i] = p.readInt();
+                    scan_ev.aids[i] = p.bodyInt.get(i+23);
                 scan_ev.afmts = new int[acnt];
                 for (i=0;i<acnt;i++)
-                    scan_ev.afmts[i] = p.readInt();
+                    scan_ev.afmts[i] = p.bodyInt.get(i+acnt+23);
                 scan_ev.alangs = new String[acnt];
                 for (i=0;i<acnt;i++)
-                    scan_ev.alangs[i] = p.readString();
+                    scan_ev.alangs[i] = p.bodyString.get(i+2);
                 scan_ev.atypes = new int[acnt];
                 for (i=0;i<acnt;i++)
-                    scan_ev.atypes[i] = p.readInt();
+                    scan_ev.atypes[i] = p.bodyInt.get(i+2*acnt+23);
                 scan_ev.aexts = new int[acnt];
                 for (i=0;i<acnt;i++)
-                    scan_ev.aexts[i] = p.readInt();
+                    scan_ev.aexts[i] = p.bodyInt.get(i+3*acnt+23);
             }
-            scan_ev.pcr = p.readInt();
-            int scnt = p.readInt();
+            scan_ev.pcr = p.bodyInt.get(4*acnt+23);
+            int scnt = p.bodyInt.get(4*acnt+24);
             if (scnt != 0) {
                 scan_ev.stypes = new int[scnt];
                 for (i=0;i<scnt;i++)
-                    scan_ev.stypes[i] = p.readInt();
+                    scan_ev.stypes[i] = p.bodyInt.get(i+4*acnt+25);
                 scan_ev.sids = new int[scnt];
                 for (i=0;i<scnt;i++)
-                    scan_ev.sids[i] = p.readInt();
+                    scan_ev.sids[i] = p.bodyInt.get(i+scnt+4*acnt+25);
                 scan_ev.sstypes = new int[scnt];
                 for (i=0;i<scnt;i++)
-                    scan_ev.sstypes[i] = p.readInt();
+                    scan_ev.sstypes[i] = p.bodyInt.get(i+2*scnt+4*acnt+25);
                 scan_ev.sid1s = new int[scnt];
                 for (i=0;i<scnt;i++)
-                    scan_ev.sid1s[i] = p.readInt();
+                    scan_ev.sid1s[i] = p.bodyInt.get(i+3*scnt+4*acnt+25);
                 scan_ev.sid2s = new int[scnt];
                 for (i=0;i<scnt;i++)
-                    scan_ev.sid2s[i] = p.readInt();
+                    scan_ev.sid2s[i] = p.bodyInt.get(i+4*scnt+4*acnt+25);
                 scan_ev.slangs = new String[scnt];
                 for (i=0;i<scnt;i++)
-                    scan_ev.slangs[i] = p.readString();
+                    scan_ev.slangs[i] = p.bodyString.get(i+acnt+2);
             }
-            scan_ev.free_ca = p.readInt();
-            scan_ev.scrambled = p.readInt();
-            scan_ev.scan_mode = p.readInt();
-            scan_ev.sdtVersion = p.readInt();
-            scan_ev.sort_mode = p.readInt();
+            scan_ev.free_ca = p.bodyInt.get(5*scnt+4*acnt+25);
+            scan_ev.scrambled = p.bodyInt.get(5*scnt+4*acnt+26);
+            scan_ev.scan_mode = p.bodyInt.get(5*scnt+4*acnt+27);
+            scan_ev.sdtVersion = p.bodyInt.get(5*scnt+4*acnt+28);
+            scan_ev.sort_mode = p.bodyInt.get(5*scnt+4*acnt+29);
 
             scan_ev.lcnInfo = new ScannerLcnInfo();
-            scan_ev.lcnInfo.netId = p.readInt();
-            scan_ev.lcnInfo.tsId = p.readInt();
-            scan_ev.lcnInfo.serviceId = p.readInt();
+            scan_ev.lcnInfo.netId = p.bodyInt.get(5*scnt+4*acnt+30);
+            scan_ev.lcnInfo.tsId = p.bodyInt.get(5*scnt+4*acnt+31);
+            scan_ev.lcnInfo.serviceId = p.bodyInt.get(5*scnt+4*acnt+32);
             scan_ev.lcnInfo.visible = new int[4];
             scan_ev.lcnInfo.lcn = new int[4];
             scan_ev.lcnInfo.valid = new int[4];
             for (j=0; j<4; j++) {
-                scan_ev.lcnInfo.visible[j] = p.readInt();
-                scan_ev.lcnInfo.lcn[j] = p.readInt();
-                scan_ev.lcnInfo.valid[j] = p.readInt();
+                scan_ev.lcnInfo.visible[j] = p.bodyInt.get(j*3+5*scnt+4*acnt+33);
+                scan_ev.lcnInfo.lcn[j] = p.bodyInt.get(j*3+5*scnt+4*acnt+34);
+                scan_ev.lcnInfo.valid[j] = p.bodyInt.get(j*3+5*scnt+4*acnt+35);
             }
-            scan_ev.majorChannelNumber = p.readInt();
-            scan_ev.minorChannelNumber = p.readInt();
-            scan_ev.sourceId = p.readInt();
-            scan_ev.accessControlled = p.readInt();
-            scan_ev.hidden = p.readInt();
-            scan_ev.hideGuide = p.readInt();
-            scan_ev.vct = p.readString();
+            scan_ev.majorChannelNumber = p.bodyInt.get(4*3+5*scnt+4*acnt+33);
+            scan_ev.minorChannelNumber = p.bodyInt.get(4*3+5*scnt+4*acnt+34);
+            scan_ev.sourceId = p.bodyInt.get(4*3+5*scnt+4*acnt+35);
+            scan_ev.accessControlled = p.bodyInt.get(4*3+5*scnt+4*acnt+36);
+            scan_ev.hidden = p.bodyInt.get(4*3+5*scnt+4*acnt+37);
+            scan_ev.hideGuide = p.bodyInt.get(4*3+5*scnt+4*acnt+38);
+            scan_ev.vct = p.bodyString.get(scnt+acnt+2);
         }
 
         @Override
         public void handleMessage(Message msg) {
             int i = 0, loop_count = 0, tmp_val = 0;
-            Parcel p;
 
             TvHidlParcel parcel = ((TvHidlParcel) (msg.obj));
             switch (msg.what) {
@@ -402,9 +401,8 @@ public class TvControlManager {
                     break;
 
                 case SCAN_EVENT_CALLBACK:
-                    p = ((Parcel) (msg.obj));
                     ScannerEvent scan_ev = new ScannerEvent();
-                    readScanEvent(scan_ev, p);
+                    readScanEvent(scan_ev, parcel);
                     if (mScannerListener != null)
                         mScannerListener.onEvent(scan_ev);
                     if (mStorDBListener != null)
@@ -412,9 +410,8 @@ public class TvControlManager {
                     break;
 
                 case RRT_EVENT_CALLBACK:
-                    p = ((Parcel) (msg.obj));
                     if (mRrtListener != null) {
-                        int result = p.readInt();
+                        int result = parcel.bodyInt.get(0);
                         Log.e(TAG, "RRT_EVENT_CALLBACK:" + result);
                         rrt5XmlLoadStatus = result;
                         mRrtListener.onRRT5InfoUpdated(result);
@@ -423,14 +420,13 @@ public class TvControlManager {
 
                 case EAS_EVENT_CALLBACK:
                      Log.i(TAG,"get EAS_event_callBack");
-                     p = ((Parcel) (msg.obj));
                      if (mEasListener != null) {
                         Log.i(TAG,"mEaslister is not null");
-                        int sectionCount = p.readInt();
+                        int sectionCount = parcel.bodyInt.get(0);
                         Log.i(TAG,"eas section count = "+sectionCount);
                         for (int count = 0; count<sectionCount; count++) {
                             EasEvent curEasEvent = new EasEvent();
-                            curEasEvent.readEasEvent(p);
+                            curEasEvent.readEasEvent(parcel);
                             if (easManager.isEasEventNeedProcess(curEasEvent)) {
                                 mEasListener.processDetailsChannelAlert(curEasEvent);
                             }
@@ -444,22 +440,20 @@ public class TvControlManager {
                     }
                     break;
                 case VFRAME_BMP_EVENT_CALLBACK:
-                    p = ((Parcel) (msg.obj));
                     if (mVframBMPListener != null) {
                         VFrameEvent ev = new VFrameEvent();
                         mVframBMPListener.onEvent(ev);
-                        ev.FrameNum = p.readInt();
-                        ev.FrameSize= p.readInt();
-                        ev.FrameWidth= p.readInt();
-                        ev.FrameHeight= p.readInt();
+                        ev.FrameNum = parcel.bodyInt.get(0);
+                        ev.FrameSize= parcel.bodyInt.get(1);
+                        ev.FrameWidth= parcel.bodyInt.get(2);
+                        ev.FrameHeight= parcel.bodyInt.get(3);
                     }
                     break;
 
                 case SCANNING_FRAME_STABLE_CALLBACK:
-                    p = ((Parcel) (msg.obj));
                     if (mScanningFrameStableListener != null) {
                         ScanningFrameStableEvent ev = new ScanningFrameStableEvent();
-                        ev.CurScanningFrq = p.readInt();
+                        ev.CurScanningFrq = parcel.bodyInt.get(0);
                         mScanningFrameStableListener.onFrameStable(ev);
                     }
                     break;
@@ -467,22 +461,21 @@ public class TvControlManager {
                     Log.i(TAG,"atsc ---VCHIP_CALLBACK-----------------");
                     break;
                 case EPG_EVENT_CALLBACK:
-                    p = ((Parcel) (msg.obj));
                     if (mEpgListener != null) {
                         EpgEvent ev = new EpgEvent();
-                        ev.type = p.readInt();
-                        ev.time = p.readInt();
-                        ev.programID = p.readInt();
-                        ev.channelID = p.readInt();
+                        ev.type = parcel.bodyInt.get(0);
+                        ev.time = parcel.bodyInt.get(1);
+                        ev.programID = parcel.bodyInt.get(2);
+                        ev.channelID = parcel.bodyInt.get(3);
                         mEpgListener.onEvent(ev);
                     }
                     break;
                 case SEARCH_CALLBACK:
                     if (mSigChanSearchListener != null) {
                         if (msgPdu != null) {
-                            loop_count = ((Parcel) (msg.obj)).readInt();
+                            loop_count = parcel.bodyInt.get(0);
                             for (i = 0; i < loop_count; i++) {
-                                msgPdu[i] = ((Parcel) (msg.obj)).readInt();
+                                msgPdu[i] = parcel.bodyInt.get(i+1);
                             }
                             mSigChanSearchListener.onChannelSearchChange(msgPdu);
                         }
@@ -491,26 +484,27 @@ public class TvControlManager {
                 case SIGLE_DETECT_CALLBACK:
                     if (mSigInfoChangeLister != null) {
                         TvInSignalInfo sigInfo = new TvInSignalInfo();
-                        sigInfo.transFmt = TvInSignalInfo.TransFmt.values()[(((Parcel) (msg.obj)).readInt())];
-                        sigInfo.sigFmt = TvInSignalInfo.SignalFmt.valueOf(((Parcel) (msg.obj)).readInt());
-                        sigInfo.sigStatus = TvInSignalInfo.SignalStatus.values()[(((Parcel) (msg.obj)).readInt())];
-                        sigInfo.reserved = ((Parcel) (msg.obj)).readInt();
+                        sigInfo.transFmt = TvInSignalInfo.TransFmt.values()[parcel.bodyInt.get(0)];
+                        sigInfo.sigFmt = TvInSignalInfo.SignalFmt.valueOf(parcel.bodyInt.get(1));
+                        sigInfo.sigStatus = TvInSignalInfo.SignalStatus.values()[parcel.bodyInt.get(2)];
+                        sigInfo.reserved = parcel.bodyInt.get(3);
                         mSigInfoChangeLister.onSigChange(sigInfo);
+                        Log.e(TAG,"atsc ---SIGLE_DETECT_CALLBACK-----------------");
                     }
                     break;
                 case VGA_CALLBACK:
                     break;
                 case STATUS_3D_CALLBACK:
                     if (mStatus3DChangeListener != null) {
-                        mStatus3DChangeListener.onStatus3DChange(((Parcel) (msg.obj)).readInt());
+                        mStatus3DChangeListener.onStatus3DChange(parcel.bodyInt.get(0));
                     }
                     break;
                 case HDMIRX_CEC_CALLBACK:
                     if (mHDMIRxCECListener != null) {
                         if (msgPdu != null) {
-                            loop_count = ((Parcel) (msg.obj)).readInt();
+                            loop_count = parcel.bodyInt.get(0);
                             for (i = 0; i < loop_count; i++) {
-                                msgPdu[i] = ((Parcel) (msg.obj)).readInt();
+                                msgPdu[i] = parcel.bodyInt.get(i+1);
                             }
                             mHDMIRxCECListener.onHDMIRxCECMessage(loop_count, msgPdu);
                         }
@@ -518,8 +512,8 @@ public class TvControlManager {
                     break;
                 case UPGRADE_FBC_CALLBACK:
                     if (mUpgradeFBCListener != null) {
-                        loop_count = ((Parcel) (msg.obj)).readInt();
-                        tmp_val = ((Parcel) (msg.obj)).readInt();
+                        loop_count = parcel.bodyInt.get(0);
+                        tmp_val = parcel.bodyInt.get(1);
                         Log.d(TAG, "state = " + loop_count + "    param = " + tmp_val);
                         mUpgradeFBCListener.onUpgradeStatus(loop_count, tmp_val);
                     }
@@ -528,21 +522,21 @@ public class TvControlManager {
                     break;
                 case ADC_CALIBRATION_CALLBACK:
                     if (mAdcCalibrationListener != null) {
-                        mAdcCalibrationListener.onAdcCalibrationChange(((Parcel) (msg.obj)).readInt());
+                        mAdcCalibrationListener.onAdcCalibrationChange(parcel.bodyInt.get(0));
                     }
                     break;
                 case SOURCE_SWITCH_CALLBACK:
                     if (mSourceSwitchListener != null) {
                         mSourceSwitchListener.onSourceSwitchStatusChange(
-                                SourceInput.values()[(((Parcel) (msg.obj)).readInt())], ((Parcel) (msg.obj)).readInt());
+                                SourceInput.values()[(parcel.bodyInt.get(0))], (parcel.bodyInt.get(1)));
                     }
                     break;
                 case CHANNEL_SELECT_CALLBACK:
                     if (mChannelSelectListener != null) {
                         if (msgPdu != null) {
-                            loop_count = ((Parcel) (msg.obj)).readInt();
+                            loop_count = parcel.bodyInt.get(0);
                             for (i = 0; i < loop_count; i++) {
-                                msgPdu[i] = ((Parcel) (msg.obj)).readInt();
+                                msgPdu[i] = parcel.bodyInt.get(i+1);
                             }
                             mChannelSelectListener.onChannelSelect(msgPdu);
                         }
@@ -551,10 +545,10 @@ public class TvControlManager {
                 case SERIAL_COMMUNICATION_CALLBACK:
                     if (mSerialCommunicationListener != null) {
                         if (msgPdu != null) {
-                            int dev_id = ((Parcel) (msg.obj)).readInt();
-                            loop_count = ((Parcel) (msg.obj)).readInt();
+                            int dev_id = parcel.bodyInt.get(0);
+                            loop_count = parcel.bodyInt.get(1);
                             for (i = 0; i < loop_count; i++) {
-                                msgPdu[i] = ((Parcel) (msg.obj)).readInt();
+                                msgPdu[i] = parcel.bodyInt.get(i+2);
                             }
                             mSerialCommunicationListener.onSerialCommunication(dev_id, loop_count, msgPdu);
                         }
@@ -562,16 +556,16 @@ public class TvControlManager {
                     break;
                 case CLOSE_CAPTION_CALLBACK:
                     if (mCloseCaptionListener != null) {
-                        loop_count = ((Parcel) (msg.obj)).readInt();
+                        loop_count = parcel.bodyInt.get(0);
                         Log.d(TAG, "cc listenner data count =" + loop_count);
                         for (i = 0; i < loop_count; i++) {
-                            dataArray[i] = ((Parcel) (msg.obj)).readInt();
+                            dataArray[i] = parcel.bodyInt.get(i+1);
                         }
                         //data len write to end
                         dataArray[dataArray.length - 1] = loop_count;
-                        loop_count = ((Parcel) (msg.obj)).readInt();
+                        loop_count = parcel.bodyInt.get(loop_count+1);
                         for (i = 0; i < loop_count; i++) {
-                            cmdArray[i] = ((Parcel) (msg.obj)).readInt();
+                            cmdArray[i] = parcel.bodyInt.get(i+loop_count+2);
                         }
                         cmdArray[cmdArray.length - 1] =  loop_count;
                         mCloseCaptionListener.onCloseCaptionProcess(dataArray, cmdArray);
@@ -579,12 +573,11 @@ public class TvControlManager {
                     break;
 
                 case RECORDER_EVENT_CALLBACK:
-                    p = ((Parcel) (msg.obj));
                     if (mRecorderEventListener != null) {
                         RecorderEvent ev = new RecorderEvent();
-                        ev.Id = p.readString();
-                        ev.Status = p.readInt();
-                        ev.Error = p.readInt();
+                        ev.Id = parcel.bodyString.get(0);
+                        ev.Status = parcel.bodyInt.get(0);
+                        ev.Error = parcel.bodyInt.get(1);
                         mRecorderEventListener.onRecoderEvent(ev);
                     }
                     break;
