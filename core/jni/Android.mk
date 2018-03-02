@@ -25,6 +25,8 @@ LOCAL_C_INCLUDES += \
     frameworks/base/libs/hwui \
     $(LIB_TV_BINDER_PATH)/include \
     external/skia/include \
+    external/skia/include/core \
+    external/skia/include/config \
     libnativehelper/include/nativehelper
 
 LOCAL_MODULE:= libtv_jni
