@@ -72,9 +72,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     private static final int MSG_DO_TUNE = 0;
     private static final int MSG_DO_RELEASE = 1;
     private static final int MSG_DO_SET_SURFACE = 3;
-    private static final int RETUNE_TIMEOUT = 20; // 1 second
     private static int mSelectPort = -1;
-    private int timeout = RETUNE_TIMEOUT;
     private Surface mSurface;
     protected int ACTION_FAILED = -1;
     protected int ACTION_SUCCESS = 1;
@@ -474,17 +472,11 @@ public class DroidLogicTvInputService extends TvInputService implements
     private void doSetSurface(Surface surface, TvInputBaseSession session) {
         Log.d(TAG, "[source_switch_time]:" +getUptimeSeconds()
                 + "s, doSetSurface inputId=" + mCurrentInputId + " number=" + session.mId + " surface=" + surface);
-        timeout = RETUNE_TIMEOUT;
 
         if (surface != null && !surface.isValid()) {
             Log.d(TAG, "onSetSurface get invalid surface");
             return;
         } else if (surface != null) {
-            if (mSession == null) {
-                Log.w(TAG, "session should not be null when surface is not null!!!!!");
-                int test_ww = mSession.getDeviceId();
-                return;
-            }
             if (mHardware != null && mSurface != null
                 && (mSourceType >= DroidLogicTvUtils.DEVICE_ID_HDMI1)
                 && (mSourceType <= DroidLogicTvUtils.DEVICE_ID_HDMI4)) {
@@ -501,7 +493,7 @@ public class DroidLogicTvInputService extends TvInputService implements
             stopTvPlay(session.mId);
         }
 
-        if (mHardware != null && mSurface != null && mSurface.isValid()) {
+        if (mHardware != null && mSurface != null && mConfigs.length > 0 && mSurface.isValid()) {
             mHardware.setSurface(mSurface, mConfigs[0]);
         }
     }
@@ -509,15 +501,8 @@ public class DroidLogicTvInputService extends TvInputService implements
     public int doTune(Uri uri, int sessionId) {
         SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
         Log.d(TAG, "doTune, uri = " + uri);
-        if (mConfigs == null || startTvPlay() == ACTION_FAILED) {
-            Log.d(TAG, "doTune failed, timeout=" + timeout + ", retune 50ms later ...");
-
-            if (timeout > 0) {
-                Message msg = mSessionHandler.obtainMessage(MSG_DO_TUNE, sessionId, 0, uri);
-                mSessionHandler.sendMessageDelayed(msg, 50);
-                timeout--;
-            } else
-                doTuneFinish(ACTION_FAILED, uri, sessionId);
+        if (mConfigs.length == 0 || startTvPlay() == ACTION_FAILED) {
+            doTuneFinish(ACTION_FAILED, uri, sessionId);
             return ACTION_FAILED;
         }
         mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
@@ -542,7 +527,7 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     private int stopTvPlay(int sessionId) {
         Log.d(TAG, "stopTvPlay:"+sessionId+" mHardware:"+mHardware);
-        if (mHardware != null) {
+        if (mHardware != null && mConfigs.length > 0) {
             mHardware.setSurface(null, mConfigs[0]);
             tvPlayStopped(sessionId);
         }
