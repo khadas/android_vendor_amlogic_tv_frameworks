@@ -218,6 +218,17 @@ std::string TvServerHidlClient::getMiscCfg(const std::string& key, const std::st
     return miscCfg;
 }
 
+int TvServerHidlClient:: ssmSaveHDMIEdidMode(int32_t port_id, int32_t ver) {
+    return mTvServer->ssmSaveHDMIEdidMode(port_id, ver);
+}
+
+int TvServerHidlClient::setHdmiEdidVersion(int32_t port_id, int32_t ver) {
+    return mTvServer->setHdmiEdidVersion(port_id, ver);
+}
+
+int TvServerHidlClient::handleGPIO(const std::string& key, int32_t is_out, int32_t edge) {
+    return mTvServer->handleGPIO(key, is_out, edge);
+}
 
 // callback from tv service
 Return<void> TvServerHidlClient::TvServerHidlCallback::notifyCallback(const TvHidlParcel& hidlParcel)

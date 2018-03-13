@@ -1057,8 +1057,14 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int SetHdmiEdidVersion(HdmiPortID port_id, HdmiEdidVer ver) {
-        int val[] = new int[]{port_id.toInt(), ver.toInt()};
-        return sendCmdIntArray(SET_HDMI_EDID_VER, val);
+          synchronized (mLock) {
+            try {
+                return mProxy.setHdmiEdidVersion(port_id.toInt(), ver.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "SetHdmiEdidVersion:" + e);
+            }
+        }
+        return -1;
     }
 
    /**
@@ -3651,8 +3657,15 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int SSMSaveHdmiEdidVer(HdmiPortID port_id, HdmiEdidVer ver) {
-        int val[] = new int[]{port_id.toInt(), ver.toInt()};
-        return sendCmdIntArray(SSM_SAVE_HDMI_EDID_VER, val);
+          synchronized (mLock) {
+            try {
+                return mProxy.ssmSaveHDMIEdidMode(port_id.toInt(), ver.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "FactoryWhiteBalanceGetGreenOffset:" + e);
+            }
+        }
+        return -1;
+
     }
 
     /**
@@ -6780,17 +6793,14 @@ public class TvControlManager {
      * @param edge validly when {@param is_out} is true, 1/0 high/low
      */
     public int handleGPIO(String portName, boolean isOut, int edge) {
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        cmd.writeInt(HANDLE_GPIO);
-        cmd.writeString(portName);
-        cmd.writeInt(isOut ? 1 : 0);
-        cmd.writeInt(edge);
-        sendCmdToTv(cmd, r);
-        int ret = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return ret;
+          synchronized (mLock) {
+            try {
+                return mProxy.handleGPIO(portName, isOut ? 1 : 0, edge);
+            } catch (RemoteException e) {
+                Log.e(TAG, "handleGPIO:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
