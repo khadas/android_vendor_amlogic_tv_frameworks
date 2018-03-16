@@ -98,6 +98,28 @@ public class DroidLogicTvInputService extends TvInputService implements
             if (DEBUG)
                 Log.d(TAG, "onStreamConfigChanged");
             mConfigs = configs;
+            if (DEBUG && mConfigs != null)
+                Log.d(TAG, "mConfigs.length:"+mConfigs.length);
+            else
+                Log.d(TAG, "mConfigs = null");
+
+            if (mHardware != null && mConfigs != null) {
+                if (mConfigs.length == 0) {
+                    mHardware.setSurface(null, null);
+                    /*SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
+                    mSystemControlManager.SetCurrentSourceInputInfo(SystemControlManager.SourceInput.values()[mDeviceId]);
+                    if (mSession != null) {
+                        Log.d(TAG, " Plug out & Input is not conneted,show overlay infomations");
+                        mSession.notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_WEAK_SIGNAL);
+                    }*/
+                }  else if (mConfigs.length > 0 && mSurface != null){
+                    Log.d(TAG, "open source");
+                    mHardware.setSurface(mSurface, mConfigs[0]);
+                }
+            } else {
+                if (DEBUG)
+                    Log.d(TAG, "Hardware or config is not prepared ,discard processing it");
+            }
         }
     };
 
