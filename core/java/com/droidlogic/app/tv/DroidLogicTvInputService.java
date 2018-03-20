@@ -635,7 +635,7 @@ public class DroidLogicTvInputService extends TvInputService implements
             return null;
         }
         Log.d(TAG, "createTvInputInfo, id:" + deviceInfo.toString()+",deviceId:"+deviceInfo.getDeviceId());
-        updateInfoListIfNeededLocked(getHardwareDeviceId(parentId), info, false);
+        updateInfoListIfNeededLocked(phyaddr, info, false);
         //selectHdmiDevice(sourceType);
 
         DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(this);
