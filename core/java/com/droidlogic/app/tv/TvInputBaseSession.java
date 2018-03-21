@@ -241,48 +241,19 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     @Override
     public void onSetMain(boolean isMain) {
-        Log.d(TAG, "onSetMain:" + isMain);
+        Log.d(TAG, "onSetMain, isMain: " + isMain +" mDeviceId: "+ mDeviceId +" mInputId: " + mInputId);
         TvInputInfo info = mTvInputManager.getTvInputInfo(mInputId);
-        if (info == null) {
-            Log.w(TAG, "       mInputId:" + mInputId+" has no TvInputInfo");
-            return;
-        }
-        Log.d(TAG, "       mDeviceId:" + mDeviceId+",mInputId:"+mInputId+", type:"+info.getType());
-        List<TvInputInfo> inputList = mTvInputManager.getTvInputList();
         DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(mContext);
-
-        if (isMain) {
-            if (info.getType() == TvInputInfo.TYPE_HDMI) {
-                boolean hasCecDevConnected = hdmi_cec.isHdmiCecDeviceConneted(mDeviceId);
-                boolean isCecDevAdded = false;
-                for (TvInputInfo input : inputList) {
-                    String parentId = input.getParentId();
-                    //Log.d(TAG, "       input:" + input.toString()+" ,getParentId: "+ parentId);
-                    if (parentId != null && parentId.equals(mInputId)) {
-                        isCecDevAdded = true;
-                        break;
-                    }
-                }
-                Log.d(TAG, "isCecDevAdded:" + isCecDevAdded);
-                if (hasCecDevConnected && isCecDevAdded)
-                    hdmi_cec.activeHdmiCecSource(mDeviceId);
-                else if (hasCecDevConnected && !isCecDevAdded)
-                    hdmi_cec.selectHdmiDevice(mDeviceId);
-                else  if (!hasCecDevConnected && !isCecDevAdded)
-                    hdmi_cec.activeHdmiCecSource(mDeviceId);
-                else
-                    Log.e(TAG, "ERROR occur!!!!!" );
-            } else
-                hdmi_cec.selectHdmiDevice(0);
+        if (isMain && info != null)  {
+            if (mDeviceId < DroidLogicTvUtils.DEVICE_ID_HDMI1 || mDeviceId > DroidLogicTvUtils.DEVICE_ID_HDMI4) {
+                Log.d(TAG, "onSetMain, mDeviceId: " + mDeviceId + " not correct!");
             } else {
-                //There seems to be no use to handle setMain(false);
-                HdmiTvClient hdmitvclient = mHdmiControlManager.getTvClient();
-                HdmiDeviceInfo activeInfo = hdmitvclient.getActiveSource();
-                if (activeInfo != null) {
-                    Log.d(TAG, "activeInfo:"+activeInfo.toString());
-                    if (activeInfo.getPhysicalAddress() == hdmi_cec.getPhysicalAddress(mDeviceId))
-                        hdmi_cec.selectHdmiDevice(0);
-                } else
-                    Log.d(TAG, "activeInfo is null");}
+                hdmi_cec.connectHdmiCec(mDeviceId);
+            }
+        } else {
+            if (info == null) {
+                Log.d(TAG, "onSetMain, info is null");
+            }
+        }
     }
 }

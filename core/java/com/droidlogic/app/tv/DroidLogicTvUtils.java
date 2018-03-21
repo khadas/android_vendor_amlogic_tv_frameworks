@@ -142,6 +142,8 @@ public class DroidLogicTvUtils
     public static final int DEVICE_ID_ADTV       = 16;
     public static final int DEVICE_ID_HDMIEXTEND = 18;
 
+    public static final int DEVICE_ID_OFFSET = 0x1F;
+
     public static final int RESULT_OK = 1;
     public static final int RESULT_UPDATE = 2;
     public static final int RESULT_FAILED = 3;
