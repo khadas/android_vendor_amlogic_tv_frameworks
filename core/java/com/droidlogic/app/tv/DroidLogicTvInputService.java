@@ -221,8 +221,11 @@ public class DroidLogicTvInputService extends TvInputService implements
             mInfoList.put(Id, info);
         }
 
-        if (DEBUG)
-            Log.d(TAG, "size of mInfoList is " + mInfoList.size());
+        if (DEBUG) {
+            for (int i = 0; i < mInfoList.size(); i++) {
+                Log.d(TAG, "size of mInfoList NO." + i + ":" + mInfoList.get(mInfoList.keyAt(i)));
+            }
+        }
     }
 
     protected boolean hasInfoExisted(TvInputHardwareInfo hInfo) {
@@ -335,7 +338,12 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     private String getInfoLabel() {
-        return mTvInputManager.getTvInputInfo(mCurrentInputId).loadLabel(this).toString();
+        final TvInputInfo tvinputinfo = mTvInputManager.getTvInputInfo(mCurrentInputId);
+        String label = null;
+        if (tvinputinfo != null) {
+            label = tvinputinfo.loadLabel(this).toString();
+        }
+        return label;
     }
 
     @Override
