@@ -173,7 +173,7 @@ public class DroidLogicTvUtils
 
     public static final String ACTION_CHANNEL_CHANGED = "android.intent.action.tv_channel_changed";
 
-    public static final String ACTION_PROGRAM_APPOINTED = "android.intent.action.tv_appointed_program";
+    public static final String ACTION_PROGRAM_APPOINTED = "droidlogic.intent.action.tv_appointed_program";
 
     public static final String ACTION_ATV_AUTO_SCAN = "atv_auto_scan";
     public static final String ACTION_DTV_AUTO_SCAN = "dtv_auto_scan";
