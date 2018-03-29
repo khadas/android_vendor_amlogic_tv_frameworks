@@ -1067,6 +1067,42 @@ public class TvControlManager {
         return -1;
     }
 
+    /**
+     * @Function: GetHdmiEdidVersion
+     * @Description: Get hdmi edid version
+     * @Param: port_id is hdmi port id
+     * @Return: hdmi edid version
+     */
+    public int GetHdmiEdidVersion(HdmiPortID port_id) {
+          synchronized (mLock) {
+            try {
+                return mProxy.getHdmiEdidVersion(port_id.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetHdmiEdidVersion:" + e);
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * @Function: SaveHdmiEdidVersion
+     * @Description: save hdmi edid version
+     * @Param: port_id is hdmi port id
+               ver is save version.
+     * @Return: 0 success, -1 fail
+     */
+    public int SaveHdmiEdidVersion(HdmiPortID port_id, HdmiEdidVer ver) {
+          synchronized (mLock) {
+            try {
+                return mProxy.saveHdmiEdidVersion(port_id.toInt(), ver.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "SaveHdmiEdidVersion:" + e);
+            }
+        }
+        return -1;
+
+    }
+
    /**
      * @Function: SetHdmiHdcpKeyEnable
      * @Description: enable or disable hdmi hdcp kdy
@@ -3647,36 +3683,6 @@ public class TvControlManager {
      */
     public int SSMReadNoiseGateThreshold() {
         return sendCmd(SSM_READ_NOISE_GATE_THRESHOLD_STATUS);
-    }
-
-    /**
-     * @Function: SSMSaveHdmiEdidVer
-     * @Description: save hdmi edid version
-     * @Param: port_id is hdmi port id
-                      ver is save version.
-     * @Return: 0 success, -1 fail
-     */
-    public int SSMSaveHdmiEdidVer(HdmiPortID port_id, HdmiEdidVer ver) {
-          synchronized (mLock) {
-            try {
-                return mProxy.ssmSaveHDMIEdidMode(port_id.toInt(), ver.toInt());
-            } catch (RemoteException e) {
-                Log.e(TAG, "FactoryWhiteBalanceGetGreenOffset:" + e);
-            }
-        }
-        return -1;
-
-    }
-
-    /**
-     * @Function: SSMReadHdmiEdidVer
-     * @Description: Read hdmi edid version
-     * @Param: port_id is hdmi port id
-     * @Return: hdmi edid version
-     */
-    public int SSMReadHdmiEdidVer(HdmiPortID port_id) {
-        int val[] = new int[]{port_id.toInt()};
-        return sendCmdIntArray(SSM_READ_HDMI_EDID_VER, val);
     }
 
     /**

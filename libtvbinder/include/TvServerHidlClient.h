@@ -85,8 +85,9 @@ public:
     void getCurSignalInfo(int &fmt, int &transFmt, int &status, int &frameRate);
     int setMiscCfg(const std::string& key, const std::string& val);
     std::string getMiscCfg(const std::string& key, const std::string& def);
-    int ssmSaveHDMIEdidMode(int32_t port_id, int32_t ver);
     int setHdmiEdidVersion(int32_t port_id, int32_t ver);
+    int getHdmiEdidVersion(int32_t port_id);
+    int saveHdmiEdidVersion(int32_t port_id, int32_t ver);
     int handleGPIO(const std::string& key, int32_t is_out, int32_t edge);
 
 private:
