@@ -35,6 +35,7 @@ import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.content.Intent;
 import java.util.List;
+import android.view.KeyEvent;
 
 public abstract class TvInputBaseSession extends TvInputService.Session implements Handler.Callback {
     private static final boolean DEBUG = true;
@@ -56,7 +57,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     protected boolean isBlockNoRatingEnable = false;
     protected boolean isUnlockCurrent_NR = false;
-
+    protected HdmiTvClient mHdmiTvClient = null;
     private HdmiControlManager mHdmiControlManager ;
 
     public TvInputBaseSession(Context context, String inputId, int deviceId) {
@@ -75,6 +76,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
          Log.d(TAG, "TvInputBaseSession,inputId:" + inputId+", devieId:"+deviceId);
          mHdmiControlManager = (HdmiControlManager) mContext.getSystemService(Context.HDMI_CONTROL_SERVICE);
 
+         if (mHdmiControlManager != null) {
+             mHdmiTvClient = mHdmiControlManager.getTvClient();
+         }
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         intentFilter.addAction(Intent.ACTION_SCREEN_ON);
@@ -256,4 +260,18 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
             }
         }
     }
+
+        @Override
+        public boolean onKeyUp(int keyCode, KeyEvent event) {
+            Log.d(TAG, "=====onKeyUp=====");
+            mHdmiTvClient.sendKeyEvent(keyCode, false);
+            return true;
+        }
+
+        @Override
+        public boolean onKeyDown(int keyCode, KeyEvent event) {
+            Log.d(TAG, "=====onKeyDown=====");
+            mHdmiTvClient.sendKeyEvent(keyCode, true);
+            return true;
+        }
 }
