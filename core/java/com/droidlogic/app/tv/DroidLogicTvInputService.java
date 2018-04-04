@@ -161,7 +161,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     protected void acquireHardware(TvInputInfo info){
         mDeviceId = getHardwareDeviceId(info.getId());
         mCurrentInputId = info.getId();
-        mHardware = mTvInputManager.acquireTvInputHardware(mDeviceId, mHardwareCallback,info);
+        mHardware = mTvInputManager.acquireTvInputHardware(mDeviceId, info, mHardwareCallback);
         Log.d(TAG, "acquireHardware mDeviceId="+mDeviceId+",  mCurrentInputId="+mCurrentInputId+", mHardware: " + mHardware);
     }
 
