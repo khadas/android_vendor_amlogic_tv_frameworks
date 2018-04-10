@@ -55,6 +55,7 @@ import vendor.amlogic.hardware.tvserver.V1_0.FormatInfo;
 import vendor.amlogic.hardware.tvserver.V1_0.TvHidlParcel;
 import vendor.amlogic.hardware.tvserver.V1_0.ConnectType;
 import vendor.amlogic.hardware.tvserver.V1_0.Result;
+import vendor.amlogic.hardware.tvserver.V1_0.FreqList;
 
 public class TvControlManager {
     private static final String TAG = "TvControlManager";
@@ -4431,7 +4432,14 @@ public class TvControlManager {
     public static final int ATV_DTV_SCAN_STATUS_PAUSED_USER = 2;
 
     public int AtvDtvGetScanStatus() {
-        return sendCmd(ATV_DTV_GET_SCAN_STATUS);
+        synchronized (mLock) {
+            try {
+                return mProxy.atvdtvGetScanStatus();
+            } catch (RemoteException e) {
+                Log.e(TAG, "AtvDtvGetScanStatus:" + e);
+            }
+        }
+        return -1;
     }
 
     public int clearFrontEnd(int arg0) {
@@ -4652,6 +4660,32 @@ public class TvControlManager {
 
     public ArrayList<FreqList> DTVGetScanFreqList(int mode) {
         libtv_log_open();
+        Log.d(TAG, "TvControlManager TVGetScanFreqList" + mode);
+        synchronized (mLock) {
+            try {
+                ArrayList<FreqList> hidlFreqList = new ArrayList<FreqList>();
+                hidlFreqList = mProxy.dtvGetScanFreqListMode(mode);
+                int size = hidlFreqList.size();
+                if (size <= 0)
+                {
+                    Log.d(TAG, "hidlFreqList size is 0");
+                    return null;
+                }
+                /*for (int i = 0; i < size; i++) {
+                    Log.d(TAG, "get dtv scan freq list hidlFreqList.ID =" +
+                    hidlFreqList.get(i).ID + "hidlFreqList.Freq =" +
+                    hidlFreqList.get(i).freq + "hidlFreqList.channelNum =" +
+                    hidlFreqList.get(i).channelNum);
+                }
+                */
+                return hidlFreqList;
+            } catch (RemoteException e) {
+                Log.e(TAG, "DTVGetScanFreqList:" + e);
+            }
+        }
+
+        return null;
+        /*
         Parcel cmd = Parcel.obtain();
         Parcel r = Parcel.obtain();
         cmd.writeInt(DTV_GET_SCAN_FREQUENCY_LIST_MODE);
@@ -4676,6 +4710,7 @@ public class TvControlManager {
         cmd.recycle();
         r.recycle();
         return FList;
+        */
     }
 
     /**
@@ -5886,12 +5921,6 @@ public class TvControlManager {
         public int vPid;
         public ArrayList<DtvAudioTrackInfo> audioInfoList;
         public int chFreq;
-    }
-
-    public class FreqList {
-        public int ID;
-        public int freq;
-        public int channelNum;
     }
 
     /**

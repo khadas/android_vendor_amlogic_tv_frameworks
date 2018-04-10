@@ -16,8 +16,10 @@ import android.os.SystemProperties;
 import android.os.HandlerThread;
 
 import com.droidlogic.app.tv.TvControlManager;
-import com.droidlogic.app.tv.TvControlManager.FreqList;
+//import com.droidlogic.app.tv.TvControlManager.FreqList;
 import com.droidlogic.app.tv.TvControlManager.TvMode;
+import vendor.amlogic.hardware.tvserver.V1_0.FreqList;
+
 public abstract class TvStoreManager {
     public static final String TAG = "TvStoreManager";
 
