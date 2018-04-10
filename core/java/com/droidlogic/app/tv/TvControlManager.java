@@ -51,6 +51,7 @@ import android.hidl.manager.V1_0.IServiceNotification;
 import vendor.amlogic.hardware.tvserver.V1_0.ITvServer;
 import vendor.amlogic.hardware.tvserver.V1_0.ITvServerCallback;
 import vendor.amlogic.hardware.tvserver.V1_0.SignalInfo;
+import vendor.amlogic.hardware.tvserver.V1_0.FormatInfo;
 import vendor.amlogic.hardware.tvserver.V1_0.TvHidlParcel;
 import vendor.amlogic.hardware.tvserver.V1_0.ConnectType;
 import vendor.amlogic.hardware.tvserver.V1_0.Result;
@@ -869,11 +870,25 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int StopTv() {
-        return sendCmd(STOP_TV);
+        synchronized (mLock) {
+            try {
+                return mProxy.stopTv();
+            } catch (RemoteException e) {
+                Log.e(TAG, "StopTv:" + e);
+            }
+        }
+        return -1;
     }
 
     public int StartTv() {
-        return sendCmd(START_TV);
+        synchronized (mLock) {
+            try {
+                return mProxy.startTv();
+            } catch (RemoteException e) {
+                Log.e(TAG, "StartTv:" + e);
+            }
+        }
+        return -1;
     }
 
     public int GetTvRunStatus() {
@@ -908,7 +923,14 @@ public class TvControlManager {
      * @Return: refer to enum SourceInput
      */
     public int GetCurrentSourceInput() {
-        return sendCmd(GET_CURRENT_SOURCE_INPUT);
+        synchronized (mLock) {
+            try {
+                return mProxy.getCurrentSourceInput();
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetCurrentSourceInput:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -918,7 +940,14 @@ public class TvControlManager {
      * @Return: refer to enum SourceInput
      */
     public int GetCurrentVirtualSourceInput() {
-        return sendCmd(GET_CURRENT_SOURCE_INPUT_VIRTUAL);
+        synchronized (mLock) {
+            try {
+                return mProxy.getCurrentVirtualSourceInput();
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetCurrentVirtualSourceInput:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -956,13 +985,14 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int SetSourceInput(SourceInput srcInput) {
-        /*int tmp_res_info = GetDisplayResolutionInfo();
-          cmd.writeInt(0);
-          cmd.writeInt(0);
-          cmd.writeInt(((tmp_res_info >> 16) & 0xFFFF) - 1);
-          cmd.writeInt(((tmp_res_info >> 0) & 0xFFFF) - 1);*/
-        int val[] = new int[]{srcInput.toInt()};
-        return sendCmdIntArray(SET_SOURCE_INPUT, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.setSourceInput(srcInput.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "SetSourceInput:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -972,8 +1002,14 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int SetSourceInput(SourceInput srcInput, SourceInput virtualSrcInput) {
-        int val[] = new int[]{srcInput.toInt(), virtualSrcInput.toInt()};
-        return sendCmdIntArray(SET_SOURCE_INPUT_EXT, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.setSourceInputExt(srcInput.toInt(), virtualSrcInput.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "SetSourceInput:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -1135,8 +1171,9 @@ public class TvControlManager {
      * @Return: value brightness
      */
     public int GetBrightness(SourceInput source) {
-        int val[] = new int[]{source.toInt()};
-        return sendCmdIntArray(GET_BRIGHTNESS, val);
+        return -1;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source.toInt()};
+        //return sendCmdIntArray(GET_BRIGHTNESS, val);
     }
 
     /**
@@ -1168,8 +1205,9 @@ public class TvControlManager {
      * @Return: value contrast
      */
     public int GetContrast(SourceInput source) {
-        int val[] = new int[]{source.toInt()};
-        return sendCmdIntArray(GET_CONTRAST, val);
+        return -1;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source.toInt()};
+        //return sendCmdIntArray(GET_CONTRAST, val);
     }
 
     /**
@@ -1201,8 +1239,9 @@ public class TvControlManager {
      * @Return: value saturation
      */
     public int GetSaturation(SourceInput source) {
-        int val[] = new int[]{source.toInt()};
-        return sendCmdIntArray(GET_SATURATION, val);
+        return -1;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source.toInt()};
+        //return sendCmdIntArray(GET_SATURATION, val);
     }
 
     /**
@@ -1292,8 +1331,9 @@ public class TvControlManager {
      * @Return: picture mode refer to enum PQMode
      */
     public int GetPQMode(SourceInput source) {
-        int val[] = new int[]{source.toInt()};
-        return sendCmdIntArray(GET_PQMODE, val);
+        return -1;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source.toInt()};
+        //return sendCmdIntArray(GET_PQMODE, val);
     }
 
     /**
@@ -1326,8 +1366,9 @@ public class TvControlManager {
      * @Return: value sharpness
      */
     public int GetSharpness(SourceInput source_type) {
-        int val[] = new int[]{source_type.toInt()};
-        return sendCmdIntArray(GET_SHARPNESS, val);
+        return -1;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source_type.toInt()};
+        //return sendCmdIntArray(GET_SHARPNESS, val);
     }
 
     /**
@@ -1359,8 +1400,9 @@ public class TvControlManager {
      * @Return: value backlight
      */
     public int GetBacklight(SourceInput source_type) {
-        int val[] = new int[]{source_type.toInt()};
-        return sendCmdIntArray(GET_BACKLIGHT, val);
+        return -1;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source_type.toInt()};
+        //return sendCmdIntArray(GET_BACKLIGHT, val);
     }
 
     /**
@@ -1429,8 +1471,9 @@ public class TvControlManager {
      * @Return: color temperature refer to enum color_temperature
      */
     public int GetColorTemperature(SourceInput source) {
-        int val[] = new int[]{source.toInt()};
-        return sendCmdIntArray(GET_COLOR_TEMPERATURE, val);
+        return 0;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source.toInt()};
+        //return sendCmdIntArray(GET_COLOR_TEMPERATURE, val);
     }
 
     /**
@@ -1486,8 +1529,9 @@ public class TvControlManager {
      * @Return: display mode refer to enum Display_Mode
      */
     public int GetDisplayMode(SourceInput source) {
-        int val[] = new int[]{source.toInt()};
-        return sendCmdIntArray(GET_DISPLAY_MODE, val);
+        return 0;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source.toInt()};
+        //return sendCmdIntArray(GET_DISPLAY_MODE, val);
     }
 
     /**
@@ -1610,8 +1654,9 @@ public class TvControlManager {
      * @Return: noise reduction mode refer to enum Noise_Reduction_Mode
      */
     public int GetNoiseReductionMode(SourceInput source) {
-        int val[] = new int[]{source.toInt()};
-        return sendCmdIntArray(GET_NOISE_REDUCTION_MODE, val);
+        return -1;//wxl add for debug hidl 20180131
+        //int val[] = new int[]{source.toInt()};
+        //return sendCmdIntArray(GET_NOISE_REDUCTION_MODE, val);
     }
 
     public enum GAMMA_CURVE_TYPE {
@@ -2248,7 +2293,8 @@ public class TvControlManager {
      * @Return: value between 0 and 100
      */
     public int GetCurAudioBalance() {
-        return sendCmd(GET_CUR_AUDIO_BALANCE);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_BALANCE);
     }
 
     // Audio SupperBass Volume
@@ -2380,7 +2426,8 @@ public class TvControlManager {
      * @Return: value refer to AUDIO_SWITCH_OFF or AUDIO_SWITCH_ON
      */
     public int GetCurAudioSrsSurround() {
-        return sendCmd(GET_CUR_AUDIO_SRS_SURROUND);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_SRS_SURROUND);
     }
 
     // Audio SRS Dialog Clarity
@@ -2424,7 +2471,8 @@ public class TvControlManager {
      * @Return: value refer to AUDIO_SWITCH_OFF or AUDIO_SWITCH_ON
      */
     public int GetCurAudioSrsDialogClarity() {
-        return sendCmd(GET_CUR_AUDIO_SRS_DIALOG_CLARITY);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_SRS_DIALOG_CLARITY);
     }
 
     // Audio SRS Trubass
@@ -2468,7 +2516,8 @@ public class TvControlManager {
      * @Return: value refer to AUDIO_SWITCH_OFF or AUDIO_SWITCH_ON
      */
     public int GetCurAudioSrsTruBass() {
-        return sendCmd(GET_CUR_AUDIO_SRS_TRU_BASS);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_SRS_TRU_BASS);
     }
 
     // Audio Bass
@@ -2512,7 +2561,8 @@ public class TvControlManager {
      * @Return: value between 0 and 100
      */
     public int GetCurAudioBassVolume() {
-        return sendCmd(GET_CUR_AUDIO_BASS_VOLUME);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_BASS_VOLUME);
     }
 
     // Audio Treble
@@ -2556,7 +2606,8 @@ public class TvControlManager {
      * @Return: value between 0 and 100
      */
     public int GetCurAudioTrebleVolume() {
-        return sendCmd(GET_CUR_AUDIO_TREBLE_VOLUME);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_TREBLE_VOLUME);
     }
 
     // Audio Sound Mode
@@ -2605,7 +2656,8 @@ public class TvControlManager {
      * @Return: value refer to enum Sound_Mode
      */
     public int GetCurAudioSoundMode() {
-        return sendCmd(GET_CUR_AUDIO_SOUND_MODE);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_SOUND_MODE);
     }
 
     // Audio Wall Effect
@@ -2832,7 +2884,8 @@ public class TvControlManager {
      * @Return: value refer to AUDIO_SWITCH_OFF or AUDIO_SWITCH_ON
      */
     public int GetCurAudioSPDIFSwitch() {
-        return sendCmd(GET_CUR_AUDIO_SPDIF_SWITCH);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_SPDIF_SWITCH);
     }
 
     //Audio SPDIF Mode
@@ -2865,7 +2918,8 @@ public class TvControlManager {
      * @Return: value refer to enum CC_AUD_SPDIF_MODE
      */
     public int GetCurAudioSPDIFMode() {
-        return sendCmd(GET_CUR_AUDIO_SPDIF_MODE);
+        return 0;//wxl add for debug hidl 20180131
+        //return sendCmd(GET_CUR_AUDIO_SPDIF_MODE);
     }
 
     /**
@@ -2930,8 +2984,14 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int setAmAudioPreMute(int pre_mute) {
-        int val[] = new int[]{pre_mute};
-        return sendCmdIntArray(SET_AMAUDIO_PRE_MUTE, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.setAmAudioPreMute(pre_mute);
+            } catch (RemoteException e) {
+                Log.e(TAG, "setAmAudioPreMute:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -3011,13 +3071,14 @@ public class TvControlManager {
     * @Return: enable : 1, disable: 0
     */
     public int GetAudioVirtualizerEnable() {
-        libtv_log_open();
+        return 0;//wxl add for debug hidl 20180131
+        /*libtv_log_open();
         Parcel cmd = Parcel.obtain();
         Parcel r = Parcel.obtain();
         cmd.writeInt(GET_AUDIO_VIRTUAL_ENABLE);
         sendCmdToTv(cmd, r);
         int ret = r.readInt();
-        return ret;
+        return ret;*/
     }
 
   /**
@@ -4241,8 +4302,14 @@ public class TvControlManager {
     }
 
     public int DtvScan(int mode, int type, int freq, int para1, int para2) {
-        int val[] = new int[]{mode, type, freq, para1, para2};
-        return sendCmdIntArray(DTV_SCAN, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.dtvScan(mode, type, freq, freq, para1, para2);
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvScan:" + e);
+            }
+        }
+        return -1;
     }
 
     public int DtvAutoScan(int mode) {
@@ -4280,8 +4347,14 @@ public class TvControlManager {
     }
 
     public int AtvAutoScan(int videoStd, int audioStd, int storeType, int procMode) {
-        int val[] = new int[]{videoStd, audioStd, storeType, procMode};
-        return sendCmdIntArray(ATV_SCAN_AUTO, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.atvAutoScan(videoStd, audioStd, storeType, procMode);
+            } catch (RemoteException e) {
+                Log.e(TAG, "AtvAutoScan:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -4311,21 +4384,47 @@ public class TvControlManager {
      */
     public int AtvManualScan(int startFreq, int endFreq, int videoStd,
             int audioStd) {
-        int val[] = new int[]{startFreq, endFreq, videoStd, audioStd};
-        return sendCmdIntArray(ATV_SCAN_MANUAL, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.atvMunualScan(startFreq, endFreq, videoStd, audioStd);
+            } catch (RemoteException e) {
+                Log.e(TAG, "AtvManualScan:" + e);
+            }
+        }
+        return -1;
     }
 
     public int AtvDtvPauseScan() {
-        return sendCmd(ATV_DTV_SCAN_PAUSE);
+        synchronized (mLock) {
+            try {
+                return mProxy.pauseScan();
+            } catch (RemoteException e) {
+                Log.e(TAG, "AtvDtvPauseScan:" + e);
+            }
+        }
+        return -1;
     }
 
     public int AtvDtvResumeScan() {
-        return sendCmd(ATV_DTV_SCAN_RESUME);
+        synchronized (mLock) {
+            try {
+                return mProxy.resumeScan();
+            } catch (RemoteException e) {
+                Log.e(TAG, "AtvDtvResumeScan:" + e);
+            }
+        }
+        return -1;
     }
 
     public int OpenDevForScan(int type) {
-        int val[] = new int[]{type};
-        return sendCmdIntArray(ATV_DTV_SCAN_OPERATE_DEVICE, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.operateDeviceForScan(type);
+            } catch (RemoteException e) {
+                Log.e(TAG, "OpenDevForScan:" + e);
+            }
+        }
+        return -1;
     }
     public static final int ATV_DTV_SCAN_STATUS_RUNNING = 0;
     public static final int ATV_DTV_SCAN_STATUS_PAUSED = 1;
@@ -4341,15 +4440,14 @@ public class TvControlManager {
     }
 
     public int DtvSetTextCoding(String coding) {
-        libtv_log_open();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        cmd.writeInt(DTV_SET_TEXT_CODING);
-        cmd.writeString(coding);
-        sendCmdToTv(cmd, r);
-        cmd.recycle();
-        r.recycle();
-        return 0;
+        synchronized (mLock) {
+            try {
+                return mProxy.setDvbTextCoding(coding);
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvSetTextCoding:" + e);
+            }
+        }
+        return -1;
     }
 
 
@@ -4419,7 +4517,14 @@ public class TvControlManager {
 
     //ref to setBlackoutEnable fun
     public int SSMReadBlackoutEnalbe() {
-        return sendCmd(SSM_READ_BLACKOUT_ENABLE);
+        synchronized (mLock) {
+            try {
+                return mProxy.getSaveBlackoutEnable();
+            } catch (RemoteException e) {
+                Log.e(TAG, "SSMReadBlackoutEnalbe:" + e);
+            }
+        }
+        return 0;
     }
 
     /**
@@ -4492,17 +4597,24 @@ public class TvControlManager {
      * @Return: 0 or -1
      */
     public int ATVGetMinMaxFreq(int dataBuf[]) {
-        libtv_log_open();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        cmd.writeInt(ATV_GET_MIN_MAX_FREQ);
-        sendCmdToTv(cmd, r);
-        dataBuf[0] = r.readInt();
-        dataBuf[1] = r.readInt();
-        int tmpRet = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return tmpRet;
+        synchronized (mLock) {
+            Mutable<Integer> minFreqV = new Mutable<>();
+            Mutable<Integer> maxFreqV = new Mutable<>();
+            Mutable<Integer> retV = new Mutable<>();
+            try {
+                mProxy.getATVMinMaxFreq((int ret, int minFreq, int maxFreq) -> {
+                                    minFreqV.value = minFreq;
+                                    maxFreqV.value = maxFreq;
+                                    retV.value = ret;
+                            });
+                dataBuf[0] = minFreqV.value;
+                dataBuf[1] = maxFreqV.value;
+                return retV.value;
+            } catch (RemoteException e) {
+                Log.e(TAG, "ATVGetMinMaxFreq:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -4931,7 +5043,14 @@ public class TvControlManager {
     }
 
     public int DtvStopScan() {
-        return sendCmd(DTV_STOP_SCAN);
+        synchronized (mLock) {
+            try {
+                return mProxy.dtvStopScan();
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvStopScan:" + e);
+            }
+        }
+        return -1;
     }
 
     public int DtvGetSignalSNR() {
@@ -5000,8 +5119,13 @@ public class TvControlManager {
      * @Return:
      */
     public int DtvSetAudioChannleMod(int audioChannelMod) {
-        int val[] = new int[]{audioChannelMod};
-        sendCmdIntArray(DTV_SET_AUDIO_CHANNEL_MOD, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.dtvSetAudioChannleMod(audioChannelMod);
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvSetAudioChannleMod:" + e);
+            }
+        }
         return 0;
     }
 
@@ -5106,21 +5230,20 @@ public class TvControlManager {
     }
 
     public VideoFormatInfo DtvGetVideoFormatInfo() {
-        libtv_log_open();
-        VideoFormatInfo pVideoFormatInfo = new VideoFormatInfo();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-
-        cmd.writeInt(DTV_GET_VIDEO_FMT_INFO);
-        sendCmdToTv(cmd, r);
-        pVideoFormatInfo.width = r.readInt();
-        pVideoFormatInfo.height= r.readInt();
-        pVideoFormatInfo.fps= r.readInt();
-        pVideoFormatInfo.interlace= r.readInt();
-        pVideoFormatInfo.width = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return pVideoFormatInfo;
+        synchronized (mLock) {
+            VideoFormatInfo pVideoFormatInfo = new VideoFormatInfo();
+            try {
+                FormatInfo  formatInfo= mProxy.dtvGetVideoFormatInfo();
+                pVideoFormatInfo.width = formatInfo.width;
+                pVideoFormatInfo.height= formatInfo.height;
+                pVideoFormatInfo.fps= formatInfo.fps;
+                pVideoFormatInfo.interlace= formatInfo.interlace;
+                return pVideoFormatInfo;
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvGetVideoFormatInfo:" + e);
+            }
+        }
+        return null;
     }
 
     public class AudioFormatInfo {
@@ -5551,33 +5674,25 @@ public class TvControlManager {
     }
 
     public int TvScan(FEParas fe, ScanParas scan) {
-        libtv_log_open();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        int tmpRet ;
-        cmd.writeInt(TV_SCAN_2);
-        cmd.writeString(fe.toString());
-        cmd.writeString(scan.toString());
-        sendCmdToTv(cmd, r);
-        tmpRet = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return tmpRet;
+        synchronized (mLock) {
+            try {
+                return mProxy.Scan(fe.toString(), scan.toString());
+            } catch (RemoteException e) {
+                Log.e(TAG, "TvScan:" + e);
+            }
+        }
+        return -1;
     }
 
     public int TvSetFrontEnd(FEParas fe, boolean force) {
-        libtv_log_open();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        int tmpRet ;
-        cmd.writeInt(TV_SET_FRONTEND);
-        cmd.writeInt(force? 1 : 0);
-        cmd.writeString(fe.toString());
-        sendCmdToTv(cmd, r);
-        tmpRet = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return tmpRet;
+        synchronized (mLock) {
+            try {
+                return mProxy.tvSetFrontEnd(fe.toString(), force? 1 : 0);
+            } catch (RemoteException e) {
+                Log.e(TAG, "TvSetFrontEnd:" + e);
+            }
+        }
+        return -1;
     }
 
     public int TvSetFrontEnd(FEParas fe) {
@@ -6875,8 +6990,14 @@ public class TvControlManager {
     public static final int PLAY_CMD_SETPARAM = 5;
 
     public int sendPlayCmd(int cmd, String id, String param) {
-        String para[] = new String[]{id, param};
-        return sendCmdStringArray(DTV_PLAY_CMD, cmd, para);
+        synchronized (mLock) {
+            try {
+                return mProxy.sendPlayCmd(cmd, id, param);
+            } catch (RemoteException e) {
+                Log.e(TAG, "sendPlayCmd:" + e);
+            }
+        }
+        return -1;
     }
 
     public int startPlay(String id, String param) {
