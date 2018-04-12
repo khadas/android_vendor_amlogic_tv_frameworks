@@ -545,6 +545,9 @@ public class DroidLogicTvInputService extends TvInputService implements
         Log.d(TAG, "doTune, uri = " + uri);
         if (mConfigs.length == 0 || startTvPlay() == ACTION_FAILED) {
             doTuneFinish(ACTION_FAILED, uri, sessionId);
+            if (mSession != null) {
+                mSession.notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
+            }
             return ACTION_FAILED;
         }
         mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
