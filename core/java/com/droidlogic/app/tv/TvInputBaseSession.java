@@ -258,6 +258,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
             if (info == null) {
                 Log.d(TAG, "onSetMain, info is null");
             }
+            hdmi_cec.selectHdmiDevice(0);
         }
     }
 
