@@ -213,7 +213,7 @@ public class DroidLogicHdmiCecManager {
 
             }
         });
-
+        deviceSelectIfNeed(portId);
         return true;
     }
 
@@ -247,7 +247,7 @@ public class DroidLogicHdmiCecManager {
             int id = getPortIdByDeviceId(deviceId);
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
                 /*this only get firt level device logical addr*/
-                if (id == (info.getPhysicalAddress() >> 12) && (info.getLogicalAddress() == DEV_TYPE_AUDIO_SYSTEM)) {
+                if (id == (int)info.getPortId() && (info.getLogicalAddress() == DEV_TYPE_AUDIO_SYSTEM)) {
                     return true;
                 }
             }
@@ -262,7 +262,7 @@ public class DroidLogicHdmiCecManager {
             int id = getPortIdByDeviceId(deviceId);
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
                 /*this only get firt level device logical addr*/
-                if (id == (info.getPhysicalAddress() >> 12) && ((info.getPhysicalAddress() & 0xfff) == 0)) {
+                if (id == (int)info.getPortId() && ((info.getPhysicalAddress() & 0xfff) == 0)) {
                     count++;
                 }
             }
@@ -274,7 +274,7 @@ public class DroidLogicHdmiCecManager {
         if (deviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && deviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) {
             int id = getPortIdByDeviceId(deviceId);
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
-                if (id == (info.getPhysicalAddress() >> 12)) {
+                if (id == (int)info.getPortId()) {
                     return true;
                 }
             }
@@ -287,5 +287,21 @@ public class DroidLogicHdmiCecManager {
             mSourceType = Settings.System.getInt(mContext.getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
             return mSourceType;
         }
+    }
+
+    public boolean deviceSelectIfNeed(int portId) {
+        int count = 0;
+        int logicAddr = 0;
+        for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
+            if (portId == (int)info.getPortId()) {
+                logicAddr = info.getLogicalAddress();
+                count++;
+            }
+        }
+        if (count == 1) {
+            Log.d(TAG, "need to deviceSelect the only one: " + logicAddr + " when connected!");
+            deviceSelect(logicAddr);
+        }
+        return true;
     }
 }
