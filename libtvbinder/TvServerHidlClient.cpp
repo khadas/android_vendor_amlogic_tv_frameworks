@@ -230,6 +230,14 @@ int TvServerHidlClient::saveHdmiEdidVersion(int32_t port_id, int32_t ver) {
     return mTvServer->saveHdmiEdidVersion(port_id, ver);
 }
 
+int TvServerHidlClient::setHdmiColorRangeMode(int32_t range_mode) {
+    return mTvServer->setHdmiColorRangeMode(range_mode);
+}
+
+int TvServerHidlClient::getHdmiColorRangeMode() {
+    return mTvServer->getHdmiColorRangeMode();
+}
+
 int TvServerHidlClient::handleGPIO(const std::string& key, int32_t is_out, int32_t edge) {
     return mTvServer->handleGPIO(key, is_out, edge);
 }

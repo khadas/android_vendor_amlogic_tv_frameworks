@@ -88,6 +88,8 @@ public:
     int setHdmiEdidVersion(int32_t port_id, int32_t ver);
     int getHdmiEdidVersion(int32_t port_id);
     int saveHdmiEdidVersion(int32_t port_id, int32_t ver);
+    int setHdmiColorRangeMode(int32_t range_mode);
+    int getHdmiColorRangeMode();
     int handleGPIO(const std::string& key, int32_t is_out, int32_t edge);
 
 private:

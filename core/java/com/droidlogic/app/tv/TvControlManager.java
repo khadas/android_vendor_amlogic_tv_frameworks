@@ -1555,13 +1555,38 @@ public class TvControlManager {
         return (sendCmd(GET_EYE_PROTETION_MODE) == 1) ? true : false;
     }
 
+    /**
+     * @Function: SetHdmiColorRangeMode
+     * @Description: Set hdmi color range mode
+     * @Param: color range mode refer to enum HdmiColorRangeMode
+     * @Return: 0 success, -1 fail
+     */
     public int SetHdmiColorRangeMode(HdmiColorRangeMode mode) {
-        int val[] = new int[]{mode.toInt()};
-        return sendCmdIntArray(SET_HDMI_COLOR_RANGE_MODE, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.setHdmiColorRangeMode(mode.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "SetHdmiColorRangeMode:" + e);
+            }
+        }
+        return -1;
     }
 
+    /**
+     * @Function: GetHdmiColorRangeMode
+     * @Description: Get color range mode for HDMI port
+     * @Param:
+     * @Return: color range mode refer to enum HdmiColorRangeMode
+     */
     public int GetHdmiColorRangeMode() {
-        return sendCmd(GET_HDMI_COLOR_RANGE_MODE);
+        synchronized (mLock) {
+            try {
+                return mProxy.getHdmiColorRangeMode();
+            } catch (RemoteException e) {
+                Log.e(TAG, "getHdmiColorRangeMode:" + e);
+            }
+        }
+        return -1;
     }
 
     public int SetAudioOutmode (int mode) {
