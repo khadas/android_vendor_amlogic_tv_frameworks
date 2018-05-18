@@ -52,7 +52,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import android.provider.Settings;
 import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
-
+import android.provider.Settings.Secure;
+import android.content.ContentResolver;
 public class DroidLogicTvInputService extends TvInputService implements
         TvInSignalInfo.SigInfoChangeListener, TvControlManager.StorDBEventListener,
         TvControlManager.ScanningFrameStableListener {
@@ -76,6 +77,8 @@ public class DroidLogicTvInputService extends TvInputService implements
     private Surface mSurface;
     protected int ACTION_FAILED = -1;
     protected int ACTION_SUCCESS = 1;
+    protected int ACTION_PENDING = 0;
+
     private Context mContext;
     private int mCurrentSessionId = 0;
 
@@ -83,6 +86,8 @@ public class DroidLogicTvInputService extends TvInputService implements
     private TvControlManager mTvControlManager;
 
     private TvStoreManager mTvStoreManager;
+    private PendingTuneEvent mPendingTune = new PendingTuneEvent();
+    private  ContentResolver mContentResolver;
 
     private HardwareCallback mHardwareCallback = new HardwareCallback(){
         @Override
@@ -134,6 +139,8 @@ public class DroidLogicTvInputService extends TvInputService implements
         filter.addAction(DroidLogicTvUtils.ACTION_ATV_AUTO_SCAN);
         filter.addAction(DroidLogicTvUtils.ACTION_ATV_MANUAL_SCAN);
         registerReceiver(mChannelScanStartReceiver, filter);
+
+        mContentResolver = this.getContentResolver();
     }
 
     /**
@@ -488,6 +495,7 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     protected void doReleaseInService (int sessionId) {
         Log.d(TAG, "doReleaseInService,[source_switch_time]:" +getUptimeSeconds() + "s,sessionid:"+sessionId);
+        mPendingTune.reset();
         mSessionHandler.obtainMessage(MSG_DO_RELEASE, sessionId, 0).sendToTarget();
     }
 
@@ -522,7 +530,8 @@ public class DroidLogicTvInputService extends TvInputService implements
             if (mHardware != null && mSurface != null
                 && (mSourceType >= DroidLogicTvUtils.DEVICE_ID_HDMI1)
                 && (mSourceType <= DroidLogicTvUtils.DEVICE_ID_HDMI4)) {
-                    stopTvPlay(mSession.mId);
+                    //stopTvPlay(mSession.mId);
+                    Log.e(TAG, "This should be never be print. If so, please check");
             }
             registerInputSession(session);
             setCurrentSessionById(mSession.mId);
@@ -533,18 +542,30 @@ public class DroidLogicTvInputService extends TvInputService implements
             Log.d(TAG, "surface is null, so stop TV play");
             mSurface = null;
             stopTvPlay(session.mId);
+            return;
         }
 
         if (mHardware != null && mSurface != null && mConfigs.length > 0 && mSurface.isValid()) {
             mHardware.setSurface(mSurface, mConfigs[0]);
+        }
+
+        if (mPendingTune.hasPendingEventToProcess(session.mId)) {
+            doTune(mPendingTune.mUri, mPendingTune.mSessionId);
+            mPendingTune.reset();
         }
     }
 
     public int doTune(Uri uri, int sessionId) {
         SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
         Log.d(TAG, "doTune, uri = " + uri);
-        if (mConfigs.length == 0 || startTvPlay() == ACTION_FAILED) {
+        int result = startTvPlay();
+        Log.d(TAG, "startTvPlay,result= " + result);
+        if (mConfigs.length == 0 || result != ACTION_SUCCESS) {
             doTuneFinish(ACTION_FAILED, uri, sessionId);
+            if (result == ACTION_PENDING)
+                mPendingTune.setPendingEvent(uri, sessionId);
+            else if (result == ACTION_FAILED && mSession != null)
+                mSession.notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
             return ACTION_FAILED;
         }
         mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
@@ -558,11 +579,17 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     private int startTvPlay() {
-        Log.d(TAG, "startTvPlay inputId=" + mCurrentInputId + " surface=" + mSurface);
-        if (mHardware != null && mSurface != null && mSurface.isValid()) {
+        Log.d(TAG, "startTvPlay mHardware=" + mHardware + " mConfigs.length=" + mConfigs.length);
+        if (mHardware != null && mConfigs.length > 0) {
+            if (mSurface == null) {
+                return ACTION_PENDING;
+            } else if (mSurface != null && mSurface.isValid())
+                return ACTION_SUCCESS;
             //mHardware.setSurface(mSurface, mConfigs[0]);
-            //selectHdmiDevice(mDeviceId, mSavedLogicAddr, mSavedPhyAddr);
-            return ACTION_SUCCESS;
+            /*if ((mDeviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1)
+                    && (mDeviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4)) {
+                selectHdmiDevice(mDeviceId);
+            }*/
         }
         return ACTION_FAILED;
     }
@@ -745,5 +772,37 @@ public class DroidLogicTvInputService extends TvInputService implements
         if (mSession != null) {
             mSession.notifySessionEvent(DroidLogicTvUtils.SIG_INFO_EAS_EVENT, bundle);
         }
+    }
+
+    private class PendingTuneEvent {
+        private int mSessionId;
+        private Uri mUri;
+        private boolean hasPendingTune = false;
+
+        public void PendingTuneEvent() {}
+        public void setPendingEvent(Uri uri, int id) {
+            if (DEBUG)
+                Log.d(TAG, "PendingTune, uri=" + uri+ ",id:"+id);
+            mSessionId = id;
+            mUri = uri;
+            hasPendingTune = true;
+        }
+
+        public boolean hasPendingEventToProcess(int id) {
+            if (DEBUG)
+                Log.d(TAG, "hasPendingEventToProcess, id=" + id+ ",mSessionId:"+mSessionId);
+            return hasPendingTune && (mSessionId == id);
+        }
+
+        public void reset() {
+            mUri = null;
+            mSessionId = -1;
+            hasPendingTune = false;
+       }
+    }
+
+    public int getCaptionRawUserStyle() {
+        return Secure.getInt(
+                mContentResolver, Secure.ACCESSIBILITY_CAPTIONING_PRESET, 0);
     }
 }
