@@ -201,6 +201,7 @@ public class DroidLogicHdmiCecManager {
                 return false;
             }
         }
+        mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Log.d(TAG, "TvClient portSelect begin, portId: " + portId);
         mTvClient.portSelect(portId , new SelectCallback() {
             @Override
