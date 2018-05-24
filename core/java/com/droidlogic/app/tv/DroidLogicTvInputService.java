@@ -84,7 +84,7 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     private TvInputManager mTvInputManager;
     private TvControlManager mTvControlManager;
-
+    private SystemControlManager mSystemControlManager;
     private TvStoreManager mTvStoreManager;
     private PendingTuneEvent mPendingTune = new PendingTuneEvent();
     private  ContentResolver mContentResolver;
@@ -200,6 +200,8 @@ public class DroidLogicTvInputService extends TvInputService implements
         mCurrentSessionId = session.mId;
         Log.d(TAG, "inputId["+mCurrentInputId+"]");
         Log.d(TAG, "xsession["+session+"]");
+        if (mSystemControlManager == null)
+            mSystemControlManager = new SystemControlManager(mContext);
 
         initTvStoreManager();
         if (mTvControlManager == null)
@@ -556,7 +558,6 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     public int doTune(Uri uri, int sessionId) {
-        SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
         Log.d(TAG, "doTune, uri = " + uri);
         int result = startTvPlay();
         Log.d(TAG, "startTvPlay,result= " + result);
@@ -568,7 +569,8 @@ public class DroidLogicTvInputService extends TvInputService implements
                 mSession.notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
             return ACTION_FAILED;
         }
-        mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
+        if (mSystemControlManager != null)
+            mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
         doTuneFinish(ACTION_SUCCESS, uri, sessionId);
         return ACTION_SUCCESS;
     }
@@ -736,9 +738,10 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     private void initTvStoreManager() {
             if (mTvStoreManager == null) {
-            SystemControlManager mSystemControlManager = new SystemControlManager(mContext);
-            int channel_number_start = mSystemControlManager.getPropertyInt("tv.channel.number.start", 1);
-            mTvStoreManager = new TvStoreManager(this, mCurrentInputId, channel_number_start) {
+                int channel_number_start = 0;
+                if (mSystemControlManager != null)
+                    channel_number_start = mSystemControlManager.getPropertyInt("tv.channel.number.start", 1);
+                mTvStoreManager = new TvStoreManager(this, mCurrentInputId, channel_number_start) {
                 @Override
                 public void onEvent(String eventType, Bundle eventArgs) {
                     Log.d(TAG, "TvStoreManager.onEvent:"+eventType);
