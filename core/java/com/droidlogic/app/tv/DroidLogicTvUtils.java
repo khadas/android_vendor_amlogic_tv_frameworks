@@ -155,23 +155,23 @@ public class DroidLogicTvUtils
 
     public static final String ACTION_STOP_PLAY = "stop_play";
 
-    public static final String ACTION_TIMEOUT_SUSPEND = "android.intent.action.suspend";
+    public static final String ACTION_TIMEOUT_SUSPEND = "droidlogic.intent.action.suspend";
 
-    public static final String ACTION_UPDATE_TV_PLAY = "android.intent.action.update_tv";
+    public static final String ACTION_UPDATE_TV_PLAY = "droidlogic.intent.action.update_tv";
 
-    public static final String ACTION_DELETE_CHANNEL = "android.intent.action.tv_delete_channel";
+    public static final String ACTION_DELETE_CHANNEL = "droidlogic.intent.action.tv_delete_channel";
 
-    public static final String ACTION_SWITCH_CHANNEL = "android.intent.action.tv_switch_channel";
+    public static final String ACTION_SWITCH_CHANNEL = "droidlogic.intent.action.tv_switch_channel";
 
-    public static final String ACTION_SUBTITLE_SWITCH = "android.intent.action.subtitle_switch";
+    public static final String ACTION_SUBTITLE_SWITCH = "droidlogic.intent.action.subtitle_switch";
 
-    public static final String ACTION_AD_SWITCH = "android.intent.action.ad_switch";
+    public static final String ACTION_AD_SWITCH = "droidlogic.intent.action.ad_switch";
 
-    public static final String ACTION_AD_MIXING_LEVEL = "android.intent.action.ad_mixing_level";
+    public static final String ACTION_AD_MIXING_LEVEL = "droidlogic.intent.action.ad_mixing_level";
 
-    public static final String ACTION_AD_TRACK = "android.intent.action.ad_track";
+    public static final String ACTION_AD_TRACK = "droidlogic.intent.action.ad_track";
 
-    public static final String ACTION_CHANNEL_CHANGED = "android.intent.action.tv_channel_changed";
+    public static final String ACTION_CHANNEL_CHANGED = "droidlogic.intent.action.tv_channel_changed";
 
     public static final String ACTION_PROGRAM_APPOINTED = "droidlogic.intent.action.tv_appointed_program";
 
