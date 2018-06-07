@@ -113,6 +113,7 @@ public class ChannelInfo {
     public static final String LABEL_HDMI3 = "HDMI3";
     public static final String LABEL_HDMI4 = "HDMI4";
     public static final String LABEL_SPDIF = "SPDIF";
+    public static final String LABEL_AUX = "AUX";
 
     private long mId;
     private String mInputId;

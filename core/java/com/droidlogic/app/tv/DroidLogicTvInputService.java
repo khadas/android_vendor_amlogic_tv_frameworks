@@ -305,6 +305,9 @@ public class DroidLogicTvInputService extends TvInputService implements
         case DroidLogicTvUtils.DEVICE_ID_SPDIF:
             label = ChannelInfo.LABEL_SPDIF;
             break;
+        case DroidLogicTvUtils.DEVICE_ID_AUX:
+            label = ChannelInfo.LABEL_AUX;
+            break;
         default:
             break;
         }
