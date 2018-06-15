@@ -54,6 +54,8 @@ import android.content.IntentFilter;
 import android.content.BroadcastReceiver;
 import android.provider.Settings.Secure;
 import android.content.ContentResolver;
+import android.media.MediaCodec;
+
 public class DroidLogicTvInputService extends TvInputService implements
         TvInSignalInfo.SigInfoChangeListener, TvControlManager.StorDBEventListener,
         TvControlManager.ScanningFrameStableListener {
@@ -88,6 +90,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     private TvStoreManager mTvStoreManager;
     private PendingTuneEvent mPendingTune = new PendingTuneEvent();
     private  ContentResolver mContentResolver;
+    private MediaCodec mMediaCodec;
 
     private HardwareCallback mHardwareCallback = new HardwareCallback(){
         @Override
@@ -119,6 +122,8 @@ public class DroidLogicTvInputService extends TvInputService implements
                     }*/
                 }  else if (mConfigs.length > 0 && mSurface != null){
                     Log.d(TAG, "open source");
+                    createDecoder();
+                    decoderRelease();
                     mHardware.setSurface(mSurface, mConfigs[0]);
                 }
             } else {
@@ -524,6 +529,41 @@ public class DroidLogicTvInputService extends TvInputService implements
             }
         }
     }
+
+    private boolean createDecoder() {
+        String str = "OMX.amlogic.avc.decoder.awesome.secure";
+        try {
+            mMediaCodec = MediaCodec.createByCodecName(str);
+        } catch (Exception exception) {
+            Log.e(TAG, "Exception during decoder creation", exception);
+            decoderRelease();
+            return false;
+        }
+        Log.e(TAG, "createDecoder done");
+        return true;
+    }
+
+    private void decoderRelease() {
+        if (mMediaCodec == null) {
+            return;
+        }
+        try {
+            mMediaCodec.stop();
+            } catch (IllegalStateException exception) {
+            mMediaCodec.reset();
+            // IllegalStateException happens when decoder fail to start.
+            Log.e(TAG, "IllegalStateException during decoder stop", exception);
+        } finally {
+            try {
+                mMediaCodec.release();
+                } catch (IllegalStateException exception) {
+                Log.e(TAG, "IllegalStateException during decoder release", exception);
+                }
+                mMediaCodec = null;
+        }
+        Log.e(TAG, "decoderRelease done");
+    }
+
     private void doSetSurface(Surface surface, TvInputBaseSession session) {
         Log.d(TAG, "[source_switch_time]:" +getUptimeSeconds()
                 + "s, doSetSurface inputId=" + mCurrentInputId + " number=" + session.mId + " surface=" + surface);
@@ -551,6 +591,8 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
 
         if (mHardware != null && mSurface != null && mConfigs.length > 0 && mSurface.isValid()) {
+            createDecoder();
+            decoderRelease();
             mHardware.setSurface(mSurface, mConfigs[0]);
         }
 
