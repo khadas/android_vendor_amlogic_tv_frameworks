@@ -1022,7 +1022,7 @@ public abstract class TvStoreManager {
             }
 
             bundle = getScanEventBundle(event);
-            if ((event.mode == TvChannelParams.MODE_ANALOG) && (event.lock == 0x11)) {
+            if (((event.mode & 0xff)  == TvChannelParams.MODE_ANALOG) && (event.lock == 0x11)) {
                 bundle.putInt(DroidLogicTvUtils.SIG_INFO_C_DISPLAYNUM, mDisplayNumber);
                 mDisplayNumber++;//count for progress stage
             }

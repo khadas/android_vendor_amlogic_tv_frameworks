@@ -106,6 +106,14 @@ public class DroidLogicTvUtils
     public static final int SIG_INFO_TYPE_AUX  = 6;
     public static final int SIG_INFO_TYPE_OTHER  = 7;
 
+    //AV
+    public static final String SIG_INFO_AV_VCHIP = "av_vchip";
+    public static final String SIG_INFO_AV_VCHIP_KEY = "av_aratings";
+
+    //CC
+    public static final String SIG_INFO_CC_DATA_INFO = "av_data_info";
+    public static final String SIG_INFO_CC_DATA_INFO_KEY = "cc_data_mask";
+
     public static final String SIG_INFO_EAS_EVENT = "dtv_eas_event";
     public static final String SIG_INFO_EAS_STATUS = "eas_status";
     /**
@@ -195,6 +203,17 @@ public class DroidLogicTvUtils
     public static final String PARA_SCAN_PARA4 = "scan_para4";
     public static final String PARA_SCAN_PARA5 = "scan_para5";
     public static final String PARA_SCAN_PARA6 = "scan_para6";
+
+    /*define number search program type*/
+    public static final String ATVPROGRAM = "atv_program";
+    public static final String DTVPROGRAM = "dtv_program";
+    public static final String RADIOPROGRAM = "radio_program";
+    public static final String TOTALNUMBER = "total_number";
+    public static final String ATVNUMBER = "atv_number";
+    public static final String DTVNUMBER = "dtv_number";
+    public static final String RADIONUMBER = "radio_number";
+    public static final String FIRSTAUTOFOUNDFREQUENCY = "first_found_frequency";
+    public static final String AUTO_SEARCH_MODE = "auto_search_mode";
 
     /*auto tracks call*/
     public static final String ACTION_DTV_AUTO_TRACKS = "dtv_auto_tracks";

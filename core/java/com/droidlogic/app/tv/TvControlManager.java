@@ -673,6 +673,29 @@ public class TvControlManager {
         return "";
     }
 
+    public String GetTVSupportCountries() {
+        synchronized (mLock) {
+            try {
+                return mProxy.getTvSupportCountries();
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetTVSupportCountries:" + e);
+            }
+        }
+        return "";
+    }
+
+    public int SetTvCountry(String country) {
+        synchronized (mLock) {
+            try {
+                 mProxy.setTvCountry(country);
+                 return 0;
+            } catch (RemoteException e) {
+                Log.e(TAG, "SetTvCountry:" + e);
+            }
+        }
+        return -1;
+    }
+
     /**
      * @Function: GetCurrentSignalInfo
      * @Description: Get current signal infomation
@@ -1072,8 +1095,14 @@ public class TvControlManager {
      * @Return: 0:plug out 1:plug in
      */
     public int GetSourceConnectStatus(SourceInput srcInput) {
-        int val[] = new int[]{srcInput.toInt()};
-        return sendCmdIntArray(GET_SOURCE_CONNECT_STATUS, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.getInputSrcConnectStatus(srcInput.toInt());
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetSourceConnectStatus:" + e);
+            }
+        }
+        return -1;
     }
 
     public String GetSourceInputList() {
@@ -1210,16 +1239,36 @@ public class TvControlManager {
     }
 
     public int SetAudioOutmode (int mode) {
-        int val[] = new int[]{mode};
-        return sendCmdIntArray(SET_AUDIO_OUTMODE, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.setAudioOutmode(mode);
+            } catch (RemoteException e) {
+                Log.e(TAG, "SetAudioOutmode:" + e);
+            }
+        }
+        return -1;
     }
 
     public int GetAudioOutmode(){
-        return sendCmd(GET_AUDIO_OUTMODE);
+        synchronized (mLock) {
+            try {
+                return mProxy.getAudioOutmode();
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetAudioOutmode:" + e);
+            }
+        }
+        return -1;
     }
 
     public int GetAudioStreamOutmode(){
-        return sendCmd(GET_AUDIO_STREAM_OUTMODE);
+        synchronized (mLock) {
+            try {
+                return mProxy.getAudioStreamOutmode();
+            } catch (RemoteException e) {
+                Log.e(TAG, "GetAudioStreamOutmode:" + e);
+            }
+        }
+        return -1;
     }
 
     public static final int AM_AUDIO_TV = 0;
@@ -1501,7 +1550,15 @@ public class TvControlManager {
     }
 
     public int FactoryCleanAllTableForProgram() {
-        return sendCmd(FACTORY_CLEAN_ALL_TABLE_FOR_PROGRAM);
+        synchronized (mLock) {
+            try {
+                return mProxy.FactoryCleanAllTableForProgram();
+            } catch (RemoteException e) {
+                Log.e(TAG, "FactoryCleanAllTableForProgram:" + e);
+            }
+        }
+        return -1;
+        //return sendCmd(FACTORY_CLEAN_ALL_TABLE_FOR_PROGRAM);
     }
 
     public int FactorySetPatternYUV(int mask, int y, int u, int v) {
@@ -2553,7 +2610,15 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int SSMInitDevice() {
-        return sendCmd(SSM_INIT_DEVICE);
+        synchronized (mLock) {
+            try {
+                return mProxy.SSMInitDevice();
+            } catch (RemoteException e) {
+                Log.e(TAG, "SSMInitDevice:" + e);
+            }
+        }
+        return -1;
+        //return sendCmd(SSM_INIT_DEVICE);
     }
 
     /**
@@ -3924,11 +3989,25 @@ public class TvControlManager {
     }
 
     public void startAutoBacklight() {
-        sendCmd(START_AUTO_BACKLIGHT);
+        synchronized (mLock) {
+            try {
+                mProxy.startAutoBacklight();
+            } catch (RemoteException e) {
+                Log.e(TAG, "startAutoBacklight:" + e);
+            }
+        }
+        //sendCmd(START_AUTO_BACKLIGHT);
     }
 
     public void stopAutoBacklight() {
-        sendCmd(STOP_AUTO_BACKLIGHT);
+        synchronized (mLock) {
+            try {
+                mProxy.stopAutoBacklight();
+            } catch (RemoteException e) {
+                Log.e(TAG, "stopAutoBacklight:" + e);
+            }
+        }
+        //sendCmd(STOP_AUTO_BACKLIGHT);
     }
 
     /**
