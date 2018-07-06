@@ -13,7 +13,6 @@ import com.droidlogic.app.DaylightSavingTime;
 public class TvTime{
     private long diff = 0;
     private Context mContext;
-    private SystemControlManager mSystemControlManager;
 
     private final static String TV_KEY_TVTIME = "dtvtime";
     private final static String PROP_SET_SYSTIME_ENABLED = "persist.sys.getdtvtime.isneed";
@@ -21,14 +20,14 @@ public class TvTime{
 
     public TvTime(Context context){
         mContext = context;
-        mSystemControlManager = new SystemControlManager(mContext);
     }
 
     public synchronized void setTime(long time){
         Date sys = new Date();
 
         diff = time - sys.getTime();
-        if (mSystemControlManager.getPropertyBoolean(PROP_SET_SYSTIME_ENABLED, false)
+        SystemControlManager SM = new SystemControlManager(mContext);
+        if (SM.getPropertyBoolean(PROP_SET_SYSTIME_ENABLED, false)
                 && (Math.abs(diff) > 1000)) {
             SystemClock.setCurrentTimeMillis(time);
             diff = 0;
