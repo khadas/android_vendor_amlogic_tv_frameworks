@@ -192,8 +192,8 @@ std::string TvServerHidlClient::getSupportInputDevices() {
     return tvDevices;
 }
 
-int TvServerHidlClient::getHdmiPorts() {
-    return mTvServer->getHdmiPorts();
+int TvServerHidlClient::getHdmiPorts(int32_t inputSrc) {
+    return mTvServer->getHdmiPorts(inputSrc);
 }
 
 void TvServerHidlClient::getCurSignalInfo(int &fmt, int &transFmt, int &status, int &frameRate) {

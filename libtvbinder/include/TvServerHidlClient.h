@@ -80,7 +80,7 @@ public:
     int getCurrentInputSrc();
     int getHdmiAvHotplugStatus();
     std::string getSupportInputDevices();
-    int getHdmiPorts();
+    int getHdmiPorts(int32_t inputSrc);
 
     void getCurSignalInfo(int &fmt, int &transFmt, int &status, int &frameRate);
     int setMiscCfg(const std::string& key, const std::string& val);
