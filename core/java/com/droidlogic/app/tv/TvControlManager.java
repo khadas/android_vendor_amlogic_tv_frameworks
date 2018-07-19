@@ -1381,31 +1381,6 @@ public class TvControlManager {
         return sendCmdIntArray(GET_SAVE_AMAUDIO_VOLUME, val);
     }
 
-    public enum GAMMA_CURVE_TYPE {
-        GAMMA_CURVE_AUTO(-1),//choose gamma table by value has been saved.
-        GAMMA_CURVE_DEFAULT(0),
-        GAMMA_CURVE_2_1(1),
-        GAMMA_CURVE_2_2(2),
-        GAMMA_CURVE_2_3(3),
-        GAMMA_CURVE_2_4(4),
-        GAMMA_CURVE_MAX(5);
-
-        private int val;
-        GAMMA_CURVE_TYPE(int val) {
-            this.val = val;
-        }
-
-        public int toInt() {
-            return this.val;
-        }
-    }
-
-    public int setGamma(GAMMA_CURVE_TYPE gamma_curve, int is_save) {
-        int val[] = new int[]{gamma_curve.toInt(), is_save};
-        return sendCmdIntArray(SET_GAMMA, val);
-    }
-    // PQ END
-
     // FACTORY
     public enum TEST_PATTERN {
         TEST_PATTERN_NONE(0),
@@ -1427,124 +1402,6 @@ public class TvControlManager {
         }
     }
 
-
-    public class tvin_cutwin_t {
-        public int hs;
-        public int he;
-        public int vs;
-        public int ve;
-    }
-
-    /**
-     * @Function: FactorySetPQMode_Brightness
-     * @Description: Adjust brightness value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode, brightness brightness value
-     * @Return: 0 success, -1 fail
-     */
-    public int FactorySetPQMode_Brightness(SourceInput source_type, int pq_mode, int brightness) {
-        int val[] = new int[]{source_type.toInt(), pq_mode, brightness};
-        return sendCmdIntArray(FACTORY_SETPQMODE_BRIGHTNESS, val);
-    }
-
-    /**
-     * @Function: FactoryGetPQMode_Brightness
-     * @Description: Get brightness value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode
-     * @Return: 0 success, -1 fail
-     */
-    public int FactoryGetPQMode_Brightness(SourceInput source_type, int pq_mode) {
-        int val[] = new int[]{source_type.toInt(), pq_mode};
-        return sendCmdIntArray(FACTORY_GETPQMODE_BRIGHTNESS, val);
-    }
-
-    /**
-     * @Function: FactorySetPQMode_Contrast
-     * @Description: Adjust contrast value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode, contrast contrast value
-     * @Return: contrast value
-     */
-    public int FactorySetPQMode_Contrast(SourceInput source_type, int pq_mode, int contrast) {
-        int val[] = new int[]{source_type.toInt(), pq_mode, contrast};
-        return sendCmdIntArray(FACTORY_SETPQMODE_CONTRAST, val);
-    }
-
-    /**
-     * @Function: FactoryGetPQMode_Contrast
-     * @Description: Get contrast value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode
-     * @Return: 0 success, -1 fail
-     */
-    public int FactoryGetPQMode_Contrast(SourceInput source_type, int pq_mode) {
-        int val[] = new int[]{source_type.toInt(), pq_mode};
-        return sendCmdIntArray(FACTORY_GETPQMODE_CONTRAST, val);
-    }
-
-    /**
-     * @Function: FactorySetPQMode_Saturation
-     * @Description: Adjust saturation value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode, saturation saturation value
-     * @Return: 0 success, -1 fail
-     */
-    public int FactorySetPQMode_Saturation(SourceInput source_type, int pq_mode, int saturation) {
-        int val[] = new int[]{source_type.toInt(), pq_mode, saturation};
-        return sendCmdIntArray(FACTORY_SETPQMODE_SATURATION, val);
-    }
-
-    /**
-     * @Function: FactoryGetPQMode_Saturation
-     * @Description: Get saturation value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode
-     * @Return: saturation value
-     */
-    public int FactoryGetPQMode_Saturation(SourceInput source_type, int pq_mode) {
-        int val[] = new int[]{source_type.toInt(), pq_mode};
-        return sendCmdIntArray(FACTORY_GETPQMODE_SATURATION, val);
-    }
-
-    /**
-     * @Function: FactorySetPQMode_Hue
-     * @Description: Adjust hue value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode, hue hue value
-     * @Return: 0 success, -1 fail
-     */
-    public int FactorySetPQMode_Hue(SourceInput source_type, int pq_mode, int hue) {
-        int val[] = new int[]{source_type.toInt(), pq_mode, hue};
-        return sendCmdIntArray(FACTORY_SETPQMODE_HUE, val);
-    }
-
-    /**
-     * @Function: FactoryGetPQMode_Hue
-     * @Description: Get hue value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode
-     * @Return: hue value
-     */
-    public int FactoryGetPQMode_Hue(SourceInput source_type, int pq_mode) {
-        int val[] = new int[]{source_type.toInt(), pq_mode};
-        return sendCmdIntArray(FACTORY_GETPQMODE_HUE, val);
-    }
-
-    /**
-     * @Function: FactorySetPQMode_Sharpness
-     * @Description: Adjust sharpness value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode, sharpness sharpness value
-     * @Return: 0 success, -1 fail
-     */
-    public int FactorySetPQMode_Sharpness(SourceInput source_type, int pq_mode, int sharpness) {
-        int val[] = new int[]{source_type.toInt(), pq_mode, sharpness};
-        return sendCmdIntArray(FACTORY_SETPQMODE_SHARPNESS, val);
-    }
-
-    /**
-     * @Function: FactoryGetPQMode_Sharpness
-     * @Description: Get sharpness value in corresponding pq mode for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, PQMode refer to enum Pq_Mode
-     * @Return: sharpness value
-     */
-    public int FactoryGetPQMode_Sharpness(SourceInput source_type, int pq_mode) {
-        int val[] = new int[]{source_type.toInt(), pq_mode};
-        return sendCmdIntArray(FACTORY_GETPQMODE_SHARPNESS, val);
-    }
-
     /**
      * @Function: FactorySetTestPattern
      * @Description: Set test patten for factory menu conctrol
@@ -1564,57 +1421,6 @@ public class TvControlManager {
      */
     public int FactoryGetTestPattern() {
         return sendCmd(FACTORY_GETTESTPATTERN);
-    }
-
-    /**
-     * @Function: FactorySetOverscanParams
-     * @Description: Set overscan params of corresponding source type and fmt for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, fmt refer to enum tvin_sig_fmt_e
-     * @Param: trans_fmt refer to enum tvin_trans_fmt, cutwin_t refer to class tvin_cutwin_t
-     * @Return: 0 success, -1 fail
-     */
-    public int FactorySetOverscanParams(SourceInput source_type, TvInSignalInfo.SignalFmt fmt,
-            TvInSignalInfo.TransFmt trans_fmt, tvin_cutwin_t cutwin_t) {
-        int val[] = new int[]{source_type.toInt(), fmt.toInt(), trans_fmt.ordinal(),
-            cutwin_t.hs, cutwin_t.he, cutwin_t.vs, cutwin_t.ve};
-        return sendCmdIntArray(FACTORY_SETOVERSCAN, val);
-    }
-
-    /**
-     * @Function: FactoryGetOverscanParams
-     * @Description: Get overscan params of corresponding source type and fmt for factory menu conctrol
-     * @Param: source_type refer to enum SourceInput, fmt refer to enum tvin_sig_fmt_e
-     * @Param: trans_fmt refer to enum tvin_trans_fmt
-     * @Return: cutwin_t value for overscan refer to class tvin_cutwin_t
-     */
-    public tvin_cutwin_t FactoryGetOverscanParams(SourceInput source_type, TvInSignalInfo.SignalFmt fmt,
-            TvInSignalInfo.TransFmt trans_fmt) {
-        libtv_log_open();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        cmd.writeInt(FACTORY_GETOVERSCAN);
-        cmd.writeInt(source_type.ordinal());
-        cmd.writeInt(fmt.toInt());
-        cmd.writeInt(trans_fmt.ordinal());
-        sendCmdToTv(cmd, r);
-        tvin_cutwin_t cutwin_t = new tvin_cutwin_t();
-        cutwin_t.hs = r.readInt();
-        cutwin_t.he = r.readInt();
-        cutwin_t.vs = r.readInt();
-        cutwin_t.ve = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return cutwin_t;
-    }
-
-    /**
-     * @Function: FactorySSMSetOutDefault
-     * @Description: Reset all factory params in SSM
-     * @Param:
-     * @Return: 0 success, -1 fail
-     */
-    public int FactorySSMSetOutDefault() {
-        return sendCmd(FACTORY_SET_OUT_DEFAULT);
     }
 
     public int FactoryCleanAllTableForProgram() {
@@ -6122,38 +5928,6 @@ public class TvControlManager {
         int val[] = new int[]{value};
         return sendCmdIntArray(FACTORY_FBC_PANEL_USER_SETTING_DEFAULT, val);
     }
-
-    public class WhiteBalanceParams {
-        public int r_gain;        // u1.10, range 0~2047, default is 1024 (1.0x)
-        public int g_gain;        // u1.10, range 0~2047, default is 1024 (1.0x)
-        public int b_gain;        // u1.10, range 0~2047, default is 1024 (1.0x)
-        public int r_offset;      // s11.0, range -1024~+1023, default is 0
-        public int g_offset;      // s11.0, range -1024~+1023, default is 0
-        public int b_offset;      // s11.0, range -1024~+1023, default is 0
-    }
-
-    public WhiteBalanceParams FactoryWhiteBalanceGetAllParams(int colorTemp_mode) {
-        WhiteBalanceParams params = new WhiteBalanceParams();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        cmd.writeInt(FACTORY_WHITE_BALANCE_GET_ALL_PRAMAS);
-        cmd.writeInt(colorTemp_mode);
-        sendCmdToTv(cmd, r);
-        int ret = r.readInt();
-        if (ret == 0) {
-            params.r_gain = r.readInt();
-            params.g_gain = r.readInt();
-            params.b_gain = r.readInt();
-            params.r_offset = r.readInt();
-            params.g_offset = r.readInt();
-            params.b_offset = r.readInt();
-        }
-        cmd.recycle();
-        r.recycle();
-
-        return params;
-    }
-
     // set listener when not need to listen set null
 
     public final static int EVENT_AV_PLAYBACK_NODATA            = 1;
