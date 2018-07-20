@@ -199,7 +199,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         super.notifyVideoUnavailable(reason);
         if (mOverlayView != null) {
             mOverlayView.setImageVisibility(true);
-            mOverlayView.setTextVisibility(false);
+            mOverlayView.setTextVisibility(true);
         }
     }
 
