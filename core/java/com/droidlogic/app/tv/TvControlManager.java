@@ -6393,8 +6393,15 @@ public class TvControlManager {
     public static final int RECORDING_CMD_START = 2;
 
     public int sendRecordingCmd(int cmd, String id, String param) {
-        String para[] = new String[]{id, param};
-        return sendCmdStringArray(DTV_RECORDING_CMD, cmd, para);
+        synchronized (mLock) {
+            try {
+                Log.d(TAG, "sendRecordingCmd");
+                return mProxy.sendRecordingCmd(cmd, id, (param == null) ? "" : param);
+            } catch (RemoteException e) {
+                Log.e(TAG, "sendRecordingCmd:" + e);
+            }
+        }
+        return -1;
     }
 
     public int prepareRecording(String id, String param) {
