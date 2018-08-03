@@ -999,7 +999,9 @@ public class TvControlManager {
             return SourceInput_Type.SOURCE_TYPE_ADTV;
         } else if (source_input == SourceInput.AUX.toInt()) {
             return SourceInput_Type.SOURCE_TYPE_AUX;
-        } else {
+        } else if (source_input == SourceInput.ARC.toInt()) {
+            return SourceInput_Type.SOURCE_TYPE_ARC;
+        }else {
             return SourceInput_Type.SOURCE_TYPE_MPEG;
         }
     }
@@ -6196,7 +6198,8 @@ public class TvControlManager {
         SOURCE_SPDIF(15),
         ADTV(16),
         AUX(17),
-        MAX(18);
+        ARC(18),
+        MAX(19);
         private int val;
 
         SourceInput(int val) {
@@ -6221,7 +6224,8 @@ public class TvControlManager {
         SOURCE_TYPE_SPDIF(9),
         SOURCE_TYPE_ADTV(10),
         SOURCE_TYPE_AUX(11),
-        SOURCE_TYPE_MAX(12);
+        SOURCE_TYPE_ARC(12),
+        SOURCE_TYPE_MAX(13);
 
         private int val;
 
