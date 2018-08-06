@@ -491,7 +491,7 @@ public class TvControlManager {
                         sigInfo.sigStatus = TvInSignalInfo.SignalStatus.values()[parcel.bodyInt.get(2)];
                         sigInfo.reserved = parcel.bodyInt.get(3);
                         mSigInfoChangeLister.onSigChange(sigInfo);
-                        Log.e(TAG,"atsc ---SIGLE_DETECT_CALLBACK-----------------");
+                        Log.e(TAG,"---SIGLE_DETECT_CALLBACK-----------------");
                     }
                     break;
                 case VGA_CALLBACK:
@@ -3984,8 +3984,26 @@ public class TvControlManager {
 
     //enable: 0  is disable , 1  is enable.      when enable it , can black video for switching program
     public int setBlackoutEnable(int enable){
-        int val[] = new int[]{enable};
-        return sendCmdIntArray(SET_BLACKOUT_ENABLE, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.setBlackoutEnable(enable);
+            } catch (RemoteException e) {
+                Log.e(TAG, "setBlackoutEnable:" + e);
+            }
+        }
+        return -1;
+    }
+
+    //ref to setBlackoutEnable fun
+    public int getBlackoutEnalbe() {
+        synchronized (mLock) {
+            try {
+                return mProxy.getBlackoutEnable();
+            } catch (RemoteException e) {
+                Log.e(TAG, "getBlackoutEnalbe:" + e);
+            }
+        }
+        return 0;
     }
 
     public void startAutoBacklight() {
@@ -4046,18 +4064,6 @@ public class TvControlManager {
             ",MinStep:" + map.get("MinStep");
         String val[] = new String[]{data};
         sendCmdStringArray(SET_AUTO_BACKLIGHT_DATA, val);
-        return 0;
-    }
-
-    //ref to setBlackoutEnable fun
-    public int SSMReadBlackoutEnalbe() {
-        synchronized (mLock) {
-            try {
-                return mProxy.getSaveBlackoutEnable();
-            } catch (RemoteException e) {
-                Log.e(TAG, "SSMReadBlackoutEnalbe:" + e);
-            }
-        }
         return 0;
     }
 
@@ -4765,18 +4771,36 @@ public class TvControlManager {
     }
 
     public int DtvSwitchAudioTrack(int audio_pid, int audio_format, int audio_param) {
-        int val[] = new int[]{audio_pid, audio_format, audio_param};
-        return sendCmdIntArray(DTV_SWITCH_AUDIO_TRACK, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.DtvSwitchAudioTrack3(audio_pid, audio_format,audio_param);
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvSwitchAudioTrack:" + e);
+            }
+        }
+        return -1;
     }
 
     public int DtvSwitchAudioTrack(int prog_id, int audio_track_id) {
-        int val[] = new int[]{prog_id, audio_track_id};
-        return sendCmdIntArray(DTV_SWITCH_AUDIO_TRACK, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.DtvSwitchAudioTrack(prog_id, audio_track_id);
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvSwitchAudioTrack:" + e);
+            }
+        }
+        return -1;
     }
 
     public int DtvSetAudioAD(int enable, int audio_pid, int audio_format) {
-        int val[] = new int[]{enable, audio_pid, audio_format};
-        return sendCmdIntArray(DTV_SET_AUDIO_AD, val);
+        synchronized (mLock) {
+            try {
+                return mProxy.DtvSetAudioAD(enable, audio_pid, audio_format);
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvSetAudioAD:" + e);
+            }
+        }
+        return -1;
     }
 
     public long DtvGetEpgUtcTime() {
@@ -6445,7 +6469,7 @@ public class TvControlManager {
     public int sendPlayCmd(int cmd, String id, String param) {
         synchronized (mLock) {
             try {
-                return mProxy.sendPlayCmd(cmd, id, param);
+                return mProxy.sendPlayCmd(cmd, id, (param == null) ? "" : param);
             } catch (RemoteException e) {
                 Log.e(TAG, "sendPlayCmd:" + e);
             }
