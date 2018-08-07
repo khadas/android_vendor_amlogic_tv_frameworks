@@ -102,7 +102,7 @@ public class DroidContentRatingsParser {
     private AtomicFile mAtomicFile_t;
     public DroidContentRatingsParser() {
         //mContext = context;
-        File userDir = new File("/param");//Environment.getDataSystemDirectory();
+        File userDir = new File("/mnt/vendor/param");//Environment.getDataSystemDirectory();
         if (!userDir.exists()) {
             if (!userDir.mkdirs()) {
                 throw new IllegalStateException("User dir cannot be created: " + userDir);
