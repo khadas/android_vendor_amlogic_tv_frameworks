@@ -10,12 +10,11 @@ LOCAL_SRC_FILES:= \
 
 LOCAL_SHARED_LIBRARIES := \
     vendor.amlogic.hardware.tvserver@1.0 \
+    android.hidl.allocator@1.0 \
     libcutils \
     libutils \
     libbinder \
     libtvbinder \
-    libnativehelper \
-    libandroid_runtime \
     liblog \
     libhardware
 
@@ -23,11 +22,12 @@ LOCAL_C_INCLUDES += \
     frameworks/base/core/jni \
     frameworks/base/core/jni/android/graphics \
     frameworks/base/libs/hwui \
+    frameworks/native/libs/binder/include \
     $(LIB_TV_BINDER_PATH)/include \
     external/skia/include \
     external/skia/include/core \
     external/skia/include/config \
-    libnativehelper/include/nativehelper
+    libnativehelper/include_jni
 
 LOCAL_MODULE:= libtv_jni
 LOCAL_PRELINK_MODULE := false
