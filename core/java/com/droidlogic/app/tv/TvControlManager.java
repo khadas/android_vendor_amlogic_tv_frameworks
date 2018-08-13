@@ -106,9 +106,6 @@ public class TvControlManager {
     public static final int AUDIO_OUTMODE_MONO          = 0;
     public static final int AUDIO_OUTMODE_STEREO        = 1;
     public static final int AUDIO_OUTMODE_SAP           = 2;
-    static {
-        System.loadLibrary("tv_jni");
-    }
 
     private long mNativeContext; // accessed by native methods
     private EventHandler mEventHandler;
@@ -139,18 +136,7 @@ public class TvControlManager {
 
     private EasManager easManager = new EasManager();
     private static TvControlManager mInstance;
-
-    private native final void native_setup(Object tv_this);
-    private native final void native_release();
-    //public native void addCallbackBuffer(byte cb[]);
-    public native final void unlock();
-    public native final void lock();
-    public native final void reconnect() throws IOException;
-    private native int processCmd(Parcel p, Parcel r);
-    private native final void native_create_video_frame_bitmap(Object bmp);
-    private native final void native_create_subtitle_bitmap(Object bmp);
-    private static native Bitmap native_GetFrameBitmap(int width, int hight, int type);
-
+/*
     private static void postEventFromNative(Object tv_ref, int what, Parcel ext) {
         ext.setDataPosition(0);
 
@@ -162,7 +148,7 @@ public class TvControlManager {
             c.mEventHandler.sendMessage(m);
         }
     }
-
+*/
     private int sendCmdToTv(Parcel p, Parcel r) {
         Log.i(TAG, "sendCmdToTv is abandoned in Android O, please use cmd HIDL way!!cmd:" + p.readInt());
 
@@ -606,7 +592,6 @@ public class TvControlManager {
             Log.e(TAG, "looper is null, so can not do anything");
         }
         mHALCallback = new HALCallback(this);
-        //native_setup(new WeakReference<TvControlManager>(this));
 
         try {
             boolean ret = IServiceManager.getService()
@@ -807,13 +792,11 @@ public class TvControlManager {
 
 
     protected void finalize() {
-        //native_release();
     }
 
     // when app exit, need release manual
     public final void release() {
         libtv_log_open();
-        native_release();
     }
 
     // Deprecated, use Channels TYPE_XXXX from TvContract
@@ -4276,32 +4259,6 @@ public class TvControlManager {
         return tmpRet;
     }
 
-    public Bitmap CreateSubtitleBitmap() {
-        libtv_log_open();
-        Bitmap subtitleFrame = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
-        native_create_subtitle_bitmap(subtitleFrame);
-        return subtitleFrame;
-    }
-
-    /**
-     * @param width The desired width of the returned bitmap;
-     * @param height The desired height of the returned bitmap;
-     * @return Returns a Bitmap containing the video layer contents, or null
-     * if an error occurs. Make sure to call Bitmap.recycle() as soon as
-     * possible, once its content is not needed anymore.
-     */
-     public Bitmap captureFrame(int width, int hight, int type){
-         Bitmap mBitmap = native_GetFrameBitmap(width, hight, type);
-         if (mBitmap != null && (width != mBitmap.getWidth() || hight != mBitmap.getHeight())) {
-             float mW_F = ((float)width)/mBitmap.getWidth();
-             float mH_F = ((float)hight)/mBitmap.getHeight();
-             Matrix matrix = new Matrix();
-             matrix.postScale(mW_F, mH_F);
-             mBitmap = Bitmap.createBitmap(mBitmap,0,0,mBitmap.getWidth(),mBitmap.getHeight(),matrix,true);
-         }
-         return mBitmap;
-     }
-
     public void setSubtitleUpdateListener(SubtitleUpdateListener l) {
         libtv_log_open();
         mSubtitleListener = l;
@@ -4322,13 +4279,6 @@ public class TvControlManager {
     public void setScanningFrameStableListener(ScanningFrameStableListener l) {
         libtv_log_open();
         mScanningFrameStableListener = l;
-    }
-
-    public Bitmap CreateVideoFrameBitmap(int inputSourceMode) {
-        libtv_log_open();
-        Bitmap videoFrame = Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888);
-        native_create_video_frame_bitmap(videoFrame);
-        return videoFrame;
     }
 
     public final static int EVENT_SCAN_PROGRESS             = 0;
