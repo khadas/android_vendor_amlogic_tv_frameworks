@@ -2,9 +2,7 @@
 #include <utils/Log.h>
 
 #include "tvcmd.h"
-#include "jni.h"
-#include "JNIHelp.h"
-#include "android_runtime/AndroidRuntime.h"
+#include <jni.h>
 #include <utils/Vector.h>
 #include <binder/IMemory.h>
 #include <binder/Parcel.h>
@@ -57,6 +55,7 @@ private:
     Vector<jbyteArray> mCallbackBuffers;    // Global reference application managed byte[]
     bool mManualBufferMode;                 // Whether to use application managed buffers.
     bool mManualTvCallbackSet;              // Whether the callback has been set, used to reduce unnecessary calls to set the callback.
+    JNIEnv *mEnv;
 };
 
 #define CAPTURE_VIDEO 0
@@ -74,7 +73,9 @@ sp<TvServerHidlClient> get_native_tv(JNIEnv *env, jobject thiz, JNITvContext **p
         tv = context->getTv();
     }
     if (tv == 0) {
-        jniThrowException(env, "java/lang/RuntimeException", "Method called after release()");
+        jclass clazz = env->FindClass("java/lang/RuntimeException");
+        env->ThrowNew(clazz, "Method called after release()");
+        env->DeleteLocalRef(clazz);
     }
 
     if (pContext != NULL) *pContext = context;
@@ -91,6 +92,7 @@ JNITvContext::JNITvContext(JNIEnv *env, jobject weak_this, jclass clazz, const s
     mManualTvCallbackSet = false;
     pSubBmp = NULL;
     mSubMemBase = NULL;
+    mEnv = env;
     //mExtParcel = parcelForJavaObject(env, ext_parcel);
 }
 
@@ -98,19 +100,19 @@ void JNITvContext::release()
 {
     ALOGD("release");
     Mutex::Autolock _l(mLock);
-    JNIEnv *env = AndroidRuntime::getJNIEnv();
-
-    if (mTvJObjectWeak != NULL) {
-        env->DeleteGlobalRef(mTvJObjectWeak);
-        mTvJObjectWeak = NULL;
+    if (mEnv != NULL) {
+        if (mTvJObjectWeak != NULL) {
+            mEnv->DeleteGlobalRef(mTvJObjectWeak);
+            mTvJObjectWeak = NULL;
+        }
+        if (mTvJClass != NULL) {
+            mEnv->DeleteGlobalRef(mTvJClass);
+            mTvJClass = NULL;
+        }
+        if (pSubBmp != NULL)
+            pSubBmp = NULL;
     }
-    if (mTvJClass != NULL) {
-        env->DeleteGlobalRef(mTvJClass);
-        mTvJClass = NULL;
-    }
-    if (pSubBmp != NULL) {
-        pSubBmp = NULL;
-    }
+    mEnv = NULL;
     mTv.clear();
 }
 
@@ -121,7 +123,7 @@ static void com_droidlogic_app_tv_TvControlManager_native_setup(JNIEnv *env, job
 
     sp<TvServerHidlClient> tv = TvServerHidlClient::connect(CONNECT_TYPE_EXTEND);
     if (tv == nullptr) {
-        jniThrowException(env, "java/lang/RuntimeException", "Fail to connect to tv service");
+        ALOGE("fail to connect to tv service");
         return;
     }
 
@@ -133,7 +135,7 @@ static void com_droidlogic_app_tv_TvControlManager_native_setup(JNIEnv *env, job
 
     jclass clazz = env->GetObjectClass(thiz);
     if (clazz == NULL) {
-        jniThrowException(env, "java/lang/RuntimeException", "Can't find com/droidlogic/app/tv/TvControlManager!");
+        ALOGE("Can't find com/droidlogic/app/tv/TvControlManager!");
         return;
     }
 
@@ -221,12 +223,36 @@ void JNITvContext::addCallbackBuffer(JNIEnv *env, jbyteArray cbb)
     }
 }
 
+static struct parcel_offsets_t
+{
+    jclass clazz;
+    jfieldID mNativePtr;
+    jmethodID obtain;
+    jmethodID recycle;
+} gParcelOffsets;
+
+static Parcel* mParcelForJavaObject(JNIEnv* env, jobject obj)
+{
+    if (obj) {
+        Parcel* p = (Parcel*)env->GetLongField(obj, gParcelOffsets.mNativePtr);
+        if (p != NULL) {
+            return p;
+        }
+
+        jclass clazz = env->FindClass("java/lang/IllegalStateException");
+        env->ThrowNew(clazz, "Parcel has been finalized!");
+        env->DeleteLocalRef(clazz);
+    }
+    return NULL;
+}
+
+
 static jint com_droidlogic_app_tv_TvControlManager_processCmd(JNIEnv *env, jobject thiz, jobject pObj, jobject rObj)
 {
     sp<TvServerHidlClient> tv = get_native_tv(env, thiz, NULL);
     if (tv == 0) return -1;
 
-    Parcel *p = parcelForJavaObject(env, pObj);
+    Parcel *p = mParcelForJavaObject(env, pObj);
     //jclass clazz;
     //clazz = env->FindClass("android/os/Parcel");
     //LOG_FATAL_IF(clazz == NULL, "Unable to find class android.os.Parcel");
@@ -234,7 +260,7 @@ static jint com_droidlogic_app_tv_TvControlManager_processCmd(JNIEnv *env, jobje
 
     //jmethodID mConstructor = env->GetMethodID(clazz, "<init>", "(I)V");
     //jobject replayobj = env->NewObject(clazz, mConstructor, 0);
-    Parcel *r = parcelForJavaObject(env, rObj);
+    Parcel *r = mParcelForJavaObject(env, rObj);
     return tv->processCmd(*p, r);
     //if ( != NO_ERROR) {
     //    jniThrowException(env, "java/lang/RuntimeException", "StartTv failed");
@@ -414,7 +440,14 @@ int register_com_droidlogic_app_tv_TvControlManager(JNIEnv *env)
     }
 
     // Register native functions
-    return AndroidRuntime::registerNativeMethods(env, "com/droidlogic/app/tv/TvControlManager", camMethods, NELEM(camMethods));
+    if ((env->RegisterNatives(clazz, camMethods, NELEM(camMethods))) <= 0) {
+        env->DeleteLocalRef(clazz);
+        ALOGE("RegisterNatives failed for '%s'\n", "TvControlManager");
+        return -1;
+    }
+
+    env->DeleteLocalRef(clazz);
+    return 0;
 }
 
 
