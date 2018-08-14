@@ -1,6 +1,7 @@
 package com.droidlogic.app.tv;
 
 import android.content.Context;
+import android.media.AudioManager;
 import android.media.tv.TvContentRating;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvInputService;
@@ -21,6 +22,7 @@ import android.view.LayoutInflater;
 
 import com.droidlogic.app.tv.DroidLogicTvUtils;
 import com.droidlogic.app.tv.TvControlManager;
+import com.droidlogic.app.tv.TvControlDataManager;
 
 import android.hardware.hdmi.HdmiControlManager;
 import android.hardware.hdmi.HdmiTvClient;
@@ -44,15 +46,17 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     private static final int MSG_DO_PRI_CMD = 9;
     protected static final int MSG_SUBTITLE_SHOW = 10;
     protected static final int MSG_SUBTITLE_HIDE = 11;
-
+    protected static final int MSG_DO_RELEASE = 12;
     private Context mContext;
     public int mId;
     private String mInputId;
     private int mDeviceId;
+    private AudioManager mAudioManager;
     private TvInputManager mTvInputManager;
     private boolean mHasRetuned = false;
     protected Handler mSessionHandler;
     private TvControlManager mTvControlManager;
+    private TvControlDataManager mTvControlDataManager = null;
     protected DroidLogicOverlayView mOverlayView = null;
 
     protected boolean isBlockNoRatingEnable = false;
@@ -66,10 +70,12 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         mInputId = inputId;
         mDeviceId = deviceId;
 
+        mAudioManager = (AudioManager)context.getSystemService (Context.AUDIO_SERVICE);
         mTvControlManager = TvControlManager.getInstance();
+        mTvControlDataManager = TvControlDataManager.getInstance(mContext);
         mSessionHandler = new Handler(context.getMainLooper(), this);
         mTvInputManager = (TvInputManager)mContext.getSystemService(Context.TV_INPUT_SERVICE);
-        int block_norating = Settings.System.getInt(mContext.getContentResolver(), DroidLogicTvUtils.BLOCK_NORATING, 0);
+        int block_norating = mTvControlDataManager.getInt(mContext.getContentResolver(), DroidLogicTvUtils.BLOCK_NORATING, 0);
         isBlockNoRatingEnable = block_norating == 0 ? false : true;
         if (DEBUG)
             Log.d(TAG, "isBlockNoRatingEnable = " + isBlockNoRatingEnable);
@@ -112,6 +118,32 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         }
     }
 
+    public void doRelease() {
+        Log.d(TAG, "doRelease,session:"+this);
+        setOverlayViewEnabled(false);
+        mContext.unregisterReceiver(mBroadcastReceiver);
+
+        if (mOverlayView != null) {
+            mOverlayView.releaseResource();
+            mOverlayView = null;
+        }
+        //doAppPrivateCmd(DroidLogicTvUtils.ACTION_STOP_TV, null);
+
+        if ((mDeviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && mDeviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4)) {
+            TvInputInfo info = mTvInputManager.getTvInputInfo(mInputId);
+            Log.d(TAG, "info:" + info);
+            String parentId = null;
+            if (info != null) {
+                parentId = info.getParentId();
+            }
+            DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(mContext);
+            Log.d(TAG, "doRelease info: " + info + " mInputId: " + mInputId + " parentId: " + parentId);
+            if (parentId != null) {
+                hdmi_cec.selectHdmiDevice(0, 0, 0);
+            }
+        }
+    }
+
     public void doAppPrivateCmd(String action, Bundle bundle) {}
     public void doUnblockContent(TvContentRating rating) {}
 
@@ -121,6 +153,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     @Override
     public void onSetStreamVolume(float volume) {
+        //this function used for parental control, so HDMI source don't need it.
+        if ((mDeviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && mDeviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4)) {
+            return;
+        }
         if (DEBUG)
             Log.d(TAG, "onSetStreamVolume volume = " + volume);
 
@@ -203,6 +239,15 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         }
     }
 
+
+    @Override
+    public void onRelease() {
+        if (mSessionHandler == null)
+            return;
+        Message msg = mSessionHandler.obtainMessage(MSG_DO_RELEASE);
+        msg.sendToTarget();
+    }
+
     public void hideUI() {
         if (mOverlayView != null) {
             mOverlayView.setImageVisibility(false);
@@ -212,14 +257,25 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     }
 
     private void setAudiodMute(boolean mute) {
+        Log.d(TAG, "setAudiodMute="+mute);
         if (mute) {
-            //SystemProperties.set("persist.sys.tvview.blocked", "true");
-            mTvControlManager.setAmAudioPreMute(TvControlManager.AUDIO_MUTE_FOR_TV);
+            mAudioManager.setParameters("parental_control_av_mute=true");
         } else {
-            //SystemProperties.set("persist.sys.tvview.blocked", "false");
-            mTvControlManager.setAmAudioPreMute(TvControlManager.AUDIO_UNMUTE_FOR_TV);
+            mAudioManager.setParameters("parental_control_av_mute=false");
         }
     }
+
+    public void openTvAudio (int type){
+        switch (type) {
+            case DroidLogicTvUtils.SOURCE_TYPE_ATV:
+                mAudioManager.setParameters("tuner_in=atv");
+                break;
+            case DroidLogicTvUtils.SOURCE_TYPE_DTV:
+                mAudioManager.setParameters("tuner_in=dtv");
+                break;
+        }
+    }
+
 
     @Override
     public boolean handleMessage(Message msg) {
@@ -239,6 +295,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
                     mOverlayView.setSubtitleVisibility(false);
                 }
                 break;
+            case MSG_DO_RELEASE:
+                doRelease();
+                break;
         }
         return false;
     }
@@ -257,22 +316,29 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         } else {
             if (info == null) {
                 Log.d(TAG, "onSetMain, info is null");
+            } else if (info.getHdmiDeviceInfo() == null) {
+                Log.d(TAG, "onSetMain, info is: " + info + " but info.getHdmiDeviceInfo() is null");
             }
-            hdmi_cec.selectHdmiDevice(0);
         }
     }
 
-        @Override
+        /*@Override
         public boolean onKeyUp(int keyCode, KeyEvent event) {
             Log.d(TAG, "=====onKeyUp=====");
-            mHdmiTvClient.sendKeyEvent(keyCode, false);
-            return true;
+            if (mHdmiTvClient != null) {
+                mHdmiTvClient.sendKeyEvent(keyCode, false);
+                return true;
+            }
+            return false;
         }
 
         @Override
         public boolean onKeyDown(int keyCode, KeyEvent event) {
             Log.d(TAG, "=====onKeyDown=====");
-            mHdmiTvClient.sendKeyEvent(keyCode, true);
-            return true;
-        }
+            if (mHdmiTvClient != null) {
+                mHdmiTvClient.sendKeyEvent(keyCode, true);
+                return true;
+            }
+            return false;
+        }*/
 }

@@ -24,18 +24,30 @@ public class DroidLogicHdmiCecManager {
     private HdmiTvClient mTvClient;
     private int mSelectDeviceId = -1;
     private int mSelectLogicAddr = -1;
+    private int mSelectPhyAddr = -1;
     private int mSourceType = 0;
 
     private final Object mLock = new Object();
 
     private static DroidLogicHdmiCecManager mInstance = null;
     private TvInputManager mTvInputManager;
+    private TvControlDataManager mTvControlDataManager = null;
     private static boolean DEBUG = false;
     private static final int CALLBACK_HANDLE_FAIL = 1 << 16;
-    private static final int DELAYMILIS = 200;
+    private static final int DELAYMILIS = 100;
+    private static final int LONGDELAYMILIS = 1000;
+    private static final int SHORTDELAYMILIS = 5;
     private static final int HDMI_DEVICE_SELECT = 2 << 16;
+    private static final int HDMI_PORT_SELECT = 3 << 16;
+    private static final int REMOVE_DEVICE_SELECT = 4 << 16;
     private int DEV_TYPE_AUDIO_SYSTEM = 5;
     private int DEV_TYPE_TUNER = 3;
+    public static final int POWER_STATUS_UNKNOWN = -1;
+    public static final int POWER_STATUS_ON = 0;
+    public static final int POWER_STATUS_STANDBY = 1;
+    public static final int POWER_STATUS_TRANSIENT_TO_ON = 2;
+    public static final int POWER_STATUS_TRANSIENT_TO_STANDBY = 3;
+
     private final Handler mHandler = new Handler () {
         @Override
         public void handleMessage(Message msg) {
@@ -47,7 +59,16 @@ public class DroidLogicHdmiCecManager {
                     Log.d(TAG, "deviceSelect begin, logicAddr = " + msg.arg1);
                     deviceSelect((int)msg.arg1);
                     break;
-
+                case HDMI_PORT_SELECT:
+                    Log.d(TAG, "portSelect begin, portId = " + msg.arg1);
+                    portSelect((int)msg.arg1);
+                    break;
+                case REMOVE_DEVICE_SELECT:
+                    if (mSelectLogicAddr > 0) {
+                        Log.d(TAG, "remove hdmi device select msg!");
+                        mHandler.removeMessages(HDMI_DEVICE_SELECT);
+                    }
+                    break;
             }
         }
     };
@@ -69,6 +90,8 @@ public class DroidLogicHdmiCecManager {
 
         if (mTvInputManager == null)
             mTvInputManager = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
+
+        mTvControlDataManager = TvControlDataManager.getInstance(mContext);
     }
 
     /**
@@ -114,19 +137,32 @@ public class DroidLogicHdmiCecManager {
                             Log.d(TAG, "logic addr may alter in the same channel , continue");
                         }
                     } else {
-                        if (mSelectLogicAddr == logicAddr) {
-                            Log.d(TAG, "same sub device has added in the current input, return");
-                            return false;
-                        }
-                        if ((mSelectLogicAddr == 0 && logicAddr != 0) || (mSelectLogicAddr != 0 && logicAddr == 0)) {
-                            Log.d(TAG, "hot plug sub evice in the same parent channel, continue");
+                        if (logicAddr != 0) {
+                            if (mSelectLogicAddr != logicAddr) {
+                                if (mSelectLogicAddr != 0) {
+                                    Log.d(TAG, "plug in a different sub device in the current parent input, return");
+                                    return false;
+                                } else {
+                                    Log.d(TAG, "plug in a new sub device in the current parent input, continue");
+                                }
+                            } else {
+                                Log.d(TAG, "same sub device has added in the current input, return");
+                                return false;
+                            }
+                        } else {
+                            if (mSelectPhyAddr == phyAddr) {
+                                Log.d(TAG, "plug out current sub device in the current parent input, continue");
+                            } else {
+                               Log.d(TAG, "plug out different sub device in the current parent input, return");
+                               return false;
+                            }
                         }
                     }
                 } else {
                     Log.d(TAG, "not in current channel, do nothing, return");
                     return false;
                 }
-            } else if (deviceId == 0){
+            } else if (deviceId == 0) {
                 Log.d(TAG, "change to home, continue");
             } else {
                 Log.d(TAG, "deviceId is invalid, return");
@@ -135,6 +171,7 @@ public class DroidLogicHdmiCecManager {
             synchronized (mLock) {
                 mSelectDeviceId = deviceId;
                 mSelectLogicAddr = logicAddr;
+                mSelectPhyAddr = phyAddr;
             }
         } else if(mSelectDeviceId == 0) {
             Log.d(TAG, "It is current at home, do nothing, return");
@@ -151,7 +188,13 @@ public class DroidLogicHdmiCecManager {
         Log.d(TAG, "mHandler handle logicAddr: " + logicAddr + " device begin");
         mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Message msg = mHandler.obtainMessage(HDMI_DEVICE_SELECT, logicAddr, 0);
-        mHandler.sendMessageDelayed(msg, DELAYMILIS);
+        int delayTime = (deviceId == 0) ? LONGDELAYMILIS : DELAYMILIS;
+        mHandler.sendMessageDelayed(msg, delayTime);
+        if (deviceId != 0 && logicAddr == 0) {
+           /* the second <Report Physical Address> should be filtered*/
+            Message message = mHandler.obtainMessage(REMOVE_DEVICE_SELECT, 0, 0);
+            mHandler.sendMessageDelayed(message, SHORTDELAYMILIS);
+        }
         return true;
     }
 
@@ -185,8 +228,10 @@ public class DroidLogicHdmiCecManager {
             return false;
         }
         int portId = getPortIdByDeviceId(deviceId);
-        if (mSelectDeviceId == deviceId || portId == 0) {
-            Log.d(TAG, "connectHdmiCec,but mSelectDeviceId == deviceId or portId = 0, return");
+        final boolean hasCec = hasHdmiCecDevice(deviceId);
+
+        if (!hasCec || portId == 0) {
+            Log.d(TAG, "portId = 0, or has not cec, return");
             return false;
         }
 
@@ -203,7 +248,14 @@ public class DroidLogicHdmiCecManager {
         }
         mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Log.d(TAG, "TvClient portSelect begin, portId: " + portId);
-        mTvClient.portSelect(portId , new SelectCallback() {
+        Message msg = mHandler.obtainMessage(HDMI_PORT_SELECT, portId, 0);
+        mHandler.sendMessageDelayed(msg, 0);
+        deviceSelectIfNeed(portId);
+        return true;
+    }
+
+    private void portSelect(int portId) {
+        mTvClient.portSelect(portId, new SelectCallback() {
             @Override
             public void onComplete(int result) {
                 if (result != HdmiControlManager.RESULT_SUCCESS)
@@ -211,11 +263,8 @@ public class DroidLogicHdmiCecManager {
                 else {
                     Log.d(TAG, "select port success, onComplete result = " + result);
                 }
-
             }
         });
-        deviceSelectIfNeed(portId);
-        return true;
     }
 
     public int getSelectDeviceId(){
@@ -229,7 +278,7 @@ public class DroidLogicHdmiCecManager {
 
     }
 
-    public int getPortIdByDeviceId(int deviceId){
+    public int getPortIdByDeviceId(int deviceId) {
         List<TvInputHardwareInfo> hardwareList = mTvInputManager.getHardwareList();
         if (hardwareList == null || hardwareList.size() == 0)
             return -1;
@@ -248,7 +297,7 @@ public class DroidLogicHdmiCecManager {
             int id = getPortIdByDeviceId(deviceId);
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
                 /*this only get firt level device logical addr*/
-                if (id == (int)info.getPortId() && (info.getLogicalAddress() == DEV_TYPE_AUDIO_SYSTEM)) {
+                if (id == ((int)info.getPortId()) && (info.getLogicalAddress() == DEV_TYPE_AUDIO_SYSTEM)) {
                     return true;
                 }
             }
@@ -263,7 +312,7 @@ public class DroidLogicHdmiCecManager {
             int id = getPortIdByDeviceId(deviceId);
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
                 /*this only get firt level device logical addr*/
-                if (id == (int)info.getPortId() && ((info.getPhysicalAddress() & 0xfff) == 0)) {
+                if (id == ((int)info.getPortId()) && ((info.getPhysicalAddress() & 0xfff) == 0)) {
                     count++;
                 }
             }
@@ -275,7 +324,7 @@ public class DroidLogicHdmiCecManager {
         if (deviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && deviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) {
             int id = getPortIdByDeviceId(deviceId);
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
-                if (id == (int)info.getPortId()) {
+                if (id == ((int)info.getPortId())) {
                     return true;
                 }
             }
@@ -285,7 +334,7 @@ public class DroidLogicHdmiCecManager {
 
     public int getInputSourceType() {
         synchronized (mLock) {
-            mSourceType = Settings.System.getInt(mContext.getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
+            mSourceType = mTvControlDataManager.getInt(mContext.getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
             return mSourceType;
         }
     }
@@ -305,4 +354,5 @@ public class DroidLogicHdmiCecManager {
         }
         return true;
     }
+
 }

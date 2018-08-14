@@ -7,6 +7,9 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := \
   $(call all-subdir-java-files)
 
+LOCAL_SRC_FILES += com/droidlogic/tvinput/services/ITvScanService.aidl
+LOCAL_SRC_FILES += com/droidlogic/tvinput/services/IUpdateUiCallbackListener.aidl
+
 LOCAL_MODULE := droidlogic-tv
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
 LOCAL_DX_FLAGS := --core-library

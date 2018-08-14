@@ -9,6 +9,7 @@ import android.text.TextUtils;
 
 import java.util.Map;
 import java.util.Arrays;
+import android.database.sqlite.SQLiteException;
 
 public class ChannelInfo {
     private static final String TAG = "ChannelInfo";
@@ -99,6 +100,7 @@ public class ChannelInfo {
     public static final String KEY_HIDE_GUIDE = "hideGuide";
     public static final String KEY_VCT = "vct";
     public static final String KEY_EITV = "eitv";
+    public static final String KEY_PROGRAMS_IN_PAT = "programs_in_pat";
 
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
     public static final String KEY_CONTENT_RATINGS = "content_ratings";
@@ -187,6 +189,7 @@ public class ChannelInfo {
     private int mHideGuide;
     private String mVct;
     private int[] mEitVersions;
+    private int   mProgramsInPat;
 
     private String mContentRatings;
     private String mSignalType;
@@ -238,8 +241,25 @@ public class ChannelInfo {
             builder.setVideoFormat(cursor.getString(index));
         index = cursor.getColumnIndex(Channels.COLUMN_INTERNAL_PROVIDER_DATA);
         if (index >= 0) {
-            Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(cursor.getString(index));
-            if (parsedMap.get(KEY_AUDIO_PIDS) != null) {
+            String value = null;
+            int type = 0;
+            try{
+                type = cursor.getType(index);
+                if (type == Cursor.FIELD_TYPE_BLOB) {
+                    //youtube iptv database in this column is blob. Add it for the future.
+                    byte[] data = cursor.getBlob(0);
+                    Log.d(TAG,"cursor is blob, return null");
+                    return null;
+                } else if (type == Cursor.FIELD_TYPE_STRING)
+                    value = cursor.getString(index);
+                else
+                    return null;
+            } catch (SQLiteException e) {
+                Log.d(TAG,"SQLiteException:"+e);
+                return null;
+            }
+            Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(value);
+            if (parsedMap != null && parsedMap.size() > 0 && parsedMap.get(KEY_AUDIO_PIDS) != null) {
                 String[] str_audioPids = parsedMap.get(KEY_AUDIO_PIDS).replace("[", "").replace("]", "").split(",");
                 String[] str_audioFormats = parsedMap.get(KEY_AUDIO_FORMATS).replace("[", "").replace("]", "").split(",");
                 String[] str_audioExts = parsedMap.get(KEY_AUDIO_EXTS).replace("[", "").replace("]", "").split(",");
@@ -379,6 +399,8 @@ public class ChannelInfo {
                     builder.setEitVersions(vs);
                 }
             }
+            if (parsedMap.get(KEY_PROGRAMS_IN_PAT) != null)
+                builder.setProgramsInPat(Integer.parseInt(parsedMap.get(KEY_PROGRAMS_IN_PAT)));
         }
 
         index = cursor.getColumnIndex(Channels.COLUMN_BROWSABLE);
@@ -652,6 +674,10 @@ public class ChannelInfo {
         return mEitVersions;
     }
 
+    public int getProgramsInPat() {
+        return mProgramsInPat;
+    }
+
     public boolean isBrowsable() {
         return this.mBrowsable;
     }
@@ -832,6 +858,10 @@ public class ChannelInfo {
         mEitVersions = versions;
     }
 
+    public void setProgramsInPat(int n) {
+        mProgramsInPat = n;
+    }
+
     public void copyFrom(ChannelInfo channel) {
         if (this == channel)
             return;
@@ -922,6 +952,7 @@ public class ChannelInfo {
             mChannel.mHideGuide = 0;
             mChannel.mVct = null;
             mChannel.mEitVersions = null;
+            mChannel.mProgramsInPat = 0;
         }
 
         public Builder setId(long id) {
@@ -1230,6 +1261,11 @@ public class ChannelInfo {
             return this;
         }
 
+        public Builder setProgramsInPat(int n) {
+            mChannel.mProgramsInPat = n;
+            return this;
+        }
+
         public ChannelInfo build() {
             return mChannel;
         }
@@ -1276,6 +1312,15 @@ public class ChannelInfo {
         return (mType.equals(TvContract.Channels.TYPE_PAL)
             || mType.equals(TvContract.Channels.TYPE_NTSC)
             || mType.equals(TvContract.Channels.TYPE_SECAM));
+    }
+
+    public boolean isDigitalChannel() {
+        return (mType.equals(TvContract.Channels.TYPE_DTMB)
+            || mType.equals(TvContract.Channels.TYPE_DVB_T)
+            || mType.equals(TvContract.Channels.TYPE_DVB_C)
+            || mType.equals(TvContract.Channels.TYPE_DVB_S)
+            || mType.equals(TvContract.Channels.TYPE_ATSC_T)
+            || mType.equals(TvContract.Channels.TYPE_ATSC_C));
     }
 
     public boolean isAtscChannel() {
@@ -1361,7 +1406,8 @@ public class ChannelInfo {
                 "\n Ratings = " + mContentRatings +
                 "\n SignalType = " + mSignalType +
                 "\n vct = " + mVct +
-                "\n EitVers = " + Arrays.toString(mEitVersions);
+                "\n EitVers = " + Arrays.toString(mEitVersions) +
+                "\n ProgramsInPat = " + mProgramsInPat;
     }
 
     public static class Subtitle {

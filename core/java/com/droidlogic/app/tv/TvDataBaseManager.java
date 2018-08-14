@@ -347,13 +347,22 @@ public class TvDataBaseManager {
 
     public int insertAtvChannelWithFreOrder(ChannelInfo channel) {
         int newChannelNum = -1;
-        ArrayList<ChannelInfo> atvlist = getChannelList(channel.getInputId(), Channels.SERVICE_TYPE_AUDIO_VIDEO);
+        ArrayList<ChannelInfo> atvlist = getATVChannelList(channel.getInputId(), Channels.SERVICE_TYPE_AUDIO_VIDEO);
         if (atvlist.size() <= 0 || channel.getFrequency() > atvlist.get(atvlist.size() - 1).getFrequency()) {
             newChannelNum = atvlist.size() + 1;
         } else {
             for (int i = 0; i < atvlist.size(); i++) {
                 if (channel.getFrequency() == atvlist.get(i).getFrequency()) {
                     Log.d(TAG, "ATV CH[freq:" + channel.getFrequency() + "] already exist");
+                    if (channel.getVideoStd() != atvlist.get(i).getVideoStd()
+                            || channel.getAudioStd() != atvlist.get(i).getAudioStd()
+                            || channel.getVfmt() != atvlist.get(i).getVfmt()) {
+                        Log.d(TAG, "Update ATV CH[freq:" + channel.getFrequency() + "] video or audio std.");
+                        atvlist.get(i).setVideoStd(channel.getVideoStd());
+                        atvlist.get(i).setAudioStd(channel.getAudioStd());
+                        atvlist.get(i).setVfmt(channel.getVfmt());
+                        updateAtvChannel(atvlist.get(i));
+                    }
                     newChannelNum = atvlist.size() + 1;
                     return newChannelNum;
                 } else if (channel.getFrequency() < atvlist.get(i).getFrequency()) {
@@ -431,6 +440,7 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_SIGNAL_TYPE, DroidLogicTvUtils.TvString.toString(channel.getSignalType()));
         map.put(ChannelInfo.KEY_VCT, "\""+channel.getVct()+"\"");
         map.put(ChannelInfo.KEY_EITV, Arrays.toString(channel.getEitVersions()));
+        map.put(ChannelInfo.KEY_PROGRAMS_IN_PAT, String.valueOf(channel.getProgramsInPat()));
         String output = DroidLogicTvUtils.mapToJson(map);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 
@@ -467,7 +477,14 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_AUDIO_COMPENSATION, String.valueOf(channel.getAudioCompensation()));
         map.put(ChannelInfo.KEY_IS_FAVOURITE, String.valueOf(channel.isFavourite() ? 1 : 0));
         map.put(ChannelInfo.KEY_MULTI_NAME, DroidLogicTvUtils.TvString.toString(channel.getDisplayNameMulti()));
-        map.put(ChannelInfo.KEY_FE_PARAS, channel.getFEParas());
+
+        Map<String, String> feMap = DroidLogicTvUtils.jsonToMap(channel.getFEParas());
+        feMap.put(TvControlManager.FEParas.K_VSTD, String.valueOf(channel.getVideoStd()));
+        feMap.put(TvControlManager.FEParas.K_ASTD, String.valueOf(channel.getAudioStd()));
+        feMap.put(TvControlManager.FEParas.K_VFMT, String.valueOf(channel.getVfmt()));
+        feMap.put(TvControlManager.FEParas.K_SOUNDSYS, String.valueOf(channel.getAudioOutPutMode()));
+        map.put(ChannelInfo.KEY_FE_PARAS, DroidLogicTvUtils.mapToJson(feMap));
+
         map.put(ChannelInfo.KEY_MAJOR_NUM, String.valueOf(channel.getMajorChannelNumber()));
         map.put(ChannelInfo.KEY_MINOR_NUM, String.valueOf(channel.getMinorChannelNumber()));
         map.put(ChannelInfo.KEY_SOURCE_ID, String.valueOf(channel.getSourceId()));
@@ -841,16 +858,29 @@ public class TvDataBaseManager {
                     int transportStreamId = cursor.getInt(findPosition(projection, Channels.COLUMN_TRANSPORT_STREAM_ID));
                     String name = cursor.getString(findPosition(projection, Channels.COLUMN_DISPLAY_NAME));
                     int frequency = 0;
+                    int videostd = 0;
+                    int audiostd = 0;
+                    int vfmt = 0;
                     int index = cursor.getColumnIndex(Channels.COLUMN_INTERNAL_PROVIDER_DATA);
                     if (index >= 0) {
                         Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(cursor.getString(index));
                         frequency = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_FREQUENCY));
+                        if (channel.isAnalogChannel()) {
+                            videostd = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_VIDEO_STD));
+                            audiostd = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_AUDIO_STD));
+                            vfmt = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_VFMT));
+                        }
                     }
                     if ((serviceId == channel.getServiceId()
                         && originalNetworkId == channel.getOriginalNetworkId()
                         && transportStreamId == channel.getTransportStreamId()
                         && frequency == channel.getFrequency()
-                        && TextUtils.equals(name, channel.getDisplayName())) || (channel.isAnalogChannel() && frequency == channel.getFrequency()))
+                        && TextUtils.equals(name, channel.getDisplayName()))
+                            || (channel.isAnalogChannel()
+                                && frequency == channel.getFrequency()
+                                && videostd == channel.getVideoStd()
+                                && audiostd == channel.getAudioStd()
+                                && vfmt == channel.getVfmt()))
                         found = true;
                 }
 
@@ -912,6 +942,18 @@ public class TvDataBaseManager {
         return CHANNEL_TYPE_TO_MODE_MAP.get(type);
     }
 
+    public ArrayList<ChannelInfo> getATVChannelList(String curInputId, String srvType) {
+        ArrayList<ChannelInfo> atvChannelList = new ArrayList<ChannelInfo>();
+        ArrayList<ChannelInfo> channelListAll = getChannelList(curInputId, srvType);
+        for (int i = 0; i <= channelListAll.size() - 1; i++) {
+            ChannelInfo channelInfo = channelListAll.get(i);
+            if (channelInfo.isAnalogChannel()) {
+                atvChannelList.add(channelInfo);
+            }
+        }
+        return atvChannelList;
+    }
+
     public ArrayList<ChannelInfo> getChannelList(String curInputId, String srvType) {
         return getChannelList(curInputId, srvType, false);
     }
@@ -923,20 +965,26 @@ public class TvDataBaseManager {
         Cursor cursor = null;
         try {
             cursor = mContentResolver.query(channelsUri, ChannelInfo.COMMON_PROJECTION, null, null, null);
+            ChannelInfo channelInfo = null;
             while (cursor != null && cursor.moveToNext()) {
                 int index = cursor.getColumnIndex(Channels.COLUMN_SERVICE_TYPE);
+                Log.d(TAG,"index:"+index+","+ cursor.getString(index)+",srvType:"+srvType);
                 if (srvType.equals(cursor.getString(index))) {
+                    channelInfo = ChannelInfo.fromCommonCursor(cursor);
+                    if (channelInfo == null )
+                        continue;
                     if (!need_browserable) {
-                        channelList.add(ChannelInfo.fromCommonCursor(cursor));
+                        channelList.add(channelInfo);
                     } else {
                         boolean browserable = cursor.getInt(cursor.getColumnIndex(Channels.COLUMN_BROWSABLE)) == 1 ? true : false;
                         if (browserable) {
-                            channelList.add(ChannelInfo.fromCommonCursor(cursor));
+                            channelList.add(channelInfo);
                         }
                     }
                 }
             }
         } catch (Exception e) {
+            Log.d(TAG,"getChannelList Exception");
             // TODO: handle exception
             e.printStackTrace();
         } finally {
@@ -947,6 +995,8 @@ public class TvDataBaseManager {
 
         if (channelList.size() > 0 && channelList.get(0).getType().contains("DTMB"))
             Collections.sort(channelList, new SortIntComparator());
+        else if (channelList.size() > 0 && channelList.get(0).isAnalogChannel())
+            Collections.sort(channelList, new SortIntComparator());
         else
             Collections.sort(channelList, new SortComparator());
         if (DEBUG)
@@ -955,7 +1005,10 @@ public class TvDataBaseManager {
     }
 
     public ChannelInfo getChannelInfo(Uri channelUri) {
-        int matchId = DroidLogicTvUtils.matchsWhich(channelUri);
+        int matchId = DroidLogicTvUtils.NO_MATCH;
+        if (channelUri != null) {
+            matchId = DroidLogicTvUtils.matchsWhich(channelUri);
+        }
         if (matchId == DroidLogicTvUtils.NO_MATCH || matchId == DroidLogicTvUtils.MATCH_PASSTHROUGH_ID) {
             return null;
         }
@@ -966,8 +1019,7 @@ public class TvDataBaseManager {
 
         try {
             cursor = mContentResolver.query(uri, ChannelInfo.COMMON_PROJECTION, null, null, null);
-            if (cursor != null) {
-                cursor.moveToNext();
+            if (cursor != null && cursor.moveToNext()) {
                 info = ChannelInfo.fromCommonCursor(cursor);
             }
         } catch (Exception e) {
@@ -1067,8 +1119,17 @@ public class TvDataBaseManager {
         public int compare(ChannelInfo a, ChannelInfo b) {
             if (a.getDisplayNumber() == null)
                 return -1;
-            return Integer.parseInt(a.getDisplayNumber()) - Integer.parseInt(b.getDisplayNumber());
+            return splitDisplayNumberInt(a.getDisplayNumber()) - splitDisplayNumberInt(b.getDisplayNumber());
         }
+    }
+
+    private int splitDisplayNumberInt(String value) {
+        if (value != null) {
+            if (value.contains("-")) {
+                return Integer.parseInt(value.split("-")[0]);
+            }
+        }
+        return 0;
     }
 
     private int findPosition(String[] list, String target) {
@@ -1084,7 +1145,7 @@ public class TvDataBaseManager {
         if (list != null) {
             for (int i = 0; i < list.size(); i++) {
                 ChannelInfo info = list.get(i);
-                Log.d(TAG, "printList: number=" + info.getDisplayNumber() + " name=" + info.getDisplayName());
+                Log.d(TAG, "printList: number=" + info.getDisplayNumber() + " name=" + info.getDisplayName() + " freq=" + info.getFrequency());
             }
         }
     }
@@ -1267,8 +1328,8 @@ public class TvDataBaseManager {
      * @param newPrograms A list of {@link Program} instances which includes program
      *         information.
      */
-    public void updatePrograms(Uri channelUri, List<Program> newPrograms) {
-        updatePrograms(channelUri, newPrograms, null, false);
+    public void updatePrograms(Uri channelUri,        long channelId, List<Program> newPrograms) {
+        updatePrograms(channelUri, channelId, newPrograms, null, false);
     }
 
     public static final class ComparatorValues implements Comparator<Program> {
@@ -1295,7 +1356,7 @@ public class TvDataBaseManager {
             && timeUtcMillis < program.getEndTimeUtcMillis());
     }
 
-    public boolean updatePrograms(Long channelId, List<Program> newPrograms, Long timeUtcMillis) {
+    public boolean updatePrograms(long channelId, List<Program> newPrograms, Long timeUtcMillis) {
         boolean updated = false;
         Log.d(TAG, "updatePrograms epg start-----");
         for (Program p: newPrograms) {
@@ -1366,20 +1427,51 @@ public class TvDataBaseManager {
         Log.d(TAG, "updatePrograms epg end-----");
         return updated;
     }
-    public boolean updatePrograms(Uri channelUri, List<Program> newPrograms, Long timeUtcMillis, boolean isAtsc) {
+
+    private ArrayList<ContentProviderOperation> epg_ops = new ArrayList<>();
+    private HashMap<Long, List<Program>> epg_map = new HashMap<Long, List<Program>>();
+
+    public void clearPrograms() {
+        if (epg_ops.size() > 0) {
+            epg_ops.clear();
+        }
+    }
+
+    public void flushPrograms() {
+        if (epg_ops.size() > 0) {
+            try {
+                mContentResolver.applyBatch(TvContract.AUTHORITY, epg_ops);
+            } catch (RemoteException | OperationApplicationException e) {
+                Log.e(TAG, "Failed to insert programs.", e);
+            }
+            epg_ops.clear();
+        }
+    }
+
+    public void resetPrograms() {
+        clearPrograms();
+        epg_map.clear();
+    }
+
+    public boolean updatePrograms(Uri channelUri, long channelId, List<Program> newPrograms, Long timeUtcMillis, boolean isAtsc) {
         boolean updated = false;
         final int fetchedProgramsCount = newPrograms.size();
         if (fetchedProgramsCount == 0) {
             return updated;
         }
-        List<Program> oldPrograms = getPrograms(TvContract.buildProgramsUriForChannel(channelUri));
+        List<Program> oldPrograms;
+        oldPrograms = epg_map.get(channelId);
+        if (oldPrograms == null) {
+            oldPrograms = getPrograms(TvContract.buildProgramsUriForChannel(channelUri));
+            epg_map.put(channelId, oldPrograms);
+        }
 
-        Collections.sort(newPrograms, new ComparatorValues());
-        Collections.sort(oldPrograms, new ComparatorValues());
+        //Collections.sort(newPrograms, new ComparatorValues());
+        //Collections.sort(oldPrograms, new ComparatorValues());
         //Log.d(TAG, "updatePrograms sort programs ");
         Program firstNewProgram = null;
         for (Program program : newPrograms) {
-            if (isAtsc && !isATSCSpecialProgram(program)) {
+            if (/*isAtsc &&*/ !isATSCSpecialProgram(program)) {
                 firstNewProgram = program;
                 break;
             }
@@ -1403,7 +1495,7 @@ public class TvDataBaseManager {
 
         // Compare the new programs with old programs one by one and update/delete the old one or
         // insert new program if there is no matching program in the database.
-        ArrayList<ContentProviderOperation> ops = new ArrayList<>();
+        //ArrayList<ContentProviderOperation> ops = new ArrayList<>();
         while (newProgramsIndex < fetchedProgramsCount) {
             Program oldProgram = oldProgramsIndex < oldPrograms.size()
                     ? oldPrograms.get(oldProgramsIndex) : null;
@@ -1420,9 +1512,10 @@ public class TvDataBaseManager {
                             if (TextUtils.equals(program.getDescription(), newProgram.getDescription()))
                                 break;
                             program.setDescription(newProgram.getDescription());
-                            ops.add(ContentProviderOperation.newUpdate(
-                                    TvContract.buildProgramUri(program.getId()))
+                            epg_ops.add(ContentProviderOperation.newUpdate(
+                                    TvContract.Programs.CONTENT_URI)
                                     .withValues(program.toContentValues())
+                                    .withSelection("channel_id="+channelId+" and start_time_utc_millis="+program.getStartTimeUtcMillis(), null)
                                     .build());
                             /*Program p = new Program.Builder(program)
                                 .build();
@@ -1437,7 +1530,7 @@ public class TvDataBaseManager {
                         }
                     }
                     newProgramsIndex++;
-                } else if ((isAtsc && oldProgram.matchsWithoutDescription(newProgram))
+                } else if ((/*isAtsc && */oldProgram.matchsWithoutDescription(newProgram))
                     || (oldProgram.equals(newProgram))) {
                     // Exact match. No need to update. Move on to the next programs.
                     oldProgramsIndex++;
@@ -1447,25 +1540,33 @@ public class TvDataBaseManager {
                     // Partial match. Update the old program with the new one.
                     // NOTE: Use 'update' in this case instead of 'insert' and 'delete'. There could
                     // be application specific settings which belong to the old program.
-                    ops.add(ContentProviderOperation.newUpdate(
-                            TvContract.buildProgramUri(oldProgram.getId()))
+                    epg_ops.add(ContentProviderOperation.newUpdate(
+                            TvContract.Programs.CONTENT_URI)
                             .withValues(newProgram.toContentValues())
+                            .withSelection("channel_id="+channelId+" and start_time_utc_millis="+oldProgram.getStartTimeUtcMillis(), null)
                             .build());
+                    oldPrograms.set(oldProgramsIndex, newProgram);
                     oldProgramsIndex++;
                     newProgramsIndex++;
 
-                    updated = isProgramAtTime(newProgram, timeUtcMillis);
+                    if (!updated) {
+                        updated = isProgramAtTime(newProgram, timeUtcMillis);
+                    }
 
                     Log.d(TAG, "\tepg update:cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")id("+oldProgram.getId()+")");
                 } else if (oldProgram.getEndTimeUtcMillis() < newProgram.getEndTimeUtcMillis()) {
                     // No match. Remove the old program first to see if the next program in
                     // {@code oldPrograms} partially matches the new program.
-                    ops.add(ContentProviderOperation.newDelete(
-                            TvContract.buildProgramUri(oldProgram.getId()))
+                    epg_ops.add(ContentProviderOperation.newDelete(
+                            TvContract.Programs.CONTENT_URI)
+                            .withSelection("channel_id="+channelId+" and start_time_utc_millis="+oldProgram.getStartTimeUtcMillis(), null)
                             .build());
-                    oldProgramsIndex++;
+                    //oldProgramsIndex++;
+                    oldPrograms.remove(oldProgramsIndex);
 
-                    updated = isProgramAtTime(oldProgram, timeUtcMillis);
+                    if (!updated) {
+                        updated = isProgramAtTime(newProgram, timeUtcMillis);
+                    }
 
                     Log.d(TAG, "\tepg delete:"+oldProgram.getId()+":cid("+oldProgram.getChannelId()+")eid("+oldProgram.getProgramId()+")desc("+oldProgram.getTitle()+")time("+oldProgram.getStartTimeUtcMillis()+"-"+oldProgram.getEndTimeUtcMillis()+")");
                 } else {
@@ -1475,7 +1576,9 @@ public class TvDataBaseManager {
                         addNewProgram = true;
                         newProgramsIndex++;
 
-                        updated = isProgramAtTime(newProgram, timeUtcMillis);
+                        if (!updated) {
+                            updated = isProgramAtTime(newProgram, timeUtcMillis);
+                        }
 
                         Log.d(TAG, "\tepg new:cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")id("+newProgram.getId()+")");
                     }
@@ -1485,7 +1588,9 @@ public class TvDataBaseManager {
                     // No old programs. Just insert new programs.
                     addNewProgram = true;
 
+                if (!updated) {
                     updated = isProgramAtTime(newProgram, timeUtcMillis);
+                }
 
                     Log.d(TAG, "\tepg new:(old none):cid("+newProgram.getChannelId()+")eid("+newProgram.getProgramId()+")desc("+newProgram.getTitle()+")time("+newProgram.getStartTimeUtcMillis()+"-"+newProgram.getEndTimeUtcMillis()+")id("+newProgram.getId()+")");
                 }
@@ -1493,25 +1598,26 @@ public class TvDataBaseManager {
             }
 
             if (addNewProgram) {
-                ops.add(ContentProviderOperation
+                 epg_ops.add(ContentProviderOperation
                         .newInsert(TvContract.Programs.CONTENT_URI)
                         .withValues(newProgram.toContentValues())
                         .build());
+                 oldPrograms.add(oldProgramsIndex, newProgram);
+                 oldProgramsIndex ++;
             }
+       }
 
-            // Throttle the batch operation not to cause TransactionTooLargeException.
-            if (ops.size() > BATCH_OPERATION_COUNT
-                    || newProgramsIndex >= fetchedProgramsCount) {
-                try {
-                    mContentResolver.applyBatch(TvContract.AUTHORITY, ops);
-                } catch (RemoteException | OperationApplicationException e) {
-                    Log.e(TAG, "Failed to insert programs.", e);
-                    return updated;
-                }
-                ops.clear();
+       // Throttle the batch operation not to cause TransactionTooLargeException.
+       if ((epg_ops.size() > 200) || updated) {
+            try {
+                mContentResolver.applyBatch(TvContract.AUTHORITY, epg_ops);
+            } catch (RemoteException | OperationApplicationException e) {
+                Log.e(TAG, "Failed to insert programs.", e);
+                return updated;
             }
-        }
-        return updated;
+            epg_ops.clear();
+       }
+       return updated;
     }
 
     public void updateProgram(Program program) {

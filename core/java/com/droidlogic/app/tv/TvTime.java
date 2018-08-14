@@ -9,6 +9,7 @@ import java.util.Date;
 
 import com.droidlogic.app.SystemControlManager;
 import com.droidlogic.app.DaylightSavingTime;
+import com.droidlogic.app.tv.TvControlDataManager;
 
 public class TvTime{
     private long diff = 0;
@@ -16,10 +17,11 @@ public class TvTime{
 
     private final static String TV_KEY_TVTIME = "dtvtime";
     private final static String PROP_SET_SYSTIME_ENABLED = "persist.sys.getdtvtime.isneed";
-
+    private TvControlDataManager mTvControlDataManager = null;
 
     public TvTime(Context context){
         mContext = context;
+        mTvControlDataManager = TvControlDataManager.getInstance(mContext);
     }
 
     public synchronized void setTime(long time){
@@ -37,25 +39,25 @@ public class TvTime{
             Log.d("DroidLogic", "setTime");
         }
 
-        Settings.System.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, diff);
+        mTvControlDataManager.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, diff);
     }
 
 
     public synchronized long getTime(){
         Date sys = new Date();
-        diff = Settings.System.getLong(mContext.getContentResolver(), TV_KEY_TVTIME, 0);
+        diff = mTvControlDataManager.getLong(mContext.getContentResolver(), TV_KEY_TVTIME, 0);
 
         return sys.getTime() + diff;
     }
 
 
     public synchronized long getDiffTime(){
-        return Settings.System.getLong(mContext.getContentResolver(), TV_KEY_TVTIME, 0);
+        return mTvControlDataManager.getLong(mContext.getContentResolver(), TV_KEY_TVTIME, 0);
     }
 
     public synchronized void setDiffTime(long diff){
         this.diff = diff;
-        Settings.System.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, this.diff);
+        mTvControlDataManager.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, this.diff);
     }
 }
 

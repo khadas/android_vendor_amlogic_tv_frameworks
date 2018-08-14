@@ -259,6 +259,7 @@ public interface TvControlCommand {
     int SCAN_LCN_CALLBACK = 547;
     int RRT_EVENT_CALLBACK = 548;
     int EAS_EVENT_CALLBACK = 549;
+    int AUDIO_EVENT_CALLBACK = 550;
     // CALLBACK END
 
     // SSM
@@ -333,7 +334,6 @@ public interface TvControlCommand {
     int SSM_READ_TV_TYPE = 672;
     int SSM_SAVE_HDCPKEY = 675;
     int SSM_READ_HDCPKEY = 676;
-    int SSM_READ_BLACKOUT_ENABLE = 677;
     int SSM_REFRESH_HDCPKEY = 678;
     int SSM_SAVE_HDMI_EDID_VER = 679;
     int SSM_READ_HDMI_EDID_VER = 680;
@@ -484,7 +484,6 @@ public interface TvControlCommand {
     int DTV_GET_AUDIO_FMT_INFO = 1443;
 
     int TV_CLEAR_ALL_PROGRAM  = 1454;
-    int SET_BLACKOUT_ENABLE = 1455;
     int START_AUTO_BACKLIGHT = 1456;
     int STOP_AUTO_BACKLIGHT = 1457;
     int IS_AUTO_BACKLIGHTING = 1458;

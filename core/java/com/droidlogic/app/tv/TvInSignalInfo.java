@@ -1,6 +1,9 @@
 package com.droidlogic.app.tv;
 
 public class TvInSignalInfo {
+    public final static int SOURCE_DISCONNECTED = 0;
+    public final static int SOURCE_CONNECTED = 1;
+
     public enum TransFmt {
         TVIN_TFMT_2D,
         TVIN_TFMT_3D_LRH_OLOR,

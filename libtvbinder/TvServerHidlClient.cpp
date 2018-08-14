@@ -242,6 +242,14 @@ int TvServerHidlClient::handleGPIO(const std::string& key, int32_t is_out, int32
     return mTvServer->handleGPIO(key, is_out, edge);
 }
 
+int TvServerHidlClient::vdinUpdateForPQ(int32_t gameStatus, int32_t pcStatus, int32_t autoSwitchFlag) {
+    return mTvServer->vdinUpdateForPQ(gameStatus, pcStatus, autoSwitchFlag);
+}
+
+int TvServerHidlClient::setWssStatus(int status) {
+    return mTvServer->setWssStatus(status);
+}
+
 // callback from tv service
 Return<void> TvServerHidlClient::TvServerHidlCallback::notifyCallback(const TvHidlParcel& hidlParcel)
 {

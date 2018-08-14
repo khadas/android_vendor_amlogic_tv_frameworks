@@ -43,6 +43,7 @@ public abstract class TvStoreManager {
     private boolean isRealtimeStore = true;
     private HandlerThread mhandlerThread;
     private Handler mChildHandler;
+    private int mCurrentStoreFrequency = 0;
 
     private ArrayList<ChannelInfo> mChannelsOld = null;
     private ArrayList<ChannelInfo> mChannelsNew = null;
@@ -75,6 +76,16 @@ public abstract class TvStoreManager {
         mhandlerThread.start();
         mChildHandler = new Handler(mhandlerThread.getLooper(), new ChildCallback());
     }
+
+    public void releaseHandlerThread() {
+       if (mhandlerThread != null) {
+           mhandlerThread.quit();
+           mhandlerThread = null;
+       }
+       if (mChildHandler != null)
+           mChildHandler = null;
+    }
+
 
     public void setInitialLcnNumber(int initialLcnNumber) {
         Log.d(TAG, "initalLcnNumber["+initialLcnNumber+"]");
@@ -271,6 +282,7 @@ public abstract class TvStoreManager {
                .setHidden(event.hidden)
                .setHideGuide(event.hideGuide)
                .setVct(event.vct)
+               .setProgramsInPat(event.programs_in_pat)
                .setSignalType(DroidLogicTvUtils.getCurrentSignalType(mContext) == DroidLogicTvUtils.SIGNAL_TYPE_ERROR
                 ? TvContract.Channels.TYPE_ATSC_T : DroidLogicTvUtils.getCurrentSignalType(mContext))
                .build();
@@ -314,7 +326,7 @@ public abstract class TvStoreManager {
                .setTransportStreamId(0)
                .setVideoPid(0)
                .setVideoStd(event.videoStd)
-               .setVfmt(0)
+               .setVfmt(event.vfmt)
                .setVideoWidth(0)
                .setVideoHeight(0)
                .setAudioPids(null)
@@ -788,10 +800,13 @@ public abstract class TvStoreManager {
         return needinsert;
     }
 
-   private boolean getIsSameDisplayNumber(ChannelInfo chan) {
+   private boolean getIsSameDisplayNumber(ChannelInfo currentChannel) {
           int size = mChannelsExist.size();
           for (int i = 0; i < size; i++) {
-           if (chan.getDisplayNumber().equals(mChannelsExist.get(i).getDisplayNumber()) && (chan.getFrequency() != mChannelsExist.get(i).getFrequency())) {
+            ChannelInfo channel = mChannelsExist.get(i);
+            if (TextUtils.equals(currentChannel.getDisplayNumber(), channel.getDisplayNumber())
+                && (currentChannel.getFrequency() != channel.getFrequency())
+                && TextUtils.equals(currentChannel.getSignalType(), channel.getSignalType())) {
                return true;
            }
          }
@@ -946,7 +961,7 @@ public abstract class TvStoreManager {
                 }
             }
 
-            /*if (getIsSameDisplayNumber(channel) == true) {
+            if (getIsSameDisplayNumber(channel) == true) {
               //is same
                mode = fep.getMode();
                freq = fep.getFrequency();
@@ -954,7 +969,7 @@ public abstract class TvStoreManager {
                if (physicalNum > 0)
                  channel.setDisplayNumber(""+physicalNum+"-"+channel.getServiceId());
               Log.d(TAG, "----Channels physicalNum set DisplayName:" + physicalNum + " getDisplayNumber:" + channel.getDisplayNumber());
-            }*/
+            }
             channel.print();
             /*add seach channel*/
             mChannelsExist.add(channel);
@@ -1015,9 +1030,12 @@ public abstract class TvStoreManager {
             checkOrPatchBeginLost(event);
 
             //take evt:progress as a store-loop end.
-            if (!isFinalStoreStage
-                && !mScanMode.isDTVManulScan()) {
-                storeTvChannel(isRealtimeStore, isFinalStoreStage);
+            if (!isFinalStoreStage && !mScanMode.isDTVManulScan()) {
+                if (mCurrentStoreFrequency != event.freq) {
+                    // one frequency store channel once time
+                    mCurrentStoreFrequency = event.freq;
+                    storeTvChannel(isRealtimeStore, isFinalStoreStage);
+                }
                 mDisplayNumber2 = mInitialDisplayNumber;//dtv pop all channels scanned every store-loop
             }
 
@@ -1049,6 +1067,7 @@ public abstract class TvStoreManager {
                 Log.d(TAG, "Store end mChannelsNew.size=" + mChannelsNew.size());
                 onScanEndBeforeStore(event.freq);
             }
+            mCurrentStoreFrequency = 0;
             storeTvChannel(isRealtimeStore, isFinalStoreStage);
 
             bundle = getScanEventBundle(event);

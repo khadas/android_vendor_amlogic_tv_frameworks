@@ -53,10 +53,11 @@ import android.content.BroadcastReceiver;
 import android.provider.Settings.Secure;
 import android.content.ContentResolver;
 import android.media.MediaCodec;
+import android.media.AudioManager;
 
 public class DroidLogicTvInputService extends TvInputService implements
         TvInSignalInfo.SigInfoChangeListener, TvControlManager.StorDBEventListener,
-        TvControlManager.ScanningFrameStableListener {
+        TvControlManager.ScanningFrameStableListener, TvControlManager.StatusSourceConnectListener {
     private static final String TAG = DroidLogicTvInputService.class.getSimpleName();
     private static final boolean DEBUG = true;
 
@@ -84,11 +85,13 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     private TvInputManager mTvInputManager;
     private TvControlManager mTvControlManager;
+    private TvControlDataManager mTvControlDataManager = null;
     private SystemControlManager mSystemControlManager;
     private TvStoreManager mTvStoreManager;
     private PendingTuneEvent mPendingTune = new PendingTuneEvent();
-    private  ContentResolver mContentResolver;
+    private ContentResolver mContentResolver;
     private MediaCodec mMediaCodec;
+    private AudioManager mAudioManager;
 
     private HardwareCallback mHardwareCallback = new HardwareCallback(){
         @Override
@@ -135,6 +138,9 @@ public class DroidLogicTvInputService extends TvInputService implements
     public void onCreate() {
         super.onCreate();
         mTvInputManager = (TvInputManager)this.getSystemService(Context.TV_INPUT_SERVICE);
+        mSystemControlManager = new SystemControlManager(this);
+        mAudioManager = (AudioManager)this.getSystemService (Context.AUDIO_SERVICE);
+        mTvControlDataManager = TvControlDataManager.getInstance(this);
 
         IntentFilter filter= new IntentFilter();
         filter.addAction(DroidLogicTvUtils.ACTION_DTV_AUTO_SCAN);
@@ -196,20 +202,18 @@ public class DroidLogicTvInputService extends TvInputService implements
      * @param session {@link HdmiInputSession} or {@link AVInputSession}
      */
     protected void registerInputSession(TvInputBaseSession session) {
-        Log.d(TAG, "registerInputSession:"+session);
         mSession = session;
-        if (session == null)
+        if (session == null) {
             return;
+        }
         mCurrentSessionId = session.mId;
-        Log.d(TAG, "inputId["+mCurrentInputId+"]");
-        Log.d(TAG, "xsession["+session+"]");
-        if (mSystemControlManager == null)
-            mSystemControlManager = new SystemControlManager(mContext);
+        Log.d(TAG, "registerInputSession:  inputId="+mCurrentInputId+  " sessioniId=" + session.mId);
 
         initTvStoreManager();
         if (mTvControlManager == null)
             mTvControlManager = TvControlManager.getInstance();
         mTvControlManager.SetSigInfoChangeListener(this);
+        mTvControlManager.SetSourceConnectListener(this);
         mTvControlManager.setScanningFrameStableListener(this);
         resetScanStoreListener();
     }
@@ -417,6 +421,7 @@ public class DroidLogicTvInputService extends TvInputService implements
                 else if (mTvControlManager.IsDviSignal()) {
                     bundle.putString(DroidLogicTvUtils.SIG_INFO_ARGS, "DVI "+strings[4]
                             + "_" + signal_info.reserved + "HZ");
+                    mAudioManager.setParameters("audio=linein");
                 }else
                     bundle.putString(DroidLogicTvUtils.SIG_INFO_ARGS, strings[4]
                             + "_" + signal_info.reserved + "HZ");
@@ -457,6 +462,20 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     public void onSigChanged(TvInSignalInfo signal_info) { }
 
+    @Override
+    public void onSourceConnectChange(TvControlManager.SourceInput source, int connectionState) {
+        if (DEBUG)
+            Log.d(TAG, "onSourceConnectChange:  source=" + source.toInt() + " connectionState=" + connectionState);
+
+        if (mSession == null) {
+            Log.w(TAG, "mSession is null ,discard onSourceConnectChange!");
+            return;
+        }
+
+        if (mDeviceId == source.toInt() && connectionState == TvInSignalInfo.SOURCE_DISCONNECTED) {
+            mSession.notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
+        }
+    }
 
     @Override
     public void StorDBonEvent(TvControlManager.ScannerEvent event) {
@@ -483,6 +502,11 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     protected  boolean setSurfaceInService(Surface surface, TvInputBaseSession session ) {
         Log.d(TAG, "setSurfaceInService,session:"+session);
+
+        if (surface == null && session != null) {
+            session.hideUI();
+        }
+
         Message message = mSessionHandler.obtainMessage();
         message.what = MSG_DO_SET_SURFACE;
 
@@ -523,7 +547,6 @@ public class DroidLogicTvInputService extends TvInputService implements
             case MSG_DO_SET_SURFACE:
                 SomeArgs args = (SomeArgs) message.obj;
                 doSetSurface((Surface)args.arg1, (TvInputBaseSession)args.arg2);
-                break;
             case MSG_DO_RELEASE:
                 doSessionRelease(message.arg1);
                 break;
@@ -579,12 +602,17 @@ public class DroidLogicTvInputService extends TvInputService implements
                     //stopTvPlay(mSession.mId);
                     Log.e(TAG, "This should be never be print. If so, please check");
             }
+            if (mSurface != null && surface != null && mSurface != surface && mSession != null) {
+                Log.d(TAG, "TvView swithed,  stopTvPlay before tuning");
+                stopTvPlay(mSession.mId);
+            }
             registerInputSession(session);
-            setCurrentSessionById(mSession.mId);
+            setCurrentSessionById(session.mId);
             mSurface = surface;
         }
 
-        if (surface == null && mHardware != null && mConfigs != null && session.mId == mSession.mId) {
+        if (surface == null && mHardware != null && mConfigs != null
+                && mSession != null && session.mId == mSession.mId) {
             Log.d(TAG, "surface is null, so stop TV play");
             mSurface = null;
             stopTvPlay(session.mId);
@@ -615,8 +643,13 @@ public class DroidLogicTvInputService extends TvInputService implements
                 mSession.notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
             return ACTION_FAILED;
         }
-        if (mSystemControlManager != null)
+        if (mSystemControlManager != null) {
             mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
+            //ATV,HDMI,AV don't need tsync,or it will cause static frame.
+            //online video and DTV will enable it automatically
+            mSystemControlManager.writeSysFs("/sys/class/tsync/enable", "0");
+        }
+
         doTuneFinish(ACTION_SUCCESS, uri, sessionId);
         return ACTION_SUCCESS;
     }
@@ -784,7 +817,7 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     private void initTvStoreManager() {
             if (mTvStoreManager == null) {
-                int channel_number_start = 0;
+                int channel_number_start = 1;
                 if (mSystemControlManager != null)
                     channel_number_start = mSystemControlManager.getPropertyInt("tv.channel.number.start", 1);
                 mTvStoreManager = new TvStoreManager(this, mCurrentInputId, channel_number_start) {
@@ -802,7 +835,7 @@ public class DroidLogicTvInputService extends TvInputService implements
                 }
                 @Override
                 public void onDtvNumberMode(String mode) {
-                    Settings.System.putString(DroidLogicTvInputService.this.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_NUMBER_MODE, "lcn");
+                    mTvControlDataManager.putString(DroidLogicTvInputService.this.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_NUMBER_MODE, "lcn");
                 }
                 public void onScanEnd() {
                     mTvControlManager.DtvStopScan();
