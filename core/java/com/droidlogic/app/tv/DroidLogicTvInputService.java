@@ -41,10 +41,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 import android.hardware.hdmi.HdmiControlManager;
-import android.hardware.hdmi.HdmiTvClient;
 import android.provider.Settings.Global;
 import android.hardware.hdmi.HdmiDeviceInfo;
-import android.hardware.hdmi.HdmiTvClient.SelectCallback;
 import java.util.HashMap;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -312,6 +310,9 @@ public class DroidLogicTvInputService extends TvInputService implements
             break;
         case DroidLogicTvUtils.DEVICE_ID_AUX:
             label = ChannelInfo.LABEL_AUX;
+            break;
+        case DroidLogicTvUtils.DEVICE_ID_ARC:
+            label = ChannelInfo.LABEL_ARC;
             break;
         default:
             break;
