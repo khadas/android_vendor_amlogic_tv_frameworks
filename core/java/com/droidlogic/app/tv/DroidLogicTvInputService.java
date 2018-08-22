@@ -594,6 +594,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         if (mHardware != null && mSurface != null && mConfigs.length > 0 && mSurface.isValid()) {
             createDecoder();
             decoderRelease();
+            mHardware.setSurface(mSurface, mConfigs[0]);
         }
 
         if (mPendingTune.hasPendingEventToProcess(session.mId)) {
@@ -616,11 +617,6 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
         if (mSystemControlManager != null)
             mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
-
-        if (mHardware != null && mSurface != null && mConfigs.length > 0 && mSurface.isValid()) {
-            mHardware.setSurface(mSurface, mConfigs[0]);
-        }
-
         doTuneFinish(ACTION_SUCCESS, uri, sessionId);
         return ACTION_SUCCESS;
     }
