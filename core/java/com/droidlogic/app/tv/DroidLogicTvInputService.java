@@ -209,13 +209,19 @@ public class DroidLogicTvInputService extends TvInputService implements
         mCurrentSessionId = session.mId;
         Log.d(TAG, "registerInputSession:  inputId="+mCurrentInputId+  " sessioniId=" + session.mId);
 
-        initTvStoreManager();
+        if (mCurrentInputId != null) {
+            final TvInputInfo currentinfo = mTvInputManager.getTvInputInfo(mCurrentInputId);
+            if (currentinfo != null && currentinfo.getType() == TvInputInfo.TYPE_TUNER) {
+                initTvStoreManager();
+                resetScanStoreListener();
+            }
+        }
+
         if (mTvControlManager == null)
             mTvControlManager = TvControlManager.getInstance();
         mTvControlManager.SetSigInfoChangeListener(this);
         mTvControlManager.SetSourceConnectListener(this);
         mTvControlManager.setScanningFrameStableListener(this);
-        resetScanStoreListener();
     }
 
     /**
@@ -479,14 +485,18 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     @Override
     public void StorDBonEvent(TvControlManager.ScannerEvent event) {
-        if (mTvStoreManager != null)
+        if (mTvStoreManager != null) {
             mTvStoreManager.onStoreEvent(event);
+        } else {
+            Log.w(TAG, "StorDBonEvent mTvStoreManager null, service-->mCurrentInputId:" + mCurrentInputId + ", mSourceType:"+mSourceType + ", mChildClassName =" + mChildClassName);
+        }
     }
 
     public void resetScanStoreListener() {
         if (mTvControlManager == null)
             mTvControlManager = TvControlManager.getInstance();;
         mTvControlManager.setStorDBListener(this);
+        Log.d(TAG, "resetScanStoreListener service-->mCurrentInputId:" + mCurrentInputId + ", mSourceType:"+mSourceType + ", mChildClassName =" + mChildClassName);
     }
 
     @Override
