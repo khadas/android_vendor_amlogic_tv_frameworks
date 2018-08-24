@@ -101,6 +101,7 @@ public class ChannelInfo {
     public static final String KEY_VCT = "vct";
     public static final String KEY_EITV = "eitv";
     public static final String KEY_PROGRAMS_IN_PAT = "programs_in_pat";
+    public static final String KEY_PAT_TS_ID = "pat_ts_id";
 
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
     public static final String KEY_CONTENT_RATINGS = "content_ratings";
@@ -190,6 +191,7 @@ public class ChannelInfo {
     private String mVct;
     private int[] mEitVersions;
     private int   mProgramsInPat;
+    private int   mPatTsId;
 
     private String mContentRatings;
     private String mSignalType;
@@ -401,6 +403,8 @@ public class ChannelInfo {
             }
             if (parsedMap.get(KEY_PROGRAMS_IN_PAT) != null)
                 builder.setProgramsInPat(Integer.parseInt(parsedMap.get(KEY_PROGRAMS_IN_PAT)));
+            if (parsedMap.get(KEY_PAT_TS_ID) != null)
+                builder.setPatTsId(Integer.parseInt(parsedMap.get(KEY_PAT_TS_ID)));
         }
 
         index = cursor.getColumnIndex(Channels.COLUMN_BROWSABLE);
@@ -678,6 +682,10 @@ public class ChannelInfo {
         return mProgramsInPat;
     }
 
+    public int getPatTsId() {
+        return mPatTsId;
+    }
+
     public boolean isBrowsable() {
         return this.mBrowsable;
     }
@@ -862,6 +870,10 @@ public class ChannelInfo {
         mProgramsInPat = n;
     }
 
+    public void setPatTsId(int tsid) {
+        mPatTsId = tsid;
+    }
+
     public void copyFrom(ChannelInfo channel) {
         if (this == channel)
             return;
@@ -953,6 +965,7 @@ public class ChannelInfo {
             mChannel.mVct = null;
             mChannel.mEitVersions = null;
             mChannel.mProgramsInPat = 0;
+            mChannel.mPatTsId = -1;
         }
 
         public Builder setId(long id) {
@@ -1266,6 +1279,11 @@ public class ChannelInfo {
             return this;
         }
 
+        public Builder setPatTsId(int tsid) {
+            mChannel.mPatTsId = tsid;
+            return this;
+        }
+
         public ChannelInfo build() {
             return mChannel;
         }
@@ -1407,7 +1425,8 @@ public class ChannelInfo {
                 "\n SignalType = " + mSignalType +
                 "\n vct = " + mVct +
                 "\n EitVers = " + Arrays.toString(mEitVersions) +
-                "\n ProgramsInPat = " + mProgramsInPat;
+                "\n ProgramsInPat = " + mProgramsInPat +
+                "\n PatTsId = " + mPatTsId;
     }
 
     public static class Subtitle {

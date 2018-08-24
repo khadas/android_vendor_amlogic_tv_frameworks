@@ -285,6 +285,7 @@ public abstract class TvStoreManager {
                .setHideGuide(event.hideGuide)
                .setVct(event.vct)
                .setProgramsInPat(event.programs_in_pat)
+               .setPatTsId(event.pat_ts_id)
                .setSignalType(DroidLogicTvUtils.getCurrentSignalType(mContext) == DroidLogicTvUtils.SIGNAL_TYPE_ERROR
                 ? TvContract.Channels.TYPE_ATSC_T : DroidLogicTvUtils.getCurrentSignalType(mContext))
                .build();

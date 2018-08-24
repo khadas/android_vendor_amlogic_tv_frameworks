@@ -441,6 +441,8 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_VCT, "\""+channel.getVct()+"\"");
         map.put(ChannelInfo.KEY_EITV, Arrays.toString(channel.getEitVersions()));
         map.put(ChannelInfo.KEY_PROGRAMS_IN_PAT, String.valueOf(channel.getProgramsInPat()));
+        map.put(ChannelInfo.KEY_PAT_TS_ID, String.valueOf(channel.getPatTsId()));
+
         String output = DroidLogicTvUtils.mapToJson(map);
         values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, output);
 

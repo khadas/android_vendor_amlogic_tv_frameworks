@@ -398,6 +398,7 @@ public class TvControlManager {
             scan_ev.hideGuide = p.bodyInt.get(4*3+5*scnt+4*acnt+38);
             scan_ev.vct = p.bodyString.get(scnt+acnt+2);
             scan_ev.programs_in_pat = p.bodyInt.get(4*3+5*scnt+4*acnt+39);
+            scan_ev.pat_ts_id = p.bodyInt.get(4*3+5*scnt+4*acnt+40);
         }
 
         @Override
@@ -4257,6 +4258,7 @@ public class TvControlManager {
         public int hideGuide;
         public String vct;
         public int programs_in_pat;
+        public int pat_ts_id;
     }
 
     public class ScannerLcnInfo {
