@@ -102,6 +102,8 @@ public abstract class TvStoreManager {
 
     public void onScanExit(int freg) {}
 
+    public void onStoreEnd(int freg) {}
+
     public void onScanEndBeforeStore(int freg) {}
 
     private Bundle getScanEventBundle(TvControlManager.ScannerEvent mEvent) {
@@ -1072,6 +1074,8 @@ public abstract class TvStoreManager {
 
             bundle = getScanEventBundle(event);
             onEvent(DroidLogicTvUtils.SIG_INFO_C_STORE_END_EVENT, bundle);
+
+            onStoreEnd(event.freq);
             break;
 
         case TvControlManager.EVENT_SCAN_END:
@@ -1098,7 +1102,7 @@ public abstract class TvStoreManager {
             mScanMode = null;
             mChannelsAll = null;
 
-            onScanExit(event.freq);
+            //onScanExit(event.freq);
 
             bundle = getScanEventBundle(event);
             onEvent(DroidLogicTvUtils.SIG_INFO_C_SCAN_EXIT_EVENT, bundle);
