@@ -1210,7 +1210,7 @@ public class DroidLogicTvUtils
         try {
             obj = new JSONObject(jsonString);
         } catch (JSONException e) {
-            throw new RuntimeException("Json parse fail: ("+jsonString+")", e);
+           return null;
         }
         JSONObject ratingObj = null;
         try {
