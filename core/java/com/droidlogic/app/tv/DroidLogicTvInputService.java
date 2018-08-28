@@ -538,12 +538,6 @@ public class DroidLogicTvInputService extends TvInputService implements
         return false;
     }
 
-    protected void doReleaseInService (int sessionId) {
-        Log.d(TAG, "doReleaseInService,[source_switch_time]:" +getUptimeSeconds() + "s,sessionid:"+sessionId);
-        mPendingTune.reset();
-        mSessionHandler.obtainMessage(MSG_DO_RELEASE, sessionId, 0).sendToTarget();
-    }
-
     private final class SurfaceHandler extends Handler {
         @Override
         public void handleMessage(Message message) {
@@ -557,8 +551,6 @@ public class DroidLogicTvInputService extends TvInputService implements
             case MSG_DO_SET_SURFACE:
                 SomeArgs args = (SomeArgs) message.obj;
                 doSetSurface((Surface)args.arg1, (TvInputBaseSession)args.arg2);
-            case MSG_DO_RELEASE:
-                doSessionRelease(message.arg1);
                 break;
             }
         }
@@ -664,11 +656,6 @@ public class DroidLogicTvInputService extends TvInputService implements
         return ACTION_SUCCESS;
     }
 
-    private void doSessionRelease(int sessionId) {
-        Log.d(TAG, "doRelese, sessionId = " + sessionId);
-        doReleaseFinish(sessionId);
-    }
-
     private int startTvPlay() {
         Log.d(TAG, "startTvPlay mHardware=" + mHardware + " mConfigs.length=" + mConfigs.length);
         if (mHardware != null && mConfigs.length > 0) {
@@ -696,7 +683,6 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
     public void setCurrentSessionById(int sessionId){}
     public void doTuneFinish(int result, Uri uri, int sessionId){};
-    public void doReleaseFinish(int sessionId){};
     public void tvPlayStopped(int sessionId){};
 
     protected int getCurrentSessionId() {

@@ -107,17 +107,6 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         return mDeviceId;
     }
 
-    public void performDoReleaseSession() {
-        Log.d(TAG, "performDoReleaseSession,session:"+this);
-        //setAudiodMute(false);
-        mContext.unregisterReceiver(mBroadcastReceiver);
-        setOverlayViewEnabled(false);
-        if (mOverlayView != null) {
-            mOverlayView.releaseResource();
-            mOverlayView = null;
-        }
-    }
-
     public void doRelease() {
         Log.d(TAG, "doRelease,session:"+this);
         setOverlayViewEnabled(false);
