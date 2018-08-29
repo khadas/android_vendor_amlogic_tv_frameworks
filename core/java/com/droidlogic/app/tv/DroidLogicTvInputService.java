@@ -647,9 +647,6 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
         if (mSystemControlManager != null) {
             mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
-            //ATV,HDMI,AV don't need tsync,or it will cause static frame.
-            //online video and DTV will enable it automatically
-            mSystemControlManager.writeSysFs("/sys/class/tsync/enable", "0");
         }
 
         doTuneFinish(ACTION_SUCCESS, uri, sessionId);
