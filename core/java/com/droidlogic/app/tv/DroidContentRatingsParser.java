@@ -105,8 +105,7 @@ public class DroidContentRatingsParser {
         File userDir = new File("/mnt/vendor/param");//Environment.getDataSystemDirectory();
         if (!userDir.exists()) {
             if (!userDir.mkdirs()) {
-                Log.d(TAG, "User dir cannot be created: " + userDir);
-                //throw new IllegalStateException("User dir cannot be created: " + userDir);
+                throw new IllegalStateException("User dir cannot be created: " + userDir);
             }
          }
          mAtomicFile_t = new AtomicFile(new File(userDir, "tv_rrt_define.xml"));
