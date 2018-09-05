@@ -35,7 +35,7 @@ public class DroidLogicHdmiCecManager {
     private static boolean DEBUG = false;
     private static final int CALLBACK_HANDLE_FAIL = 1 << 16;
     private static final int DELAYMILIS = 100;
-    private static final int LONGDELAYMILIS = 1000;
+    private static final int LONGDELAYMILIS = 2000;
     private static final int SHORTDELAYMILIS = 5;
     private static final int HDMI_DEVICE_SELECT = 2 << 16;
     private static final int HDMI_PORT_SELECT = 3 << 16;
@@ -228,23 +228,15 @@ public class DroidLogicHdmiCecManager {
             return false;
         }
         int portId = getPortIdByDeviceId(deviceId);
-        final boolean hasCec = hasHdmiCecDevice(deviceId);
 
-        if (!hasCec || portId == 0) {
-            Log.d(TAG, "portId = 0, or has not cec, return");
+        if (portId == 0) {
+            Log.d(TAG, "portId = 0, return");
             return false;
         }
 
         synchronized (mLock) {
             mSelectDeviceId = deviceId;
             mSelectLogicAddr = deviceId;
-            if (isAvrDevice(deviceId)) {
-                /*for avr, should not portSelect when browse small window
-                *when enter channel, selectDecive should do in start tv,because must send SetStream Path
-                */
-                Log.d(TAG, "it is avr, return");
-                return false;
-            }
         }
         mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Log.d(TAG, "TvClient portSelect begin, portId: " + portId);

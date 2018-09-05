@@ -127,9 +127,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
             }
             DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(mContext);
             Log.d(TAG, "doRelease info: " + info + " mInputId: " + mInputId + " parentId: " + parentId);
-            if (parentId != null) {
-                hdmi_cec.selectHdmiDevice(0, 0, 0);
-            }
+            hdmi_cec.selectHdmiDevice(0, 0, 0);
         }
     }
 
@@ -311,23 +309,23 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         }
     }
 
-        /*@Override
-        public boolean onKeyUp(int keyCode, KeyEvent event) {
-            Log.d(TAG, "=====onKeyUp=====");
-            if (mHdmiTvClient != null) {
-                mHdmiTvClient.sendKeyEvent(keyCode, false);
-                return true;
-            }
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        Log.d(TAG, "=====onKeyUp=====");
+        if (mHdmiTvClient != null) {
+            mHdmiTvClient.sendKeyEvent(keyCode, false);
             return false;
         }
+        return false;
+    }
 
-        @Override
-        public boolean onKeyDown(int keyCode, KeyEvent event) {
-            Log.d(TAG, "=====onKeyDown=====");
-            if (mHdmiTvClient != null) {
-                mHdmiTvClient.sendKeyEvent(keyCode, true);
-                return true;
-            }
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Log.d(TAG, "=====onKeyDown=====");
+        if (mHdmiTvClient != null) {
+            mHdmiTvClient.sendKeyEvent(keyCode, true);
             return false;
-        }*/
+        }
+        return false;
+    }
 }
