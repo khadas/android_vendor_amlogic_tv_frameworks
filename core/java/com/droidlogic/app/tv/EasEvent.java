@@ -70,6 +70,7 @@ public class EasEvent {
         Log.i(TAG,"readEasEvent");
         int i, j, k, index = 0;
         index++;//skip sectionCount
+
         tableId = p.bodyInt.get(index++);
         extension = p.bodyInt.get(index++);
         version = p.bodyInt.get(index++);

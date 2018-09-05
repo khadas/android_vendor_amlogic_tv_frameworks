@@ -56,6 +56,7 @@ import vendor.amlogic.hardware.tvserver.V1_0.TvHidlParcel;
 import vendor.amlogic.hardware.tvserver.V1_0.ConnectType;
 import vendor.amlogic.hardware.tvserver.V1_0.Result;
 import vendor.amlogic.hardware.tvserver.V1_0.FreqList;
+import vendor.amlogic.hardware.tvserver.V1_0.RRTSearchInfo;
 
 public class TvControlManager {
     private static final String TAG = "TvControlManager";
@@ -437,6 +438,8 @@ public class TvControlManager {
                         Log.e(TAG, "RRT_EVENT_CALLBACK:" + result);
                         rrt5XmlLoadStatus = result;
                         mRrtListener.onRRT5InfoUpdated(result);
+                    } else {
+                        Log.i(TAG,"mRrtListener is null");
                     }
                     break;
 
@@ -453,6 +456,8 @@ public class TvControlManager {
                                 mEasListener.processDetailsChannelAlert(curEasEvent);
                             }
                         }
+                     } else {
+                        Log.i(TAG,"mEaslister is null");
                      }
                      break;
 
@@ -4375,15 +4380,21 @@ public class TvControlManager {
         void onRRT5InfoUpdated(int status);
     }
 
-    public int updateRRTRes(int freq, int module, int mode) {
+    public int updateRRTRes(int freq, int moudle, int mode) {
         if (rrt5XmlLoadStatus == EVENT_RRT_SCAN_START) {
             Log.d(TAG, "abandon updateRRTRes,becasue current status is : " + rrt5XmlLoadStatus);
             return -1;
+        } else {
+            synchronized (mLock) {
+                try {
+                    Log.d(TAG, "updateRRTRes,freq: " + freq+",module:"+moudle+",mode:"+mode);
+                    return mProxy.updateRRT(freq, moudle, mode);
+                } catch (RemoteException e) {
+                    Log.e(TAG, "updateRRTRes:" + e);
+                }
+            }
+            return -1;
         }
-        Log.d(TAG, "updateRRTRes,freq: " + freq+",module:"+module+",mode:"+mode);
-        int val[] = new int[]{freq, module, mode};
-        rrt5XmlLoadStatus = EVENT_RRT_SCAN_START;
-        return sendCmdIntArray(DTV_UPDATE_RRT, val);
     }
 
     public class RrtSearchInfo {
@@ -4393,39 +4404,23 @@ public class TvControlManager {
     }
 
     public RrtSearchInfo SearchRrtInfo(int rating_region_id, int dimension_id, int value_id) {
-         Parcel cmd = Parcel.obtain();
-         Parcel r = Parcel.obtain();
-         Log.d(TAG, "rating_region_id: " + rating_region_id);
-         Log.d(TAG, "dimension_id: " + dimension_id);
-         Log.d(TAG, "value_id: " + value_id);
-         cmd.writeInt(DTV_SEARCH_RRT);
-         cmd.writeInt(rating_region_id);
-         cmd.writeInt(dimension_id);
-         cmd.writeInt(value_id);
-         sendCmdToTv(cmd, r);
+        synchronized (mLock) {
+            RrtSearchInfo info = new RrtSearchInfo();
+            try {
+                RRTSearchInfo tempInfo= mProxy.searchRrtInfo(rating_region_id, dimension_id, value_id);
+                info.rating_region_name = tempInfo.RatingRegionName;
+                info.dimensions_name = tempInfo.DimensionsName;
+                info.rating_value_text = tempInfo.RatingValueText;
+                Log.d(TAG, "rating_region_name: " + info.dimensions_name);
+                Log.d(TAG, "dimensions_name: " + info.rating_region_name);
+                Log.d(TAG, "rating_value_text: " + info.rating_value_text);
 
-         RrtSearchInfo tmpRet = new RrtSearchInfo();
-         int cnt = r.readInt();
-         if (cnt != 0) {
-             tmpRet.dimensions_name = r.readString();
-         }
-
-         cnt = r.readInt();
-         if (cnt != 0) {
-             tmpRet.rating_region_name = r.readString();
-         }
-
-         cnt = r.readInt();
-         if (cnt != 0) {
-             tmpRet.rating_value_text = r.readString();
-         }
-         cmd.recycle();
-         r.recycle();
-
-         Log.d(TAG, "rating_region_name: " + tmpRet.dimensions_name);
-         Log.d(TAG, "dimensions_name: " + tmpRet.rating_region_name);
-         Log.d(TAG, "rating_value_text: " + tmpRet.rating_value_text);
-         return tmpRet;
+                return info;
+            } catch (RemoteException e) {
+                Log.e(TAG, "SearchRrtInfo:" + e);
+            }
+        }
+        return null;
     }
 
     public void setEasListener(EasEventListener l) {
