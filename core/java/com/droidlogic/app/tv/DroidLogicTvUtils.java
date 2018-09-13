@@ -321,11 +321,15 @@ public class DroidLogicTvUtils
     public static final String SIGNAL_TYPE_ERROR = "error";
     public static final String ALL_CHANNELS_NUMBER = "all_channels_number";
     public static final String DTV_TYPE_SWITCHED = "dtv_type_switched";
+    public static final String TV_SEARCH_COUNTRY = "tv_country";
     public static final String TV_SEARCH_TYPE = "tv_search_type";
     public static final String TV_SEARCH_TYPE_CHANGED = "tv_search_type_changed";
     public static final String ATV_CHANNEL_INDEX = "atv_channel_index";
     public static final String DTV_CHANNEL_INDEX = "dtv_channel_index";
     public static final String TV_INPUT_ID = "tv_input_id";
+    public static final String TV_SEARCH_ATSC_CLIST = "atsc_c_list_mode";
+    public static final String TV_NUMBER_SEARCH_MODE = "number_search_mode";
+    public static final String TV_NUMBER_SEARCH_NUMBER = "number_search_number";
 
     public static final int VIDEO_UNAVAILABLE_REASON_NODATA = 5;
 
@@ -361,11 +365,11 @@ public class DroidLogicTvUtils
 
     public static void setCountry(Context mContext, String country) {
         Log.d(TAG, "setCountry = " + country);
-        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), "tv_country", country);
+        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_SEARCH_COUNTRY, country);
     }
 
     public static String getCountry(Context mContext) {
-        String country = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), "tv_country");
+        String country = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), TV_SEARCH_COUNTRY);
         if (TextUtils.isEmpty(country)) {
             country = getSupportCountry().get(0);
             setCountry(mContext, country);
