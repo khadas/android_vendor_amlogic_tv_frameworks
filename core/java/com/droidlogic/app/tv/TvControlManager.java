@@ -4472,7 +4472,15 @@ public class TvControlManager {
     }
 
     public int DtvGetSignalStrength() {
-        return sendCmd(DTV_GET_STRENGTH);
+        synchronized (mLock) {
+            try {
+                return mProxy.dtvGetSignalStrength();
+            } catch (RemoteException e) {
+                Log.e(TAG, "DtvGetSignalStrength:" + e);
+            }
+        }
+        return -1;
+        //return sendCmd(DTV_GET_STRENGTH);
     }
 
     /**
