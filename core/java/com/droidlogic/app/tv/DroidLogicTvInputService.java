@@ -134,6 +134,19 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
     };
 
+    public void registerChannelScanStartReceiver() {
+        IntentFilter filter= new IntentFilter();
+        filter.addAction(DroidLogicTvUtils.ACTION_DTV_AUTO_SCAN);
+        filter.addAction(DroidLogicTvUtils.ACTION_DTV_MANUAL_SCAN);
+        filter.addAction(DroidLogicTvUtils.ACTION_ATV_AUTO_SCAN);
+        filter.addAction(DroidLogicTvUtils.ACTION_ATV_MANUAL_SCAN);
+        registerReceiver(mChannelScanStartReceiver, filter);
+    }
+
+    public void unRegisterChannelScanStartReceiver() {
+        unregisterReceiver(mChannelScanStartReceiver);
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -141,14 +154,6 @@ public class DroidLogicTvInputService extends TvInputService implements
         mSystemControlManager = new SystemControlManager(this);
         mAudioManager = (AudioManager)this.getSystemService (Context.AUDIO_SERVICE);
         mTvControlDataManager = TvControlDataManager.getInstance(this);
-
-        IntentFilter filter= new IntentFilter();
-        filter.addAction(DroidLogicTvUtils.ACTION_DTV_AUTO_SCAN);
-        filter.addAction(DroidLogicTvUtils.ACTION_DTV_MANUAL_SCAN);
-        filter.addAction(DroidLogicTvUtils.ACTION_ATV_AUTO_SCAN);
-        filter.addAction(DroidLogicTvUtils.ACTION_ATV_MANUAL_SCAN);
-        registerReceiver(mChannelScanStartReceiver, filter);
-
         mContentResolver = this.getContentResolver();
     }
 
