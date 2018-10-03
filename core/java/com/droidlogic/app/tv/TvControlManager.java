@@ -42,6 +42,7 @@ import android.util.Log;
 import android.view.View;
 import android.view.Surface;
 import android.view.SurfaceHolder;
+import java.lang.reflect.Method;
 
 import static com.droidlogic.app.tv.TvControlCommand.*;
 import com.droidlogic.app.tv.EasEvent;
@@ -398,7 +399,6 @@ public class TvControlManager {
             scan_ev.hideGuide = p.bodyInt.get(4*3+5*scnt+4*acnt+38);
             scan_ev.vct = p.bodyString.get(scnt+acnt+2);
             scan_ev.programs_in_pat = p.bodyInt.get(4*3+5*scnt+4*acnt+39);
-            scan_ev.pat_ts_id = p.bodyInt.get(4*3+5*scnt+4*acnt+40);
         }
 
         @Override
@@ -1363,11 +1363,21 @@ public class TvControlManager {
     public static final int AM_AUDIO_SPDIF = 15;
     public static final int AM_AUDIO_ADTV = 16;
 
+    private void setProperties(String Key, String StrVal) {
+        try {
+            Class clazz = ClassLoader.getSystemClassLoader().loadClass("android.os.SystemProperties");
+            Method method = clazz.getMethod("set", String.class, String.class);
+            method.invoke(clazz, Key, StrVal);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
     public int SetAmAudioVolume(int volume, int source) {
         int val[] = new int[]{volume};
         if (source == AM_AUDIO_MPEG) {
-            SystemProperties.set("persist.media.player.volume",
-                    String.valueOf(volume));
+            setProperties("persist.media.player.volume", String.valueOf(volume));
         }
 
         return sendCmdIntArray(SET_AMAUDIO_VOLUME, val);
@@ -1460,8 +1470,7 @@ public class TvControlManager {
         SOUND_MODE_MUSIC(1),
         SOUND_MODE_NEWS(2),
         SOUND_MODE_THEATER(3),
-        SOUND_MODE_GAME(4),
-        SOUND_MODE_USER(5);
+        SOUND_MODE_USER(4);
 
         private int val;
 
@@ -4259,7 +4268,6 @@ public class TvControlManager {
         public int hideGuide;
         public String vct;
         public int programs_in_pat;
-        public int pat_ts_id;
     }
 
     public class ScannerLcnInfo {
@@ -4473,15 +4481,7 @@ public class TvControlManager {
     }
 
     public int DtvGetSignalStrength() {
-        synchronized (mLock) {
-            try {
-                return mProxy.dtvGetSignalStrength();
-            } catch (RemoteException e) {
-                Log.e(TAG, "DtvGetSignalStrength:" + e);
-            }
-        }
-        return -1;
-        //return sendCmd(DTV_GET_STRENGTH);
+        return sendCmd(DTV_GET_STRENGTH);
     }
 
     /**
@@ -4816,12 +4816,12 @@ public class TvControlManager {
     }
 
     public int PlayDTVProgram(int mode, int freq, int para1, int para2, int vid, int vfmt, int aid, int afmt, int pcr, int audioCompetation, boolean adPrepare) {
-        SystemProperties.set ("media.audio.enable_asso", (adPrepare)? "1" : "0");
+        setProperties("media.audio.enable_asso", (adPrepare)? "1" : "0");
         return PlayDTVProgram(mode, freq, para1, para2, vid, vfmt, aid, afmt, pcr, audioCompetation);
     }
 
     public int PlayDTVProgram(int mode, int freq, int para1, int para2, int vid, int vfmt, int aid, int afmt, int pcr, int audioCompetation, boolean adPrepare, int adMixingLevel) {
-        SystemProperties.set ("media.audio.mix_asso", String.valueOf(adMixingLevel));
+        setProperties("media.audio.mix_asso", String.valueOf(adMixingLevel));
         return PlayDTVProgram(mode, freq, para1, para2, vid, vfmt, aid, afmt, pcr, audioCompetation, adPrepare);
     }
 
@@ -4995,11 +4995,11 @@ public class TvControlManager {
         return tmpRet;
     }
     public int PlayDTVProgram(FEParas fe, int vid, int vfmt, int aid, int afmt, int pcr, int audioCompetation, boolean adPrepare) {
-        SystemProperties.set ("media.audio.enable_asso", (adPrepare)? "1" : "0");
+        setProperties("media.audio.enable_asso", (adPrepare)? "1" : "0");
         return PlayDTVProgram(fe, vid, vfmt, aid, afmt, pcr, audioCompetation);
     }
     public int PlayDTVProgram(FEParas fe, int vid, int vfmt, int aid, int afmt, int pcr, int audioCompetation, boolean adPrepare, int adMixingLevel) {
-        SystemProperties.set ("media.audio.mix_asso", String.valueOf(adMixingLevel));
+        setProperties("media.audio.mix_asso", String.valueOf(adMixingLevel));
         return PlayDTVProgram(fe, vid, vfmt, aid, afmt, pcr, audioCompetation, adPrepare);
     }
 
