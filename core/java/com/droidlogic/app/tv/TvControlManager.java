@@ -86,6 +86,7 @@ public class TvControlManager {
     public static final int V4L2_COLOR_STD_PAL   = 0x04000000;
     public static final int V4L2_COLOR_STD_NTSC  = 0x08000000;
     public static final int V4L2_COLOR_STD_SECAM = 0x10000000;
+    public static final int V4L2_STD_PAL_M       = 0x00000100;
 
     //tv run status
     public static final int TV_RUN_STATUS_INIT_ED       = -1;
