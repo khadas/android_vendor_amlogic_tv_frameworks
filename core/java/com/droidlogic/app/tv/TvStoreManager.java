@@ -1009,13 +1009,8 @@ public abstract class TvStoreManager {
             if (mSortMode.isATSCStandard()) {
                 cacheChannel(event, channel);
             } else {
-                if (mScanMode.isATVManualScan())
-                    //onUpdateCurrent(channel, true);
-                    cacheChannel(event, channel);
-                else {
-                    mDisplayNumber = mTvDataBaseManager.insertAtvChannelWithFreOrder(channel);
-                    mDisplayNumber++;
-                }
+                mDisplayNumber = mTvDataBaseManager.insertAtvChannelWithFreOrder(channel);
+                mDisplayNumber++;
             }
 
             Log.d(TAG, "onEvent,displayNum:" + mDisplayNumber);

@@ -863,6 +863,7 @@ public class TvDataBaseManager {
                     int videostd = 0;
                     int audiostd = 0;
                     int vfmt = 0;
+                    String signalType = "";
                     int index = cursor.getColumnIndex(Channels.COLUMN_INTERNAL_PROVIDER_DATA);
                     if (index >= 0) {
                         Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(cursor.getString(index));
@@ -872,8 +873,10 @@ public class TvDataBaseManager {
                             audiostd = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_AUDIO_STD));
                             vfmt = Integer.parseInt(parsedMap.get(ChannelInfo.KEY_VFMT));
                         }
+                        signalType = parsedMap.get(ChannelInfo.KEY_SIGNAL_TYPE);
                     }
-                    if ((serviceId == channel.getServiceId()
+                    if (TextUtils.equals(signalType, channel.getSignalType())
+                        && (serviceId == channel.getServiceId()
                         && originalNetworkId == channel.getOriginalNetworkId()
                         && transportStreamId == channel.getTransportStreamId()
                         && frequency == channel.getFrequency()
