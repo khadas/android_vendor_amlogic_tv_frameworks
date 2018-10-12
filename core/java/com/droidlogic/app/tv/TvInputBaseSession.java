@@ -63,6 +63,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     protected boolean isUnlockCurrent_NR = false;
     protected HdmiTvClient mHdmiTvClient = null;
     private HdmiControlManager mHdmiControlManager ;
+    private int mKeyCodeMediaPlayPauseCount = 0;
 
     public TvInputBaseSession(Context context, String inputId, int deviceId) {
         super(context);
@@ -311,19 +312,52 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        Log.d(TAG, "=====onKeyUp=====");
+        Log.d(TAG, "onKeyUp: " + keyCode);
+        boolean ret = false;
+        DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(mContext);
         if (mHdmiTvClient != null) {
-            mHdmiTvClient.sendKeyEvent(keyCode, false);
-            return false;
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    mHdmiTvClient.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), false);
+                    mKeyCodeMediaPlayPauseCount++;
+                    break;
+                case KeyEvent.KEYCODE_BACK:
+                    if (hdmi_cec.hasHdmiCecDevice(mDeviceId) == true) {
+                        Log.d(TAG, "KEYCODE_BACK shoud not send to live tv if cec device exits");
+                        ret = true;
+                    }
+                    mHdmiTvClient.sendKeyEvent(keyCode, false);
+                    break;
+                default:
+                   mHdmiTvClient.sendKeyEvent(keyCode, false);
+                   break;
+            }
+            return ret;
         }
-        return false;
+        return ret;
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        Log.d(TAG, "=====onKeyDown=====");
+        Log.d(TAG, "onKeyDown: " + keyCode);
+        boolean ret = false;
+        DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(mContext);
         if (mHdmiTvClient != null) {
-            mHdmiTvClient.sendKeyEvent(keyCode, true);
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    mHdmiTvClient.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), true);
+                    break;
+                case KeyEvent.KEYCODE_BACK:
+                    if (hdmi_cec.hasHdmiCecDevice(mDeviceId) == true) {
+                        Log.d(TAG, "KEYCODE_BACK shoud not send to live tv if cec device exits");
+                        ret = true;
+                    }
+                    mHdmiTvClient.sendKeyEvent(keyCode, true);
+                    break;
+                default:
+                   mHdmiTvClient.sendKeyEvent(keyCode, true);
+                   break;
+            }
             return false;
         }
         return false;
