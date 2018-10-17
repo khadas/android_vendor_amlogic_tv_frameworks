@@ -1471,7 +1471,8 @@ public class TvControlManager {
         SOUND_MODE_MUSIC(1),
         SOUND_MODE_NEWS(2),
         SOUND_MODE_THEATER(3),
-        SOUND_MODE_USER(4);
+        SOUND_MODE_GAME(4),
+        SOUND_MODE_USER(5);
 
         private int val;
 
@@ -4269,6 +4270,7 @@ public class TvControlManager {
         public int hideGuide;
         public String vct;
         public int programs_in_pat;
+        public int pat_ts_id;
     }
 
     public class ScannerLcnInfo {
