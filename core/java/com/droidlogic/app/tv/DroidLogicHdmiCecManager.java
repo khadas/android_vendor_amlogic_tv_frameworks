@@ -47,6 +47,7 @@ public class DroidLogicHdmiCecManager {
     public static final int POWER_STATUS_STANDBY = 1;
     public static final int POWER_STATUS_TRANSIENT_TO_ON = 2;
     public static final int POWER_STATUS_TRANSIENT_TO_STANDBY = 3;
+    private static final String HDMI_CONTROL_ENABLED = "hdmi_control_enabled";
 
     private final Handler mHandler = new Handler () {
         @Override
@@ -113,7 +114,7 @@ public class DroidLogicHdmiCecManager {
             + ", mSelectDeviceId = " + mSelectDeviceId
             + ", mSourceType = " + mSourceType);
 
-        boolean cecOption = (Global.getInt(mContext.getContentResolver(), Global.HDMI_CONTROL_ENABLED, 1) == 1);
+        boolean cecOption = (Global.getInt(mContext.getContentResolver(), HDMI_CONTROL_ENABLED, 1) == 1);
         if (!cecOption || mTvClient == null || mHdmiControlManager == null) {
             Log.d(TAG, "mTvClient or mHdmiControlManager maybe null,or cec not enable, return");
             return false;
@@ -222,21 +223,29 @@ public class DroidLogicHdmiCecManager {
         Log.d(TAG, "connectHdmiCec"+ ", deviceId = " + deviceId
             + ", mSelectDeviceId = " + mSelectDeviceId+ ", mSourceType = " + mSourceType);
 
-        boolean cecOption = (Global.getInt(mContext.getContentResolver(), Global.HDMI_CONTROL_ENABLED, 1) == 1);
+        boolean cecOption = (Global.getInt(mContext.getContentResolver(), HDMI_CONTROL_ENABLED, 1) == 1);
         if (!cecOption || mTvClient == null || mHdmiControlManager == null) {
             Log.d(TAG, "mTvClient or mHdmiControlManager maybe null,or cec not enable, return");
             return false;
         }
         int portId = getPortIdByDeviceId(deviceId);
+        final boolean hasCec = hasHdmiCecDevice(deviceId);
 
-        if (portId == 0) {
-            Log.d(TAG, "portId = 0, return");
+        if (!hasCec || portId == 0) {
+            Log.d(TAG, "portId = 0, or has not cec, return");
             return false;
         }
 
         synchronized (mLock) {
             mSelectDeviceId = deviceId;
             mSelectLogicAddr = deviceId;
+            if (isAvrDevice(deviceId)) {
+                /*for avr, should not portSelect when browse small window
+                *when enter channel, selectDecive should do in start tv,because must send SetStream Path
+                */
+                Log.d(TAG, "it is avr, return");
+                return false;
+            }
         }
         mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Log.d(TAG, "TvClient portSelect begin, portId: " + portId);

@@ -36,7 +36,7 @@ import android.media.tv.TvContract.Channels;
 import android.app.ActivityManager;
 import android.view.Surface;
 import android.net.Uri;
-import com.android.internal.os.SomeArgs;
+//import com.android.internal.os.SomeArgs;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
@@ -75,6 +75,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     private static final int MSG_DO_RELEASE = 1;
     private static final int MSG_DO_SET_SURFACE = 3;
     private static int mSelectPort = -1;
+    private static String ACCESSIBILITY_CAPTIONING_PRESET = "accessibility_captioning_preset";
     private Surface mSurface;
     protected int ACTION_FAILED = -1;
     protected int ACTION_SUCCESS = 1;
@@ -151,7 +152,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     public void onCreate() {
         super.onCreate();
         mTvInputManager = (TvInputManager)this.getSystemService(Context.TV_INPUT_SERVICE);
-        mSystemControlManager = new SystemControlManager(this);
+        mSystemControlManager = SystemControlManager.getInstance();
         mAudioManager = (AudioManager)this.getSystemService (Context.AUDIO_SERVICE);
         mTvControlDataManager = TvControlDataManager.getInstance(this);
         mContentResolver = this.getContentResolver();
@@ -515,6 +516,20 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     public void onUpdateCurrentChannel(ChannelInfo channel, boolean store) {}
 
+    public final class SomeArgs {
+        public Object arg1;
+        public Object arg2;
+
+        public SomeArgs() {
+
+        }
+
+        public void clear() {
+            arg1 = null;
+            arg2 = null;
+        }
+    }
+
     protected  boolean setSurfaceInService(Surface surface, TvInputBaseSession session ) {
         Log.d(TAG, "setSurfaceInService,session:"+session);
 
@@ -524,12 +539,14 @@ public class DroidLogicTvInputService extends TvInputService implements
 
         Message message = mSessionHandler.obtainMessage();
         message.what = MSG_DO_SET_SURFACE;
+        synchronized(this) {
+            SomeArgs args = new SomeArgs();
+            args.arg1 = surface;
+            args.arg2 = session;
 
-        SomeArgs args = SomeArgs.obtain();
-        args.arg1 = surface;
-        args.arg2 = session;
+            message.obj = args;
+        }
 
-        message.obj = args;
         mSessionHandler.sendMessage(message);
         return false;
     }
@@ -652,6 +669,9 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
         if (mSystemControlManager != null) {
             mSystemControlManager.writeSysFs("/sys/class/deinterlace/di0/config", "hold_video 0");
+            //ATV,HDMI,AV don't need tsync,or it will cause static frame.
+            //online video and DTV will enable it automatically
+            mSystemControlManager.writeSysFs("/sys/class/tsync/enable", "0");
         }
 
         doTuneFinish(ACTION_SUCCESS, uri, sessionId);
@@ -883,6 +903,6 @@ public class DroidLogicTvInputService extends TvInputService implements
 
     public int getCaptionRawUserStyle() {
         return Secure.getInt(
-                mContentResolver, Secure.ACCESSIBILITY_CAPTIONING_PRESET, 0);
+                mContentResolver, ACCESSIBILITY_CAPTIONING_PRESET, 0);
     }
 }

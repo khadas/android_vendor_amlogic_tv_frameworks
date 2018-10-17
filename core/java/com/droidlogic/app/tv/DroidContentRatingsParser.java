@@ -52,10 +52,8 @@ import android.util.AtomicFile;
 import android.util.Xml;
 
 //import com.android.internal.util.FastXmlSerializer;
-import com.android.internal.util.XmlUtils;
-
-
-import libcore.io.IoUtils;
+//import com.android.internal.util.XmlUtils;
+//import libcore.io.IoUtils;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -71,6 +69,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import java.lang.Boolean;
+import java.lang.reflect.AccessibleObject;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 public class DroidContentRatingsParser {
     private static final String TAG = "DroidContentRatingsParser";
@@ -111,6 +114,41 @@ public class DroidContentRatingsParser {
          mAtomicFile_t = new AtomicFile(new File(userDir, "tv_rrt_define.xml"));
     }
 
+    private void doUtilscloseQuietly (InputStream string) {
+        try {
+            Class clazz = ClassLoader.getSystemClassLoader().loadClass("libcore.io.IoUtils");
+            Method method = clazz.getMethod("closeQuietly", InputStream.class);
+            method.invoke(clazz, string);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private void doXmlUtilsbeginDocument (XmlPullParser parser, String string) {
+        try {
+            Class clazz = ClassLoader.getSystemClassLoader().loadClass("com.android.internal.util.XmlUtils");
+            Method method = clazz.getMethod("closeQuietly", XmlPullParser.class, String.class);
+            method.invoke(clazz, parser, string);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    private boolean doXmlUtilsnextElementWithin (XmlPullParser parser, int outerDepth) {
+        try {
+            Class clazz = ClassLoader.getSystemClassLoader().loadClass("com.android.internal.util.XmlUtils");
+            Method method = clazz.getMethod("nextElementWithin", XmlPullParser.class, int.class);
+            Object objBoolean = method.invoke(clazz, parser, outerDepth);
+            return Boolean.parseBoolean(objBoolean.toString());
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     public List<ContentRatingSystemT> load_t() {
         //clearState();
         synchronized (mLock) {
@@ -132,7 +170,7 @@ public class DroidContentRatingsParser {
                 Log.w(TAG, "Failed to load tv input manager persistent store data.", ex);
                 //clearState();
             } finally {
-                IoUtils.closeQuietly(is);
+                doUtilscloseQuietly(is);
             }
             return null;
         }
@@ -141,10 +179,10 @@ public class DroidContentRatingsParser {
             throws IOException, XmlPullParserException {
         List<ContentRatingSystemT> ratingSystems_t = new ArrayList<>();
 
-        XmlUtils.beginDocument(parser, TAG_RATING_SYSTEM_DEFINITIONS);
+        doXmlUtilsbeginDocument(parser, TAG_RATING_SYSTEM_DEFINITIONS);
         final int outerDepth = parser.getDepth();
         //Log.w(TAG, "loadFromXml_t,outerDepth:"+outerDepth);
-        while (XmlUtils.nextElementWithin(parser, outerDepth)) {
+        while (doXmlUtilsnextElementWithin(parser, outerDepth)) {
            // Log.w(TAG, "-----name:"+parser.getName());
             if (parser.getName().equals(TAG_RATING_SYSTEM_DEFINITION)) {
                 ratingSystems_t.add(parseRatingSystemDefinition_t(parser));
@@ -184,7 +222,7 @@ public class DroidContentRatingsParser {
         }
 
 
-        while (XmlUtils.nextElementWithin(parser, outerDepth)) {
+        while (doXmlUtilsnextElementWithin(parser, outerDepth)) {
             i = 0;
            // Log.w(TAG, "         ---tag:"+parser.getName()+"i:"+i);
             if (parser.getName().equals(TAG_RATING_DEFINITION)) {
