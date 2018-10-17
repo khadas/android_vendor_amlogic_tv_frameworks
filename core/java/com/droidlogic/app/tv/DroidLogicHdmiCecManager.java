@@ -35,11 +35,12 @@ public class DroidLogicHdmiCecManager {
     private static boolean DEBUG = false;
     private static final int CALLBACK_HANDLE_FAIL = 1 << 16;
     private static final int DELAYMILIS = 100;
-    private static final int LONGDELAYMILIS = 6000;
+    private static final int LONGDELAYMILIS = 800;
     private static final int SHORTDELAYMILIS = 5;
     private static final int HDMI_DEVICE_SELECT = 2 << 16;
     private static final int HDMI_PORT_SELECT = 3 << 16;
     private static final int REMOVE_DEVICE_SELECT = 4 << 16;
+    private static final int SEND_KEY_EVENT  = 5 << 16;
     private int DEV_TYPE_AUDIO_SYSTEM = 5;
     private int DEV_TYPE_TUNER = 3;
     public static final int POWER_STATUS_UNKNOWN = -1;
@@ -63,6 +64,9 @@ public class DroidLogicHdmiCecManager {
                 case HDMI_PORT_SELECT:
                     Log.d(TAG, "portSelect begin, portId = " + msg.arg1);
                     portSelect((int)msg.arg1);
+                    break;
+                case SEND_KEY_EVENT:
+                    mTvClient.sendKeyEvent((int)msg.arg1, (((int)msg.arg2 == 1) ?  true : false));
                     break;
                 case REMOVE_DEVICE_SELECT:
                     if (mSelectLogicAddr > 0) {
@@ -169,11 +173,6 @@ public class DroidLogicHdmiCecManager {
                 Log.d(TAG, "deviceId is invalid, return");
                 return false;
             }
-            synchronized (mLock) {
-                mSelectDeviceId = deviceId;
-                mSelectLogicAddr = logicAddr;
-                mSelectPhyAddr = phyAddr;
-            }
         } else if(mSelectDeviceId == 0) {
             Log.d(TAG, "It is current at home, do nothing, return");
             return false;
@@ -181,10 +180,15 @@ public class DroidLogicHdmiCecManager {
             /*if com.droidlogic.tvinput crash and add hdmidevice, should not select device
             * hot plug should not be affected
             */
-            if (mSelectDeviceId < 0) {
+            if (mSelectDeviceId < 0 && deviceId != 0) {
                 Log.d(TAG, "mSelectDeviceId is -1, return");
                 return false;
             }
+        }
+        synchronized (mLock) {
+            mSelectDeviceId = deviceId;
+            mSelectLogicAddr = logicAddr;
+            mSelectPhyAddr = phyAddr;
         }
         Log.d(TAG, "mHandler handle logicAddr: " + logicAddr + " device begin");
         mHandler.removeMessages(HDMI_DEVICE_SELECT);
@@ -229,23 +233,15 @@ public class DroidLogicHdmiCecManager {
             return false;
         }
         int portId = getPortIdByDeviceId(deviceId);
-        final boolean hasCec = hasHdmiCecDevice(deviceId);
 
-        if (!hasCec || portId == 0) {
-            Log.d(TAG, "portId = 0, or has not cec, return");
+        if (portId == 0 || portId == -1) {
+            Log.d(TAG, "portId not correct, return.");
             return false;
         }
 
         synchronized (mLock) {
             mSelectDeviceId = deviceId;
             mSelectLogicAddr = deviceId;
-            if (isAvrDevice(deviceId)) {
-                /*for avr, should not portSelect when browse small window
-                *when enter channel, selectDecive should do in start tv,because must send SetStream Path
-                */
-                Log.d(TAG, "it is avr, return");
-                return false;
-            }
         }
         mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Log.d(TAG, "TvClient portSelect begin, portId: " + portId);
@@ -349,11 +345,15 @@ public class DroidLogicHdmiCecManager {
                 count++;
             }
         }
-        if (count == 1) {
+        if (count == 1 && logicAddr != DEV_TYPE_AUDIO_SYSTEM) {
             Log.d(TAG, "need to deviceSelect the only one: " + logicAddr + " when connected!");
             deviceSelect(logicAddr);
         }
         return true;
     }
-
+    public void sendKeyEvent(int keyCode, boolean isPressed) {
+        Log.d(TAG, "sendKeyEvent, keyCode: " + keyCode + " isPressed: " + isPressed);
+        Message msg = mHandler.obtainMessage(SEND_KEY_EVENT, keyCode, isPressed ? 1 : 0);
+        mHandler.sendMessageDelayed(msg, 0);
+    }
 }
