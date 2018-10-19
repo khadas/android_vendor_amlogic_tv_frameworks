@@ -999,10 +999,17 @@ public class TvDataBaseManager {
         }
 
         if (channelList.size() > 0 && channelList.get(0).getType().contains("DTMB"))
-            Collections.sort(channelList, new SortIntComparator());
-        else if (channelList.size() > 0 && channelList.get(0).isAnalogChannel())
-            Collections.sort(channelList, new SortIntComparator());
-        else
+            Collections.sort(channelList, new SortNumberComparator());
+        else if (channelList.size() > 0 && channelList.get(0).isAnalogChannel()) {
+            if (channelList.get(0).getSignalType().equals(TvContract.Channels.TYPE_ATSC_C) ||
+                channelList.get(0).getSignalType().equals(TvContract.Channels.TYPE_ATSC_T)) {
+                /* For ATSC analog search, sort by channel number */
+                Collections.sort(channelList, new SortNumberComparator());
+            } else {
+                /* For other analog search, sort by freq */
+                Collections.sort(channelList, new SortFreqComparator());
+            }
+        } else
             Collections.sort(channelList, new SortComparator());
         if (DEBUG)
             printList(channelList);
@@ -1119,12 +1126,21 @@ public class TvDataBaseManager {
         }
     }
 
-    public class SortIntComparator implements Comparator<ChannelInfo> {
+    public class SortNumberComparator implements Comparator<ChannelInfo> {
         @Override
         public int compare(ChannelInfo a, ChannelInfo b) {
             if (a.getDisplayNumber() == null)
                 return -1;
             return splitDisplayNumberInt(a.getDisplayNumber()) - splitDisplayNumberInt(b.getDisplayNumber());
+        }
+    }
+
+    public class SortFreqComparator implements Comparator<ChannelInfo> {
+        @Override
+        public int compare(ChannelInfo a, ChannelInfo b) {
+            if (a.getDisplayNumber() == null)
+                return -1;
+            return a.getFrequency() - b.getFrequency();
         }
     }
 
