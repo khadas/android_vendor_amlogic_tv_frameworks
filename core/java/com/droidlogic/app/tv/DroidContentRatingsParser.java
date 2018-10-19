@@ -115,12 +115,21 @@ public class DroidContentRatingsParser {
     }
 
     private void doUtilscloseQuietly (InputStream string) {
-        try {
+        /*try {
             Class clazz = ClassLoader.getSystemClassLoader().loadClass("libcore.io.IoUtils");
             Method method = clazz.getMethod("closeQuietly", InputStream.class);
             method.invoke(clazz, string);
         } catch (Exception e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();s
+        }*/
+        //function closeQuietly defined in IoUtils doesn't have InputStream.class parameter
+        try {
+            if (string != null) {
+                string.close();
+            }
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to close rrt xml file", e);
             e.printStackTrace();
         }
     }
@@ -128,7 +137,7 @@ public class DroidContentRatingsParser {
     private void doXmlUtilsbeginDocument (XmlPullParser parser, String string) {
         try {
             Class clazz = ClassLoader.getSystemClassLoader().loadClass("com.android.internal.util.XmlUtils");
-            Method method = clazz.getMethod("closeQuietly", XmlPullParser.class, String.class);
+            Method method = clazz.getMethod("beginDocument", XmlPullParser.class, String.class);
             method.invoke(clazz, parser, string);
         } catch (Exception e) {
             // TODO Auto-generated catch block
