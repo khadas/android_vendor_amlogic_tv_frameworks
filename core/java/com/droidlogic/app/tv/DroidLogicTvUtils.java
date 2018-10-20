@@ -379,6 +379,11 @@ public class DroidLogicTvUtils
     }
 
     public static void setSearchType(Context mContext, int value) {
+        Log.d(TAG, "setSearchType = " + value);
+        if (getSearchType(mContext) != value) {
+            Log.d(TAG, "tv_search_type was changed");
+            TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_TYPE_CHANGED, 1);
+        }
         TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_TYPE, value);
     }
 
