@@ -28,7 +28,7 @@ public class TvTime{
         Date sys = new Date();
 
         diff = time - sys.getTime();
-        SystemControlManager SM = new SystemControlManager(mContext);
+        SystemControlManager SM = SystemControlManager.getInstance();
         if (SM.getPropertyBoolean(PROP_SET_SYSTIME_ENABLED, false)
                 && (Math.abs(diff) > 1000)) {
             SystemClock.setCurrentTimeMillis(time);
