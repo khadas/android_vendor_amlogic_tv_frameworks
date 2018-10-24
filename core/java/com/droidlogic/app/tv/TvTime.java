@@ -35,8 +35,6 @@ public class TvTime{
             diff = 0;
             DaylightSavingTime daylightSavingTime = DaylightSavingTime.getInstance();
             daylightSavingTime.updateDaylightSavingTimeForce();
-            Settings.Global.putInt(mContext.getContentResolver(), Settings.Global.AUTO_TIME, 0);
-            Log.d("DroidLogic", "setTime");
         }
 
         mTvControlDataManager.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, diff);
