@@ -296,22 +296,25 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         Log.d(TAG, "onKeyUp: " + keyCode);
         boolean ret = false;
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                hdmi_cec.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), false);
-                mKeyCodeMediaPlayPauseCount++;
-                break;
-            case KeyEvent.KEYCODE_BACK:
-                if (hdmi_cec.hasHdmiCecDevice(mDeviceId) == true) {
+
+        if (hdmi_cec.hasHdmiCecDevice(mDeviceId) == true) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    hdmi_cec.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), false);
+                    mKeyCodeMediaPlayPauseCount++;
+                    break;
+                case KeyEvent.KEYCODE_BACK:
                     Log.d(TAG, "KEYCODE_BACK shoud not send to live tv if cec device exits");
                     ret = true;
-                }
-                hdmi_cec.sendKeyEvent(keyCode, false);
-                break;
-            default:
-                hdmi_cec.sendKeyEvent(keyCode, false);
-                break;
+                    hdmi_cec.sendKeyEvent(keyCode, false);
+                    break;
+                default:
+                    hdmi_cec.sendKeyEvent(keyCode, false);
+                    break;
             }
+        } else {
+            Log.d(TAG, "cec device didn't exit");
+        }
         return ret;
     }
 
@@ -319,21 +322,24 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         Log.d(TAG, "onKeyDown: " + keyCode);
         boolean ret = false;
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                hdmi_cec.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), true);
-                break;
-            case KeyEvent.KEYCODE_BACK:
-                if (hdmi_cec.hasHdmiCecDevice(mDeviceId) == true) {
+
+        if (hdmi_cec.hasHdmiCecDevice(mDeviceId) == true) {
+            switch (keyCode) {
+                case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                    hdmi_cec.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), true);
+                    break;
+                case KeyEvent.KEYCODE_BACK:
                     Log.d(TAG, "KEYCODE_BACK shoud not send to live tv if cec device exits");
                     ret = true;
-                }
-                hdmi_cec.sendKeyEvent(keyCode, true);
-                break;
-            default:
-                hdmi_cec.sendKeyEvent(keyCode, true);
-                break;
+                    hdmi_cec.sendKeyEvent(keyCode, true);
+                    break;
+                default:
+                    hdmi_cec.sendKeyEvent(keyCode, true);
+                    break;
+            }
+        } else {
+            Log.d(TAG, "cec device didn't exit");
         }
-        return false;
+        return ret;
     }
 }

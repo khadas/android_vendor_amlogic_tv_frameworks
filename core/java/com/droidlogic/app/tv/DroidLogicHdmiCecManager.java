@@ -321,6 +321,8 @@ public class DroidLogicHdmiCecManager {
     public boolean hasHdmiCecDevice(int deviceId) {
         if (deviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && deviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) {
             int id = getPortIdByDeviceId(deviceId);
+            if (mTvClient == null)
+                return false;
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
                 if (id == ((int)info.getPortId())) {
                     return true;
