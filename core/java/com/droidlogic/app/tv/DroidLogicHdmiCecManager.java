@@ -66,7 +66,8 @@ public class DroidLogicHdmiCecManager {
                     portSelect((int)msg.arg1);
                     break;
                 case SEND_KEY_EVENT:
-                    mTvClient.sendKeyEvent((int)msg.arg1, (((int)msg.arg2 == 1) ?  true : false));
+                    if (mTvClient != null)
+                        mTvClient.sendKeyEvent((int)msg.arg1, (((int)msg.arg2 == 1) ?  true : false));
                     break;
                 case REMOVE_DEVICE_SELECT:
                     if (mSelectLogicAddr > 0) {
