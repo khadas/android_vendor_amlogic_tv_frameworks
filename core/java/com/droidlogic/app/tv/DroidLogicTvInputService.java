@@ -26,6 +26,7 @@ import com.droidlogic.app.SystemControlManager;
 
 import android.provider.Settings;
 import android.content.Context;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -106,6 +107,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     private MediaCodec mMediaCodec;
     private AudioManager mAudioManager;
     private static int mCurrentUserId = 0;//UserHandle.USER_SYSTEM
+    private ActivityManager mActivityManager;
 
     private HardwareCallback mHardwareCallback = new HardwareCallback(){
         @Override
@@ -169,6 +171,8 @@ public class DroidLogicTvInputService extends TvInputService implements
         mAudioManager = (AudioManager)this.getSystemService (Context.AUDIO_SERVICE);
         mTvControlDataManager = TvControlDataManager.getInstance(this);
         mContentResolver = this.getContentResolver();
+        mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        startTvServices();
     }
 
     /**
@@ -942,5 +946,33 @@ public class DroidLogicTvInputService extends TvInputService implements
     public int getCaptionRawUserStyle() {
         return Secure.getInt(
                 mContentResolver, ACCESSIBILITY_CAPTIONING_PRESET, 0);
+    }
+
+    private static final String SOUDND_EFFECT_PACKAGE_NAME ="com.droidlogic.tv.soundeffectsettings";
+    private static final String SOUDND_EFFECT_SERVICE_NAME ="com.droidlogic.tv.soundeffectsettings.AudioEffectsSettingManagerService";
+    private static final String CMD_START_SOUND_EFFECT = "com.droidlogic.tv.settings.AudioEffectsSettingManagerService.STARTUP";
+
+    private void startTvServices () {
+        if  (!isServiceRunning(SOUDND_EFFECT_SERVICE_NAME)) {
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName(SOUDND_EFFECT_PACKAGE_NAME, SOUDND_EFFECT_SERVICE_NAME));
+            intent.setAction(CMD_START_SOUND_EFFECT);
+            startService(intent);
+        }
+    }
+
+    private boolean isServiceRunning(String className){
+        boolean isRunning = false ;
+        List<ActivityManager.RunningServiceInfo> seviceList = mActivityManager.getRunningServices(200);
+        if (seviceList.size() <= 0) {
+            return false;
+        }
+        for (int i = 0 ;i < seviceList.size(); i++) {
+            if (seviceList.get(i).service.getClassName().toString().equals(className)) {
+                isRunning = true;
+                break;
+            }
+        }
+        return  isRunning;
     }
 }
