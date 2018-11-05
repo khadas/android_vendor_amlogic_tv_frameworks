@@ -16,7 +16,7 @@ public class TvTime{
     private Context mContext;
 
     private final static String TV_KEY_TVTIME = "dtvtime";
-    private final static String PROP_SET_SYSTIME_ENABLED = "persist.sys.getdtvtime.isneed";
+    private final static String PROP_SET_SYSTIME_ENABLED = "persist.tv.getdtvtime.isneed";
     private TvControlDataManager mTvControlDataManager = null;
 
     public TvTime(Context context){
