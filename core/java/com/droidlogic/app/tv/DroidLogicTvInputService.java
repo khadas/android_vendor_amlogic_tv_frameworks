@@ -368,7 +368,6 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     protected void releasePlayer() {
-        mTvControlManager.StopPlayProgram();
     }
 
     private String getInfoLabel() {
@@ -616,6 +615,17 @@ public class DroidLogicTvInputService extends TvInputService implements
         Log.d(TAG, "[source_switch_time]:" +getUptimeSeconds()
                 + "s, doSetSurface inputId=" + mCurrentInputId + " number=" + session.mId + " surface=" + surface);
 
+        if (surface == null) {
+            if (mHardware != null && mConfigs != null
+                    && mSession != null && session.mId == mSession.mId) {
+                Log.d(TAG, "exited TV source, so stop TV play");
+                mSurface = null;
+                stopTvPlay(session.mId);
+            }
+            Log.d(TAG, "surface is null, return");
+            return;
+        }
+
         if (surface != null && !surface.isValid()) {
             Log.d(TAG, "onSetSurface get invalid surface");
             return;
@@ -633,14 +643,6 @@ public class DroidLogicTvInputService extends TvInputService implements
             registerInputSession(session);
             setCurrentSessionById(session.mId);
             mSurface = surface;
-        }
-
-        if (surface == null && mHardware != null && mConfigs != null
-                && mSession != null && session.mId == mSession.mId) {
-            Log.d(TAG, "surface is null, so stop TV play");
-            mSurface = null;
-            stopTvPlay(session.mId);
-            return;
         }
 
         if (mHardware != null && mSurface != null && mConfigs.length > 0 && mSurface.isValid()) {
