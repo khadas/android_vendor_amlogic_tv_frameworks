@@ -433,11 +433,26 @@ public class DroidLogicTvUtils
     public static String getCurrentSignalType(Context context) {
         String dtvType = TvControlDataManager.getInstance(context).getString(context.getContentResolver(), DroidLogicTvUtils.TV_KEY_DTV_TYPE);
         if (dtvType == null) {
-            return DroidLogicTvUtils.SIGNAL_TYPE_ERROR;
-        } else {
-            Log.d(TAG, "getCurrentSignalType = " + dtvType);
-            return dtvType;
+            TvControlManager mTvControlManager = TvControlManager.getInstance();
+            String config = mTvControlManager.GetTVSupportCountries();
+            String[] supportcountry = config.split(",");
+            switch (supportcountry[0]) {
+                case "US":
+                case "MX":
+                    dtvType = TvContract.Channels.TYPE_ATSC_T;
+                    break;
+                case "CN":
+                    dtvType = TvContract.Channels.TYPE_DTMB;
+                    break;
+                case "IN":
+                case "ID":
+                case "DE":
+                    dtvType = DroidLogicTvUtils.SIGNAL_TYPE_ERROR;
+                    break;
+            }
         }
+        Log.d(TAG, "getCurrentSignalType = " + dtvType);
+        return dtvType;
     }
 
     public static int matchsWhich(Uri uri) {
