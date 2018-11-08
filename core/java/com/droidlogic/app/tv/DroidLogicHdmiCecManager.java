@@ -49,6 +49,7 @@ public class DroidLogicHdmiCecManager {
     public static final int POWER_STATUS_TRANSIENT_TO_ON = 2;
     public static final int POWER_STATUS_TRANSIENT_TO_STANDBY = 3;
     private static final String HDMI_CONTROL_ENABLED = "hdmi_control_enabled";
+    private static boolean mCallBackComplete = true;
 
     private final Handler mHandler = new Handler () {
         @Override
@@ -66,8 +67,14 @@ public class DroidLogicHdmiCecManager {
                     portSelect((int)msg.arg1);
                     break;
                 case SEND_KEY_EVENT:
-                    if (mTvClient != null)
+                    if (mTvClient == null || !mCallBackComplete) {
+                        Log.d(TAG, "sendKeyEvent fail, mTvClient is null or callback not complete.");
+                        break;
+                    }
+                    if (mTvClient != null && mCallBackComplete) {
+                        Log.d(TAG, "sendKeyEvent, keyCode: " + msg.arg1 + " isPressed: " + msg.arg2);
                         mTvClient.sendKeyEvent((int)msg.arg1, (((int)msg.arg2 == 1) ?  true : false));
+                    }
                     break;
                 case REMOVE_DEVICE_SELECT:
                     if (mSelectLogicAddr > 0) {
@@ -248,14 +255,15 @@ public class DroidLogicHdmiCecManager {
         Log.d(TAG, "TvClient portSelect begin, portId: " + portId);
         Message msg = mHandler.obtainMessage(HDMI_PORT_SELECT, portId, 0);
         mHandler.sendMessageDelayed(msg, 0);
-        deviceSelectIfNeed(portId);
         return true;
     }
 
     private void portSelect(int portId) {
+        mCallBackComplete = false;
         mTvClient.portSelect(portId, new SelectCallback() {
             @Override
             public void onComplete(int result) {
+                mCallBackComplete = true;
                 if (result != HdmiControlManager.RESULT_SUCCESS)
                     mHandler.obtainMessage(CALLBACK_HANDLE_FAIL, result, 0).sendToTarget();
                 else {
@@ -339,23 +347,7 @@ public class DroidLogicHdmiCecManager {
         }
     }
 
-    public boolean deviceSelectIfNeed(int portId) {
-        int count = 0;
-        int logicAddr = 0;
-        for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
-            if (portId == (int)info.getPortId()) {
-                logicAddr = info.getLogicalAddress();
-                count++;
-            }
-        }
-        if (count == 1 && logicAddr != DEV_TYPE_AUDIO_SYSTEM) {
-            Log.d(TAG, "need to deviceSelect the only one: " + logicAddr + " when connected!");
-            deviceSelect(logicAddr);
-        }
-        return true;
-    }
     public void sendKeyEvent(int keyCode, boolean isPressed) {
-        Log.d(TAG, "sendKeyEvent, keyCode: " + keyCode + " isPressed: " + isPressed);
         Message msg = mHandler.obtainMessage(SEND_KEY_EVENT, keyCode, isPressed ? 1 : 0);
         mHandler.sendMessageDelayed(msg, 0);
     }
