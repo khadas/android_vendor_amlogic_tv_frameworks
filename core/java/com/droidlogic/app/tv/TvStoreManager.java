@@ -475,6 +475,7 @@ public abstract class TvStoreManager {
 
     private void updateChannelNumber(ChannelInfo channel, ArrayList<ChannelInfo> channels) {
         boolean ignoreDBCheck = false;//mScanMode.isDTVAutoScan();
+        boolean findDisNum = true;
         int number = -1;
         ArrayList<ChannelInfo> chs = null;
 
@@ -513,10 +514,23 @@ public abstract class TvStoreManager {
         }
 
         //service totally new
-        if (number < 0)
+        if (number < 0) {
+            if (mScanMode.isDTVManulScan()) {
+                while (findDisNum && mChannelsExist != null) {
+                    findDisNum = false;
+                    for (ChannelInfo c : mChannelsExist) {
+                        if (display_number_start == c.getNumber()) {
+                            findDisNum = true;
+                            break;
+                        }
+                    }
+                    if (findDisNum)
+                        display_number_start++;
+                }
+            }
             number = display_number_start++;
-
-        Log.d(TAG, "update displayer number["+number+"]");
+        }
+        Log.d(TAG, "update displayer number["+number+"]..");
 
         channel.setDisplayNumber(String.valueOf(number));
 
@@ -536,6 +550,7 @@ public abstract class TvStoreManager {
         int lcn_2 = -1;
         boolean visible = true;
         boolean swapped = false;
+        boolean findDisNum = true;
 
         ArrayList<ChannelInfo> chs = null;
 
@@ -658,12 +673,26 @@ public abstract class TvStoreManager {
                     }
                 }
                 //service totally new
-                if (lcn < 0)
+                if (lcn < 0) {
+                    if (mScanMode.isDTVManulScan()) {
+                        while (findDisNum && mChannelsExist != null) {
+                            findDisNum = false;
+                            for (ChannelInfo c : mChannelsExist) {
+                                if (lcn_overflow_start == c.getLCN()) {
+                                    findDisNum = true;
+                                    break;
+                                }
+                            }
+                            if (findDisNum)
+                                lcn_overflow_start++;
+                        }
+                    }
                     lcn = lcn_overflow_start++;
+                }
             }
         }
 
-        Log.d(TAG, "update LCN[0:"+lcn+" 1:"+lcn_1+" 2:"+lcn_2+"]");
+        Log.d(TAG, "update LCN[0:"+lcn+" 1:"+lcn_1+" 2:"+lcn_2+"]..");
 
         channel.setLCN(lcn);
         channel.setLCN1(lcn_1);
