@@ -54,6 +54,9 @@ import android.provider.Settings.Secure;
 import android.content.ContentResolver;
 import android.media.MediaCodec;
 import android.media.AudioManager;
+import android.text.TextUtils;
+import android.os.UserHandle;
+import java.util.Map;
 
 public class DroidLogicTvInputService extends TvInputService implements
         TvInSignalInfo.SigInfoChangeListener, TvControlManager.StorDBEventListener,
@@ -93,6 +96,7 @@ public class DroidLogicTvInputService extends TvInputService implements
     private ContentResolver mContentResolver;
     private MediaCodec mMediaCodec;
     private AudioManager mAudioManager;
+    private static int mCurrentUserId = 0;//UserHandle.USER_SYSTEM
 
     private HardwareCallback mHardwareCallback = new HardwareCallback(){
         @Override
@@ -786,6 +790,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         }
 
         Log.d(TAG, "createTvInputInfo, id:" + deviceInfo.toString()+",deviceId: "+deviceInfo.getDeviceId());
+        setInputName(info, deviceInfo.getDisplayName());
         updateInfoListIfNeededLocked(keyDeviceId, info, false);
         //selectHdmiDevice(sourceType);
         selectHdmiDevice(sourceType, hdmiDeviceId, phyaddr);
@@ -814,10 +819,26 @@ public class DroidLogicTvInputService extends TvInputService implements
 
         String id = info.getId();
         Log.d(TAG, "onHdmiDeviceRemoved, id:" + id);
+        setInputName(info, null);
         updateInfoListIfNeededLocked(keyDeviceId, info, true);
         disconnectHdmiCec(sourceType, 0, phyaddr);
 
         return id;
+    }
+
+    private void setInputName(TvInputInfo mInputInfo, CharSequence name) {
+        if (mInputInfo == null)
+            return;
+        Map<String, String> mCustomLabels;
+        mCustomLabels = TvInputInfo.TvInputSettings.getCustomLabels(getApplicationContext(), mCurrentUserId);
+        if (TextUtils.isEmpty(name)) {
+            mCustomLabels.remove(mInputInfo.getId());
+        } else {
+            mCustomLabels.put(mInputInfo.getId(), name.toString());
+        }
+        Log.d(TAG, "setInputName, Id:" + mInputInfo.getId() + " name: " + name);
+        TvInputInfo.TvInputSettings
+                .putCustomLabels(getApplicationContext(), mCustomLabels, mCurrentUserId);
     }
 
     protected final BroadcastReceiver mChannelScanStartReceiver = new BroadcastReceiver() {
