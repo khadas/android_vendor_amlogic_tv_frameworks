@@ -95,6 +95,65 @@ public class TvDataBaseManager {
         }
     }
 
+    public void deleteAtvOrDtvChannels(boolean isatv) {
+        final String atvwhere = Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_PAL +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_NTSC +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_SECAM + "'";
+        final String dtvwhere = Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DTMB +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DVB_T +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DVB_C +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DVB_S +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_T +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_C +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_M_H + "'";
+        try {
+            if (isatv)
+                mContentResolver.delete(Channels.CONTENT_URI, atvwhere, null);
+            else
+                mContentResolver.delete(Channels.CONTENT_URI, dtvwhere, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteOtherTypeAtvOrDtvChannels(String type, boolean isatv) {
+        final String[] ATVTYPE = {TvContract.Channels.TYPE_PAL, TvContract.Channels.TYPE_NTSC, TvContract.Channels.TYPE_SECAM};
+        final String[] DTVTYPE = {TvContract.Channels.TYPE_DTMB, TvContract.Channels.TYPE_DVB_T, TvContract.Channels.TYPE_DVB_C,
+                                 TvContract.Channels.TYPE_DVB_S, TvContract.Channels.TYPE_ATSC_T, TvContract.Channels.TYPE_ATSC_C, TvContract.Channels.TYPE_ATSC_M_H};
+        String where = null;
+        String[] typelist = null;
+        if (isatv) {
+            typelist = ATVTYPE;
+        } else {
+            typelist = DTVTYPE;
+        }
+        for (String one : typelist) {
+            if (one.equals(type)) {
+                continue;
+            }
+            if (where == null) {
+                where = Channels.COLUMN_TYPE + "='" + one + "'";
+            } else {
+                where += (" or " + Channels.COLUMN_TYPE + "='" + one + "'");
+            }
+        }
+        /*final String atvwhere = Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_PAL +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_NTSC +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_SECAM + "'";
+        final String dtvwhere = Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DTMB +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DVB_T +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DVB_C +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DVB_S +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_T +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_C +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_M_H + "'";*/
+        try {
+            mContentResolver.delete(Channels.CONTENT_URI, where, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private int updateDtvChannel(ChannelInfo channel) {
         int ret = 0;
         Uri channelsUri = TvContract.buildChannelsUriForInput(channel.getInputId());
