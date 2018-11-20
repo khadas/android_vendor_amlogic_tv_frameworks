@@ -407,6 +407,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         if (status == TvInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOSIG
                 || status == TvInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NULL
                 || status == TvInSignalInfo.SignalStatus.TVIN_SIG_STATUS_NOTSUP) {
+            Log.d(TAG, "onSigChange-nosignal");
             mSession.notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_UNKNOWN);
         } else if (status == TvInSignalInfo.SignalStatus.TVIN_SIG_STATUS_STABLE) {
             int device_id = mSession.getDeviceId();
@@ -440,15 +441,20 @@ public class DroidLogicTvInputService extends TvInputService implements
 
                 bundle.putInt(DroidLogicTvUtils.SIG_INFO_TYPE, DroidLogicTvUtils.SIG_INFO_TYPE_HDMI);
                 bundle.putString(DroidLogicTvUtils.SIG_INFO_LABEL, getInfoLabel());
-                if (strings != null && strings.length <= 4)
+                if (strings != null && strings.length <= 4) {
+                    Log.d(TAG, "invalid signal");
                     bundle.putString(DroidLogicTvUtils.SIG_INFO_ARGS, " ");
-                else if (mTvControlManager.IsDviSignal()) {
+                } else if (mTvControlManager.IsDviSignal()) {
+                    Log.d(TAG, "dvi signal");
                     bundle.putString(DroidLogicTvUtils.SIG_INFO_ARGS, "DVI "+strings[4]
                             + "_" + signal_info.reserved + "HZ");
                     mAudioManager.setParameters("audio=linein");
-                }else
+                } else {
+                    Log.d(TAG, "hdmi signal");
                     bundle.putString(DroidLogicTvUtils.SIG_INFO_ARGS, strings[4]
                             + "_" + signal_info.reserved + "HZ");
+                    mAudioManager.setParameters("audio=hdmi");
+                }
 
                 mSession.notifySessionEvent(DroidLogicTvUtils.SIG_INFO_EVENT, bundle);
                 break;
