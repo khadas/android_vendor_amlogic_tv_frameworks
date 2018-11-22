@@ -93,6 +93,7 @@ public:
     int handleGPIO(const std::string& key, int32_t is_out, int32_t edge);
     int vdinUpdateForPQ(int32_t gameStatus, int32_t pcStatus, int32_t autoSwitchFlag);
     int setWssStatus(int status);
+    int setDeviceIdForCec(int DeviceId);
 
 private:
     class TvServerHidlCallback : public ITvServerCallback {

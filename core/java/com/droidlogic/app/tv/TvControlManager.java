@@ -6393,6 +6393,14 @@ public class TvControlManager {
         return sendPlayCmd(PLAY_CMD_SETPARAM, id, param);
     }
 
-
+    public int setDeviceIdForCec(int DeviceId) {
+        synchronized (mLock) {
+            try {
+                return mProxy.setDeviceIdForCec(DeviceId);
+            } catch (RemoteException e) {
+                Log.e(TAG, "setDeviceIdForCec:" + e);
+            }
+        }
+        return -1;
+    }
 }
-

@@ -70,7 +70,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
 
     protected boolean isBlockNoRatingEnable = false;
     protected boolean isUnlockCurrent_NR = false;
-    DroidLogicHdmiCecManager hdmi_cec = null;
+    DroidLogicHdmiCecManager mDroidLogicHdmiCecManager = null;
     private int mKeyCodeMediaPlayPauseCount = 0;
 
     public TvInputBaseSession(Context context, String inputId, int deviceId) {
@@ -89,7 +89,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (DEBUG)
             Log.d(TAG, "isBlockNoRatingEnable = " + isBlockNoRatingEnable);
          Log.d(TAG, "TvInputBaseSession,inputId:" + inputId+", devieId:"+deviceId);
-        hdmi_cec = DroidLogicHdmiCecManager.getInstance(mContext);
+        mDroidLogicHdmiCecManager = DroidLogicHdmiCecManager.getInstance(mContext);
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         intentFilter.addAction(Intent.ACTION_SCREEN_ON);
@@ -289,8 +289,10 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (isMain && info != null)  {
             if (mDeviceId < DroidLogicTvUtils.DEVICE_ID_HDMI1 || mDeviceId > DroidLogicTvUtils.DEVICE_ID_HDMI4) {
                 Log.d(TAG, "onSetMain, mDeviceId: " + mDeviceId + " not correct!");
+                mTvControlManager.setDeviceIdForCec(-1);
             } else {
-                hdmi_cec.connectHdmiCec(mDeviceId);
+                mDroidLogicHdmiCecManager.connectHdmiCec(mDeviceId);
+                mTvControlManager.setDeviceIdForCec(mDeviceId);
             }
         } else {
             if (info == null) {
@@ -306,19 +308,19 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         Log.d(TAG, "onKeyUp: " + keyCode);
         boolean ret = false;
 
-        if (hdmi_cec.hasHdmiCecDevice(mDeviceId) == true) {
+        if (mDroidLogicHdmiCecManager.hasHdmiCecDevice(mDeviceId) == true) {
             switch (keyCode) {
                 case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                    hdmi_cec.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), false);
+                    mDroidLogicHdmiCecManager.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), false);
                     mKeyCodeMediaPlayPauseCount++;
                     break;
                 case KeyEvent.KEYCODE_BACK:
                     Log.d(TAG, "KEYCODE_BACK shoud not send to live tv if cec device exits");
                     ret = true;
-                    hdmi_cec.sendKeyEvent(keyCode, false);
+                    mDroidLogicHdmiCecManager.sendKeyEvent(keyCode, false);
                     break;
                 default:
-                    hdmi_cec.sendKeyEvent(keyCode, false);
+                    mDroidLogicHdmiCecManager.sendKeyEvent(keyCode, false);
                     break;
             }
         } else {
@@ -332,18 +334,18 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         Log.d(TAG, "onKeyDown: " + keyCode);
         boolean ret = false;
 
-        if (hdmi_cec.hasHdmiCecDevice(mDeviceId) == true) {
+        if (mDroidLogicHdmiCecManager.hasHdmiCecDevice(mDeviceId) == true) {
             switch (keyCode) {
                 case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
-                    hdmi_cec.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), true);
+                    mDroidLogicHdmiCecManager.sendKeyEvent((mKeyCodeMediaPlayPauseCount % 2 == 1 ? KeyEvent.KEYCODE_MEDIA_PAUSE : KeyEvent.KEYCODE_MEDIA_PLAY), true);
                     break;
                 case KeyEvent.KEYCODE_BACK:
                     Log.d(TAG, "KEYCODE_BACK shoud not send to live tv if cec device exits");
                     ret = true;
-                    hdmi_cec.sendKeyEvent(keyCode, true);
+                    mDroidLogicHdmiCecManager.sendKeyEvent(keyCode, true);
                     break;
                 default:
-                    hdmi_cec.sendKeyEvent(keyCode, true);
+                    mDroidLogicHdmiCecManager.sendKeyEvent(keyCode, true);
                     break;
             }
         } else {

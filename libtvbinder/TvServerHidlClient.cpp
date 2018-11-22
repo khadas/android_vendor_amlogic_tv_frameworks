@@ -250,6 +250,10 @@ int TvServerHidlClient::setWssStatus(int status) {
     return mTvServer->setWssStatus(status);
 }
 
+int TvServerHidlClient::setDeviceIdForCec(int DeviceId) {
+    return mTvServer->setDeviceIdForCec(DeviceId);
+}
+
 // callback from tv service
 Return<void> TvServerHidlClient::TvServerHidlCallback::notifyCallback(const TvHidlParcel& hidlParcel)
 {
