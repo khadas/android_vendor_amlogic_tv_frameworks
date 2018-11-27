@@ -339,6 +339,12 @@ public class DroidLogicTvUtils
     public static final String TV_SEARCH_ATSC_CLIST = "atsc_c_list_mode";
     public static final String TV_NUMBER_SEARCH_MODE = "number_search_mode";
     public static final String TV_NUMBER_SEARCH_NUMBER = "number_search_number";
+    public static final String TV_SEARCH_DVBC_QAM = "search_dvbc_qam";
+    public static final int TV_SEARCH_DVBC_QAM16 = 1;
+    public static final int TV_SEARCH_DVBC_QAM32 = 2;
+    public static final int TV_SEARCH_DVBC_QAM64 = 3;
+    public static final int TV_SEARCH_DVBC_QAM128 = 4;
+    public static final int TV_SEARCH_DVBC_QAM256 = 5;
 
     public static final int VIDEO_UNAVAILABLE_REASON_NODATA = 5;
 
