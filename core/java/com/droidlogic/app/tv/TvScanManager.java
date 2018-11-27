@@ -168,7 +168,9 @@ public class TvScanManager {
 
     public void release() {
         try {
+            mService.unregisterListener(mListener);
             mService.release();
+            mService = null;
             mMessageListener = null;
         } catch (RemoteException e) {
             e.printStackTrace();
