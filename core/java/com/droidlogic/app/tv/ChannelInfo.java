@@ -1347,7 +1347,8 @@ public class ChannelInfo {
             || mType.equals(TvContract.Channels.TYPE_DVB_C)
             || mType.equals(TvContract.Channels.TYPE_DVB_S)
             || mType.equals(TvContract.Channels.TYPE_ATSC_T)
-            || mType.equals(TvContract.Channels.TYPE_ATSC_C));
+            || mType.equals(TvContract.Channels.TYPE_ATSC_C)
+            || mType.equals(TvContract.Channels.TYPE_ISDB_T));
     }
 
     public boolean isAtscChannel() {

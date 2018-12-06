@@ -105,6 +105,7 @@ public class TvDataBaseManager {
                           Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_DVB_S +"' or " +
                           Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_T +"' or " +
                           Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_C +"' or " +
+                          Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ISDB_T +"' or " +
                           Channels.COLUMN_TYPE + "='" + TvContract.Channels.TYPE_ATSC_M_H + "'";
         try {
             if (isatv)
@@ -119,7 +120,8 @@ public class TvDataBaseManager {
     public void deleteOtherTypeAtvOrDtvChannels(String type, boolean isatv) {
         final String[] ATVTYPE = {TvContract.Channels.TYPE_PAL, TvContract.Channels.TYPE_NTSC, TvContract.Channels.TYPE_SECAM};
         final String[] DTVTYPE = {TvContract.Channels.TYPE_DTMB, TvContract.Channels.TYPE_DVB_T, TvContract.Channels.TYPE_DVB_C,
-                                 TvContract.Channels.TYPE_DVB_S, TvContract.Channels.TYPE_ATSC_T, TvContract.Channels.TYPE_ATSC_C, TvContract.Channels.TYPE_ATSC_M_H};
+                                 TvContract.Channels.TYPE_DVB_S, TvContract.Channels.TYPE_ATSC_T, TvContract.Channels.TYPE_ATSC_C,
+                                 TvContract.Channels.TYPE_ATSC_M_H, TvContract.Channels.TYPE_ISDB_T};
         String where = null;
         String[] typelist = null;
         if (isatv) {
