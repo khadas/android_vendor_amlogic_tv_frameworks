@@ -246,6 +246,7 @@ public class DroidLogicTvUtils
     public static final String FIRSTAUTOFOUNDFREQUENCY = "first_found_frequency";
     public static final String AUTO_SEARCH_MODE = "auto_search_mode";
     public static final String KEY_SEARCH_COUNTRY = "tv_country";
+    public static final String TV_SEARCH_DTMB_NUMBER = "search_dtmb_number";
 
     /*auto tracks call*/
     public static final String ACTION_DTV_AUTO_TRACKS = "dtv_auto_tracks";
@@ -372,6 +373,17 @@ public class DroidLogicTvUtils
 
     public static boolean isChina(Context mContext) {
         return TextUtils.equals(getCountry(mContext), "CN");
+    }
+
+    public static int getCurrentDtmbPhysicalNumber(Context context) {
+        int mode = TvControlDataManager.getInstance(context).getInt(context.getContentResolver(), TV_SEARCH_DTMB_NUMBER, 0);
+        Log.d(TAG, "getCurrentDtmbPhysicalNumber = " + mode);
+        return mode;
+    }
+
+    public static void setCurrentDtmbPhysicalNumber(Context context, int number) {
+        Log.d(TAG, "setCurrentDtmbPhysicalNumber = " + number);
+        TvControlDataManager.getInstance(context).putInt(context.getContentResolver(), TV_SEARCH_DTMB_NUMBER, number);
     }
 
     public static boolean isAtscCountry(Context mContext) {
