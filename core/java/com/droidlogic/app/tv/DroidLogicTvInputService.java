@@ -211,7 +211,7 @@ public class DroidLogicTvInputService extends TvInputService implements
         if (mDeviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1
                 && mDeviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) {
             DroidLogicHdmiCecManager hdmi_cec = DroidLogicHdmiCecManager.getInstance(this);
-            if (hdmi_cec.getInputSourceType() == mDeviceId)
+            if (hdmi_cec.getInputSourceDeviceId() == mDeviceId)
                 selectHdmiDevice(0, 0, 0);
         }
     }

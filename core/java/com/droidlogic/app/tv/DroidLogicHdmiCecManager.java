@@ -34,7 +34,7 @@ public class DroidLogicHdmiCecManager {
     private int mSelectDeviceId = -1;
     private int mSelectLogicAddr = -1;
     private int mSelectPhyAddr = -1;
-    private int mSourceType = 0;
+    private int mSourceDeviceId = 0;
 
     private final Object mLock = new Object();
 
@@ -65,29 +65,29 @@ public class DroidLogicHdmiCecManager {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case CALLBACK_HANDLE_FAIL:
-                    Log.d(TAG, "select device fail, onComplete result = " + msg.arg1 + ", mSelectDeviceId = 0");
+                    Log.d(TAG, "mHandler select device fail, onComplete result = " + msg.arg1 + ", mSelectDeviceId = 0");
                     break;
                 case HDMI_DEVICE_SELECT:
-                    Log.d(TAG, "deviceSelect begin, logicAddr = " + msg.arg1);
+                    Log.d(TAG, "mHandler deviceSelect begin, logicAddr = " + msg.arg1);
                     deviceSelect((int)msg.arg1);
                     break;
                 case HDMI_PORT_SELECT:
-                    Log.d(TAG, "portSelect begin, portId = " + msg.arg1);
+                    Log.d(TAG, "mHandler portSelect begin, portId = " + msg.arg1);
                     portSelect((int)msg.arg1);
                     break;
                 case SEND_KEY_EVENT:
                     if (mTvClient == null || !mCallBackComplete) {
-                        Log.d(TAG, "sendKeyEvent fail, mTvClient is null or callback not complete.");
+                        Log.d(TAG, "mHandler sendKeyEvent fail, mTvClient is null or callback not complete.");
                         break;
                     }
                     if (mTvClient != null && mCallBackComplete) {
-                        Log.d(TAG, "sendKeyEvent, keyCode: " + msg.arg1 + " isPressed: " + msg.arg2);
+                        Log.d(TAG, "mHandler sendKeyEvent, keyCode: " + msg.arg1 + " isPressed: " + msg.arg2);
                         mTvClient.sendKeyEvent((int)msg.arg1, (((int)msg.arg2 == 1) ?  true : false));
                     }
                     break;
                 case REMOVE_DEVICE_SELECT:
                     if (mSelectLogicAddr > 0) {
-                        Log.d(TAG, "remove hdmi device select msg!");
+                        Log.d(TAG, "mHandler remove hdmi device select msg!");
                         mHandler.removeMessages(HDMI_DEVICE_SELECT);
                     }
                     break;
@@ -128,17 +128,32 @@ public class DroidLogicHdmiCecManager {
         * 2. hot plug sub device in the same parent channel
         * 3. alter to tv itself
         */
-        getInputSourceType();
+        getInputSourceDeviceId();
 
         Log.d(TAG, "selectHdmiDevice"
             + ", deviceId = " + deviceId
+            + ", logicAddr = " + logicAddr
+            + ", phyAddr = " + phyAddr
             + ", mSelectDeviceId = " + mSelectDeviceId
-            + ", mSourceType = " + mSourceType);
+            + ", mSourceDeviceId = " + mSourceDeviceId
+            + ", mSelectLogicAddr = " + mSelectLogicAddr
+            + ", mSelectPhyAddr = " + mSelectPhyAddr);
 
         boolean cecOption = (Global.getInt(mContext.getContentResolver(), HDMI_CONTROL_ENABLED, 1) == 1);
         if (!cecOption || mTvClient == null || mHdmiControlManager == null) {
             Log.d(TAG, "mTvClient or mHdmiControlManager maybe null,or cec not enable, return");
             return false;
+        }
+        if ((mSourceDeviceId < DroidLogicTvUtils.DEVICE_ID_HDMI1
+            || mSourceDeviceId > DroidLogicTvUtils.DEVICE_ID_HDMI4) && (mSelectDeviceId != 0)) {
+            /*
+             mSourceDeviceId indicates the actual deviceId when change input, but change to home, it will not be updated and still be last value.
+             mSelectDeviceId sometimes not updated when change from hdmi input to non hdmi input because connectHdmiCec not be invoked.
+            */
+            synchronized (mLock) {
+                mSelectDeviceId = 0;
+            }
+            Log.d(TAG, "mSelectDeviceId should be 0 when in non hdmi channel.");
         }
         boolean isSubDevice =  ((phyAddr & 0xfff) != 0) ? true : false;
         if (mSelectDeviceId > 0) {
@@ -146,10 +161,6 @@ public class DroidLogicHdmiCecManager {
                 if (mSelectDeviceId == deviceId) {
                     if (!isSubDevice) {
                         if ((mSelectLogicAddr == 0 && logicAddr != 0) || (mSelectLogicAddr != 0 && logicAddr == 0)) {
-                            if ((isAvrDevice(deviceId)) || (logicAddr == DEV_TYPE_TUNER && isAvrDevice(deviceId))) {
-                                Log.d(TAG, "it is avr, or a compasite avr and no sub device, return");
-                                return false;
-                            }
                             Log.d(TAG, "hot plug device in the same channel, continue");
                         }
                         if (mSelectLogicAddr == logicAddr) {
@@ -207,7 +218,7 @@ public class DroidLogicHdmiCecManager {
             mSelectLogicAddr = logicAddr;
             mSelectPhyAddr = phyAddr;
         }
-        Log.d(TAG, "mHandler handle logicAddr: " + logicAddr + " device begin");
+        Log.d(TAG, "TvClient deviceSelect begin, logicAddr: " + logicAddr);
         mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Message msg = mHandler.obtainMessage(HDMI_DEVICE_SELECT, logicAddr, 0);
         int delayTime = (deviceId == 0) ? LONGDELAYMILIS : DELAYMILIS;
@@ -239,10 +250,14 @@ public class DroidLogicHdmiCecManager {
 
     public boolean connectHdmiCec(int deviceId) {
         /* this first enter into channel or focus home icon of avr may be invoke*/
-        getInputSourceType();
+        getInputSourceDeviceId();
 
-        Log.d(TAG, "connectHdmiCec"+ ", deviceId = " + deviceId
-            + ", mSelectDeviceId = " + mSelectDeviceId+ ", mSourceType = " + mSourceType);
+        Log.d(TAG, "connectHdmiCec"
+            + ", deviceId = " + deviceId
+            + ", mSelectDeviceId = " + mSelectDeviceId
+            + ", mSourceDeviceId = " + mSourceDeviceId
+            + ", mSelectLogicAddr = " + mSelectLogicAddr
+            + ", mSelectPhyAddr = " + mSelectPhyAddr);
 
         boolean cecOption = (Global.getInt(mContext.getContentResolver(), HDMI_CONTROL_ENABLED, 1) == 1);
         if (!cecOption || mTvClient == null || mHdmiControlManager == null) {
@@ -260,8 +275,8 @@ public class DroidLogicHdmiCecManager {
             mSelectDeviceId = deviceId;
             mSelectLogicAddr = deviceId;
         }
-        mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Log.d(TAG, "TvClient portSelect begin, portId: " + portId);
+        mHandler.removeMessages(HDMI_DEVICE_SELECT);
         Message msg = mHandler.obtainMessage(HDMI_PORT_SELECT, portId, 0);
         mHandler.sendMessageDelayed(msg, 0);
         return true;
@@ -349,10 +364,10 @@ public class DroidLogicHdmiCecManager {
         return false;
     }
 
-    public int getInputSourceType() {
+    public int getInputSourceDeviceId() {
         synchronized (mLock) {
-            mSourceType = mTvControlDataManager.getInt(mContext.getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
-            return mSourceType;
+            mSourceDeviceId = mTvControlDataManager.getInt(mContext.getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, 0);
+            return mSourceDeviceId;
         }
     }
 
