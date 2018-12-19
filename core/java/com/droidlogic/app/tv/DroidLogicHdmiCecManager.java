@@ -41,6 +41,7 @@ public class DroidLogicHdmiCecManager {
     private static DroidLogicHdmiCecManager mInstance = null;
     private TvInputManager mTvInputManager;
     private TvControlDataManager mTvControlDataManager = null;
+    private TvControlManager mTvControlManager;
     private static boolean DEBUG = false;
     private static final int CALLBACK_HANDLE_FAIL = 1 << 16;
     private static final int DELAYMILIS = 100;
@@ -114,6 +115,7 @@ public class DroidLogicHdmiCecManager {
             mTvInputManager = (TvInputManager) context.getSystemService(Context.TV_INPUT_SERVICE);
 
         mTvControlDataManager = TvControlDataManager.getInstance(mContext);
+        mTvControlManager = TvControlManager.getInstance();
     }
 
     /**
@@ -196,6 +198,7 @@ public class DroidLogicHdmiCecManager {
                     return false;
                 }
             } else if (deviceId == 0) {
+                setDeviceIdForCec(deviceId);
                 Log.d(TAG, "change to home, continue");
             } else {
                 Log.d(TAG, "deviceId is invalid, return");
@@ -306,6 +309,12 @@ public class DroidLogicHdmiCecManager {
             mSelectDeviceId = deviceId ;
         }
 
+    }
+
+    public void setDeviceIdForCec(int deviceId){
+        if (mTvControlManager != null) {
+            mTvControlManager.setDeviceIdForCec(deviceId);
+        }
     }
 
     public int getPortIdByDeviceId(int deviceId) {

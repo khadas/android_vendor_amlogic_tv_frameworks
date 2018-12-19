@@ -66,7 +66,6 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     private TvInputManager mTvInputManager;
     private boolean mHasRetuned = false;
     protected Handler mSessionHandler;
-    private TvControlManager mTvControlManager;
     private TvControlDataManager mTvControlDataManager = null;
     protected DroidLogicOverlayView mOverlayView = null;
 
@@ -82,7 +81,6 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         mDeviceId = deviceId;
 
         mAudioManager = (AudioManager)context.getSystemService (Context.AUDIO_SERVICE);
-        mTvControlManager = TvControlManager.getInstance();
         mTvControlDataManager = TvControlDataManager.getInstance(mContext);
         mSessionHandler = new Handler(context.getMainLooper(), this);
         mTvInputManager = (TvInputManager)mContext.getSystemService(Context.TV_INPUT_SERVICE);
@@ -301,10 +299,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (isMain && info != null)  {
             if (mDeviceId < DroidLogicTvUtils.DEVICE_ID_HDMI1 || mDeviceId > DroidLogicTvUtils.DEVICE_ID_HDMI4) {
                 Log.d(TAG, "onSetMain, mDeviceId: " + mDeviceId + " not correct!");
-                mTvControlManager.setDeviceIdForCec(-1);
             } else {
                 mDroidLogicHdmiCecManager.connectHdmiCec(mDeviceId);
-                mTvControlManager.setDeviceIdForCec(mDeviceId);
+                mDroidLogicHdmiCecManager.setDeviceIdForCec(mDeviceId);
             }
         } else {
             if (info == null) {
