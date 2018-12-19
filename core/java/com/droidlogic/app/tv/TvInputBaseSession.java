@@ -22,6 +22,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.text.TextUtils;
 import android.util.Log;
@@ -56,6 +57,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     protected static final int MSG_SUBTITLE_SHOW = 10;
     protected static final int MSG_SUBTITLE_HIDE = 11;
     protected static final int MSG_DO_RELEASE = 12;
+    protected static final int MSG_AUDIO_MUTE = 13;
     private Context mContext;
     public int mId;
     private String mInputId;
@@ -140,7 +142,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (DEBUG)
             Log.d(TAG, "onSetStreamVolume volume = " + volume);
 
-        setAudiodMute(0.0 == volume);
+        Message msg = mSessionHandler.obtainMessage(MSG_AUDIO_MUTE);
+        msg.arg1= (int)volume;
+        msg.sendToTarget();
     }
 
     @Override
@@ -261,6 +265,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     public boolean handleMessage(Message msg) {
         if (DEBUG)
             Log.d(TAG, "handleMessage, msg.what=" + msg.what);
+
+        mSessionHandler.removeMessages(msg.what);
+
         switch (msg.what) {
             case MSG_DO_PRI_CMD:
                 doAppPrivateCmd((String)msg.obj, msg.getData());
@@ -277,6 +284,11 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
                 break;
             case MSG_DO_RELEASE:
                 doRelease();
+                break;
+            case MSG_AUDIO_MUTE:
+                long startTime = SystemClock.uptimeMillis();
+                setAudiodMute(msg.arg1 == 0);
+                if (DEBUG) Log.d(TAG, "setAudiodMute used " + (SystemClock.uptimeMillis() - startTime) + " ms");
                 break;
         }
         return false;
