@@ -333,7 +333,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
                     break;
             }
         } else {
-            Log.d(TAG, "cec device didn't exit");
+            Log.d(TAG, "cec device didn't exist");
         }
         return ret;
     }
@@ -358,7 +358,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
                     break;
             }
         } else {
-            Log.d(TAG, "cec device didn't exit");
+            Log.d(TAG, "cec device didn't exist");
         }
         return ret;
     }

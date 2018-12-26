@@ -28,7 +28,7 @@ import android.os.Message;
 public class DroidLogicHdmiCecManager {
     private static final String TAG = "DroidLogicHdmiCecManager";
 
-    private Context mContext;
+    private static Context mContext;
     private HdmiControlManager mHdmiControlManager;
     private HdmiTvClient mTvClient;
     private int mSelectDeviceId = -1;
@@ -59,7 +59,6 @@ public class DroidLogicHdmiCecManager {
     public static final int POWER_STATUS_TRANSIENT_TO_ON = 2;
     public static final int POWER_STATUS_TRANSIENT_TO_STANDBY = 3;
     private static final String HDMI_CONTROL_ENABLED = "hdmi_control_enabled";
-    private static boolean mCallBackComplete = true;
 
     private final Handler mHandler = new Handler () {
         @Override
@@ -77,11 +76,10 @@ public class DroidLogicHdmiCecManager {
                     portSelect((int)msg.arg1);
                     break;
                 case SEND_KEY_EVENT:
-                    if (mTvClient == null || !mCallBackComplete) {
-                        Log.d(TAG, "mHandler sendKeyEvent fail, mTvClient is null or callback not complete.");
-                        break;
+                    if (mTvClient == null) {
+                        Log.d(TAG, "mHandler sendKeyEvent fail, mTvClient is null ?: " + (mTvClient == null));
                     }
-                    if (mTvClient != null && mCallBackComplete) {
+                    if (mTvClient != null) {
                         Log.d(TAG, "mHandler sendKeyEvent, keyCode: " + msg.arg1 + " isPressed: " + msg.arg2);
                         mTvClient.sendKeyEvent((int)msg.arg1, (((int)msg.arg2 == 1) ?  true : false));
                     }
@@ -286,11 +284,9 @@ public class DroidLogicHdmiCecManager {
     }
 
     private void portSelect(int portId) {
-        mCallBackComplete = false;
         mTvClient.portSelect(portId, new SelectCallback() {
             @Override
             public void onComplete(int result) {
-                mCallBackComplete = true;
                 if (result != HdmiControlManager.RESULT_SUCCESS)
                     mHandler.obtainMessage(CALLBACK_HANDLE_FAIL, result, 0).sendToTarget();
                 else {
@@ -319,8 +315,9 @@ public class DroidLogicHdmiCecManager {
 
     public int getPortIdByDeviceId(int deviceId) {
         List<TvInputHardwareInfo> hardwareList = mTvInputManager.getHardwareList();
-        if (hardwareList == null || hardwareList.size() == 0)
+        if (hardwareList == null || hardwareList.size() == 0) {
             return -1;
+        }
 
         for (TvInputHardwareInfo hardwareInfo : hardwareList) {
             if (DEBUG)
@@ -362,9 +359,23 @@ public class DroidLogicHdmiCecManager {
     public boolean hasHdmiCecDevice(int deviceId) {
         if (deviceId >= DroidLogicTvUtils.DEVICE_ID_HDMI1 && deviceId <= DroidLogicTvUtils.DEVICE_ID_HDMI4) {
             int id = getPortIdByDeviceId(deviceId);
-            if (mTvClient == null)
+            if (DEBUG)
+                Log.d(TAG, "hasHdmiCecDevice, portId: " + id);
+            if (mTvClient == null) {
+                if (mHdmiControlManager != null) {
+                    mTvClient = mHdmiControlManager.getTvClient();
+                } else if (mContext != null) {
+                    mHdmiControlManager = (HdmiControlManager) mContext.getSystemService(Context.HDMI_CONTROL_SERVICE);
+                    if (mHdmiControlManager != null)
+                        mTvClient = mHdmiControlManager.getTvClient();
+                } else {
+                    Log.d(TAG, "could not get mTvClient.");
+                }
                 return false;
+            }
             for (HdmiDeviceInfo info : mTvClient.getDeviceList()) {
+                if (DEBUG)
+                    Log.d(TAG, "hasHdmiCecDevice, info: " + info);
                 if (id == ((int)info.getPortId())) {
                     return true;
                 }
