@@ -27,18 +27,20 @@ public class TvTime{
     private final static String TV_KEY_TVTIME = "dtvtime";
     private final static String PROP_SET_SYSTIME_ENABLED = "persist.tv.getdtvtime.isneed";
     private TvControlDataManager mTvControlDataManager = null;
+    private SystemControlManager mSystemControlManager = null;
+    private final static String TV_STREAM_TIME = "tv.stream.realtime";//to fit for dtvkit
 
     public TvTime(Context context){
         mContext = context;
         mTvControlDataManager = TvControlDataManager.getInstance(mContext);
+        mSystemControlManager=  SystemControlManager.getInstance();
     }
 
     public synchronized void setTime(long time){
         Date sys = new Date();
 
         diff = time - sys.getTime();
-        SystemControlManager SM = SystemControlManager.getInstance();
-        if (SM.getPropertyBoolean(PROP_SET_SYSTIME_ENABLED, false)
+        if (mSystemControlManager.getPropertyBoolean(PROP_SET_SYSTIME_ENABLED, false)
                 && (Math.abs(diff) > 1000)) {
             SystemClock.setCurrentTimeMillis(time);
             diff = 0;
@@ -46,25 +48,29 @@ public class TvTime{
             daylightSavingTime.updateDaylightSavingTimeForce();
         }
 
-        mTvControlDataManager.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, diff);
+        //mTvControlDataManager.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, diff);
+        mSystemControlManager.setProperty(TV_STREAM_TIME, String.valueOf(diff));
     }
 
 
     public synchronized long getTime(){
         Date sys = new Date();
-        diff = mTvControlDataManager.getLong(mContext.getContentResolver(), TV_KEY_TVTIME, 0);
+        //diff = mTvControlDataManager.getLong(mContext.getContentResolver(), TV_KEY_TVTIME, 0);
+        diff = mSystemControlManager.getPropertyLong(TV_STREAM_TIME, 0);
 
         return sys.getTime() + diff;
     }
 
 
     public synchronized long getDiffTime(){
-        return mTvControlDataManager.getLong(mContext.getContentResolver(), TV_KEY_TVTIME, 0);
+        //return mTvControlDataManager.getLong(mContext.getContentResolver(), TV_KEY_TVTIME, 0);
+        return mSystemControlManager.getPropertyLong(TV_STREAM_TIME, 0);
     }
 
     public synchronized void setDiffTime(long diff){
         this.diff = diff;
-        mTvControlDataManager.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, this.diff);
+        //mTvControlDataManager.putLong(mContext.getContentResolver(), TV_KEY_TVTIME, this.diff);
+        mSystemControlManager.setProperty(TV_STREAM_TIME, String.valueOf(this.diff));
     }
 }
 

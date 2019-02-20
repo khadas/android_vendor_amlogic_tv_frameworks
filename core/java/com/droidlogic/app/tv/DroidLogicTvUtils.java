@@ -34,7 +34,7 @@ import java.io.UnsupportedEncodingException;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.json.JSONException;
-
+import com.droidlogic.app.tv.TvScanConfig;
 import android.util.Log;
 
 public class DroidLogicTvUtils
@@ -214,6 +214,7 @@ public class DroidLogicTvUtils
     public static final String ACTION_LIVETV_PROGRAM_APPOINTED = "droidlogic.intent.action.livetv_appointed_program";
     public static final String KEY_LIVETV_PROGRAM_APPOINTED = "livetv_appointed_program";
     public static final String KEY_ENABLE_NOSIGNAL_TIMEOUT = "enable_nosignal_timeout";
+    public static final String PROP_DISABLE_NOSIGNAL_TIMEOUT_FUNCTION = "persist.tv.disable.nosig.timeout";
     public static final String KEY_ENABLE_SUSPEND_TIMEOUT = "enable_suspend_timeout";
 
     public static final String ACTION_ATV_AUTO_SCAN = "atv_auto_scan";
@@ -245,7 +246,6 @@ public class DroidLogicTvUtils
     public static final String RADIONUMBER = "radio_number";
     public static final String FIRSTAUTOFOUNDFREQUENCY = "first_found_frequency";
     public static final String AUTO_SEARCH_MODE = "auto_search_mode";
-    public static final String KEY_SEARCH_COUNTRY = "tv_country";
     public static final String TV_SEARCH_DTMB_NUMBER = "search_dtmb_number";
 
     /*auto tracks call*/
@@ -297,6 +297,10 @@ public class DroidLogicTvUtils
     public static final int SEARCH_TYPE_DTV_INDEX2 = 2;
     public static final int SEARCH_TYPE_DTV_INDEX3 = 3;
 
+    //tif private command action
+    public static final String ACTION_TIF_BEFORE_TUNE = "tif_before_tune";
+    public static final String ACTION_TIF_AFTER_TUNE = "tif_after_tune";
+
     public static final String SYSTEM_CAPTION_STYLE_ENABLE = "accessibility_captioning_style_enabled";
 
     /**
@@ -324,6 +328,8 @@ public class DroidLogicTvUtils
     public static final String TV_DTV_CHANNEL_INDEX  = "tv_dtv_channel_index";
     public static final String TV_CURRENT_CHANNEL_IS_RADIO = "tv_current_channel_is_radio";
     public static final String BLOCK_NORATING = "block_norating";
+    public static final String TV_CURRENT_BLOCK_STATUS = "tv.current.channel.blocked";
+    public static final String TV_CURRENT_CHANNELBLOCK_STATUS = "persist.tv.current.channelblock.blocked";
 
     public static final String TV_KEY_DTV_NUMBER_MODE = "tv_dtv_number_mode";
     public static final String TV_KEY_DTV_TYPE = "tv_dtv_type";
@@ -332,8 +338,18 @@ public class DroidLogicTvUtils
     public static final String ALL_CHANNELS_NUMBER = "all_channels_number";
     public static final String DTV_TYPE_SWITCHED = "dtv_type_switched";
     public static final String TV_SEARCH_COUNTRY = "tv_country";
+    public static final String TV_SEARCH_MODE = "tv_search_mode";
+    public static final String TV_SEARCH_MODE_MANUAL = "manual";
+    public static final String TV_SEARCH_MODE_AUTO = "auto";
+    public static final String TV_SEARCH_MODE_NIT = "nit";
     public static final String TV_SEARCH_TYPE = "tv_search_type";
+    public static final String TV_SEARCH_ORDER = "tv_search_order";
+    public static final String TV_SEARCH_ATV_DTV_MODE= "search_atv_dtv_flag";
     public static final String TV_SEARCH_TYPE_CHANGED = "tv_search_type_changed";
+    public static final String TV_SEARCH_INPUTID = "tv_search_inputid";
+    public static final String TV_CURRENT_INPUTID = "tv_current_inputid";
+    public static final String TV_SEARCH_INPUTID_CHANGED = "tv_search_inputid_changed";
+    public static final String TV_DROIDLOGIC_PACKAGE = "com.droidlogic.tvinput";
     public static final String ATV_CHANNEL_INDEX = "atv_channel_index";
     public static final String DTV_CHANNEL_INDEX = "dtv_channel_index";
     public static final String TV_INPUT_ID = "tv_input_id";
@@ -341,11 +357,30 @@ public class DroidLogicTvUtils
     public static final String TV_NUMBER_SEARCH_MODE = "number_search_mode";
     public static final String TV_NUMBER_SEARCH_NUMBER = "number_search_number";
     public static final String TV_SEARCH_DVBC_QAM = "search_dvbc_qam";
+    public static final String ATSC_TV_SEARCH_SYS = "atsc_tv_search_sys";
+    public static final String ATSC_TV_SEARCH_SOUND_SYS = "atsc_tv_search_sound_sys";
+
     public static final int TV_SEARCH_DVBC_QAM16 = 1;
     public static final int TV_SEARCH_DVBC_QAM32 = 2;
     public static final int TV_SEARCH_DVBC_QAM64 = 3;
     public static final int TV_SEARCH_DVBC_QAM128 = 4;
     public static final int TV_SEARCH_DVBC_QAM256 = 5;
+    public static final int TV_SEARCH_DVBC_QAMAUTO = 6;
+    public static final String TV_SEARCH_DVBC_SYMBOL_RATE = "search_dvbc_symbol_rate";
+    public static final int TV_SEARCH_DVBC_SYMBOL_RATE_DEFAULT = 6875000;
+
+    public static final int TV_SEARCH_ORDER_LOW = 0;
+    public static final int TV_SEARCH_ORDER_HIGH = 1;
+    public static final String[] SEARCH_ORDER_LIST = {"low_to_high", "high_to_low"};
+
+    public static final int TV_SEARCH_ATV = 0;
+    public static final int TV_SEARCH_DTV = 1;
+    public static final int TV_SEARCH_ATV_DTV = 2;
+
+    public static final int TV_ATSC_MODE_STANDARD = 0;
+    public static final int TV_ATSC_MODE_LRC = 1;
+    public static final int TV_ATSC_MODE_HRC = 2;
+    public static final int TV_ATSC_MODE_AUTO = 3;
 
     public static final int VIDEO_UNAVAILABLE_REASON_NODATA = 5;
 
@@ -397,54 +432,231 @@ public class DroidLogicTvUtils
 
     public static String getCountry(Context mContext) {
         String country = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), TV_SEARCH_COUNTRY);
-        if (TextUtils.isEmpty(country)) {
-            country = getSupportCountry().get(0);
-            setCountry(mContext, country);
+        if (TextUtils.isEmpty(country) || !TvScanConfig.TV_COUNTRY.contains(country)) {
+            String defaultCountry = TvScanConfig.getTvDefaultCountry();
+            Log.i(TAG, "getCountry error, country: " + country + " not support, set default country:" + defaultCountry);
+            country = defaultCountry;
+            TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_SEARCH_COUNTRY, country);
         }
         Log.d(TAG, "getCountry = " + country);
         return country;
     }
 
-    public static void setSearchType(Context mContext, int value) {
+    public static void setSearchType(Context mContext, String value) {
         Log.d(TAG, "setSearchType = " + value);
         if (getSearchType(mContext) != value) {
             Log.d(TAG, "tv_search_type was changed");
             TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_TYPE_CHANGED, 1);
         }
-        TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_TYPE, value);
+        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_SEARCH_TYPE, value);
     }
 
-    public static int getSearchType(Context mContext) {
-        return TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCH_TYPE, 0);
+    public static String getSearchType(Context mContext) {
+        String type = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), TV_SEARCH_TYPE);
+        if (type == null) {
+            String countryId = getCountry(mContext);
+            ArrayList<String> searchTypeList = TvScanConfig.GetTvDtvSystemList(countryId);
+            if (TvScanConfig.GetTvAtvSupport(countryId)) {
+                int i = TvScanConfig.TV_SEARCH_TYPE_ATSC_C_AUTO_INDEX;
+                for (; i<=TvScanConfig.TV_SEARCH_TYPE_ATSC_T_INDEX; i++) {
+                    if (searchTypeList.contains(TvScanConfig.TV_SEARCH_TYPE.get(i))) {
+                        break;
+                    }
+                }
+                // ATSC need be shown first
+                if (i <= TvScanConfig.TV_SEARCH_TYPE_ATSC_T_INDEX) {
+                    type = TvScanConfig.TV_SEARCH_TYPE.get(i);
+                } else {
+                    type = TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX);
+                }
+            } else {
+                type = searchTypeList.get(0);
+            }
+            TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_SEARCH_TYPE, type);
+            Log.i(TAG, "getSearchType null, set default search type:" + type);
+        }
+        Log.d(TAG, "getSearchType = " + type);
+        return type;
+    }
+
+    public static void setSearchMode(Context mContext, String mode) {
+        Log.d(TAG, "setSearchMode = " + mode);
+        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_SEARCH_MODE, mode);
+    }
+
+    public static String getSearchMode(Context mContext) {
+        String mode = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), TV_SEARCH_MODE);
+        if (mode == null) {
+            ArrayList<String> searchMode = TvScanConfig.GetTvSearchModeList(getCountry(mContext));
+            mode = searchMode.get(0);
+            TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_SEARCH_MODE, mode);
+            Log.i(TAG, "getSearchMode null, set default search mode:" + mode);
+        }
+        Log.d(TAG, "getSearchMode = " + mode);
+        return mode;
+    }
+
+    public static void setDtvType(Context mContext, String type) {
+        Log.d(TAG, "setDtvType = " + type);
+        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_KEY_DTV_TYPE, type);
+    }
+
+    public static String getDtvType(Context mContext) {
+        String type = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), TV_KEY_DTV_TYPE);
+        if (type == null) {
+            String searchType  = getSearchType(mContext);
+            type = DTV_SEARCH_TYPE_LIST.get(searchType);
+            Log.i(TAG, "getDtvType null, set default dtv type:" + type);
+            TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_KEY_DTV_TYPE, type);
+        }
+        Log.d(TAG, "getDtvType = " + type);
+        return type;
+    }
+
+    public static void setAtsccListMode(Context mContext, int mode) {
+        Log.d(TAG, "setAtsccListMode = " + mode);
+        TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_ATSC_CLIST, mode);
+    }
+
+    public static int getAtsccListMode(Context mContext) {
+        int mode = TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCH_ATSC_CLIST, TV_ATSC_MODE_STANDARD);
+        Log.d(TAG, "getAtsccListMode = " + mode);
+        return mode;
+    }
+
+    public static void setTvSearchTypeSys(Context mContext, String colorSys) {
+        Log.d(TAG, "setTvSearchTypeSys = " + colorSys);
+        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), ATSC_TV_SEARCH_SYS, colorSys);
+    }
+
+    public static String getTvSearchTypeSys(Context mContext) {
+        String colorSys = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), ATSC_TV_SEARCH_SYS);
+        if (TextUtils.isEmpty(colorSys) || !TvScanConfig.TV_SOUND_SYS.contains(colorSys)) {
+            ArrayList<String> clrSysList = TvScanConfig.GetTvAtvColorSystemList(getCountry(mContext));
+            colorSys = clrSysList.get(0);
+            Log.i(TAG, "getTvSearchTypeSys null, set default color system:" + colorSys);
+            TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), ATSC_TV_SEARCH_SYS, colorSys);
+        }
+        Log.d(TAG, "getTvSearchTypeSys = " + colorSys);
+        return colorSys;
+    }
+
+    public static void setTvSearchSoundSys(Context mContext, String soundSys) {
+        Log.d(TAG, "setTvSearchSoundSys = " + soundSys);
+        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), ATSC_TV_SEARCH_SOUND_SYS, soundSys);
+    }
+
+    public static String getTvSearchSoundSys(Context mContext) {
+        String soundSys = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), ATSC_TV_SEARCH_SOUND_SYS);
+        if (TextUtils.isEmpty(soundSys) || !TvScanConfig.TV_SOUND_SYS.contains(soundSys)) {
+            ArrayList<String> audSysList = TvScanConfig.GetTvAtvColorSystemList(getCountry(mContext));
+            soundSys = audSysList.get(0);
+            Log.i(TAG, "getTvSearchSoundSys null, set default audio system:" + soundSys);
+            TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), ATSC_TV_SEARCH_SOUND_SYS, soundSys);
+        }
+        Log.d(TAG, "getTvSearchSoundSys = " + soundSys);
+        return soundSys;
+    }
+
+    public static int getSearchStatus (Context mContext) {
+        return TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCHING_STATE, 0);
+    }
+
+    public static void resetSearchStatus (Context mContext) {
+        TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCHING_STATE, 0);
+    }
+
+    public static void resetSearchTypeChanged(Context mContext) {
+        int searchTypeChanged = TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCH_TYPE_CHANGED, 0);
+        if (searchTypeChanged == 1) {
+            TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_TYPE_CHANGED, 0);
+        }
+    }
+
+    public static void setSearchOrder(Context mContext, int mode) {
+        Log.d(TAG, "setSearchOrder = " + mode);
+        TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_ORDER, mode);
+    }
+
+    public static int getSearchOrder(Context mContext) {
+        int mode = TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCH_INPUTID_CHANGED, TV_SEARCH_ORDER_LOW);
+        Log.d(TAG, "getSearchOrder = " + mode);
+        return mode;
+    }
+
+    public static void setAtvDtvModeFlag(Context mContext, int mode) {
+        Log.d(TAG, "setAtvDtvModeFlag = " + mode);
+        TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_ATV_DTV_MODE, mode);
+    }
+
+    public static int getAtvDtvModeFlag(Context mContext) {
+        int mode = TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCH_ATV_DTV_MODE, TV_SEARCH_ATV);
+        Log.d(TAG, "getAtvDtvModeFlag = " + mode);
+        return mode;
+    }
+
+    public static void setDvbcQamMode(Context mContext, int mode) {
+        Log.d(TAG, "setDvbcQamMode = " + mode);
+        TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_DVBC_QAM, mode);
+    }
+
+    public static int getDvbcQamMode(Context mContext) {
+        int mode = TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCH_DVBC_QAM, TV_SEARCH_DVBC_QAM16);
+        Log.d(TAG, "getDvbcQamMode = " + mode);
+        return mode;
+    }
+
+    public static void setDvbcSymbolRate(Context mContext, int rate) {
+        Log.d(TAG, "setDvbcSymbolRate = " + rate);
+        TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_DVBC_SYMBOL_RATE, rate);
+    }
+
+    public static int getDvbcSymbolRate(Context mContext) {
+        int rate = TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCH_DVBC_SYMBOL_RATE, TV_SEARCH_DVBC_SYMBOL_RATE_DEFAULT);
+        Log.d(TAG, "getDvbcSymbolRate = " + rate);
+        return rate;
+    }
+
+    public static void setSearchInputId(Context mContext, String value, boolean ispassthrough) {
+        Log.d(TAG, "setSearchInputId = " + value);
+        if (!ispassthrough && !TextUtils.equals(getSearchInputId(mContext), value)) {
+            Log.d(TAG, "setSearchInputId inputid was changed");
+            TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), TV_SEARCH_INPUTID_CHANGED, 1);
+        }
+        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_SEARCH_INPUTID, value);
+    }
+
+    public static int getSearchInputIdChangeStatus(Context mContext) {
+        return TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), TV_SEARCH_INPUTID_CHANGED, 0);
+    }
+
+    public static void setCurrentInputId(Context mContext, String value) {
+        Log.d(TAG, "setCurrentInputId = " + value);
+        TvControlDataManager.getInstance(mContext).putString(mContext.getContentResolver(), TV_CURRENT_INPUTID, value);
+    }
+
+    public static String getCurrentInputId(Context mContext) {
+        return TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), TV_CURRENT_INPUTID);
+    }
+
+    public static boolean isDroidLogicInput(String inputid) {
+        if (inputid != null && inputid.startsWith("com.droidlogic.tvinput")) {
+            return true;
+        }
+        return false;
+    }
+
+    public static String getSearchInputId(Context mContext) {
+        String inputid = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), TV_SEARCH_INPUTID);
+        return inputid;
     }
 
     public static boolean isATV(Context mContext) {
-        return (getSearchType(mContext) == SEARCH_TYPE_ATV_INDEX);
+        return (getSearchType(mContext).equals(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX)));
     }
 
     public static boolean isDTV(Context mContext) {
-        return (getSearchType(mContext) == SEARCH_TYPE_DTV_INDEX1
-            || getSearchType(mContext) == SEARCH_TYPE_DTV_INDEX2
-            || getSearchType(mContext) == SEARCH_TYPE_DTV_INDEX3);
-    }
-
-    public static ArrayList<String> getSupportCountry() {
-        TvControlManager mTvControlManager = TvControlManager.getInstance();
-        String config = mTvControlManager.GetTVSupportCountries();//"CN,IN,US,ID,MX,DE";
-        Log.d(TAG, "getCountry = " + config);
-        String[] supportcountry = {"CN","IN","US","ID","MX","DE"};//default
-        ArrayList<String> getsupportlist = new ArrayList<String>();
-        if (!TextUtils.isEmpty(config)) {
-            supportcountry = config.split(",");
-            for (String temp : supportcountry) {
-                getsupportlist.add(temp);
-            }
-        } else {
-            for (String temp : supportcountry) {
-                getsupportlist.add(temp);
-            }
-        }
-        return getsupportlist;
+        return (!getSearchType(mContext).equals(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX)));
     }
 
     public static void saveInputId(Context mContext, String inputId) {
@@ -610,6 +822,21 @@ public class DroidLogicTvUtils
             return SIG_INFO_TYPE_ATV;
         return SIG_INFO_TYPE_DTV;
     }
+    public static final HashMap<String, String> DTV_SEARCH_TYPE_LIST = new HashMap<String, String>() {
+        {
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATSC_C_AUTO_INDEX), TvContract.Channels.TYPE_ATSC_C);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATSC_C_HRC_INDEX), TvContract.Channels.TYPE_ATSC_C);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATSC_C_LRC_INDEX), TvContract.Channels.TYPE_ATSC_C);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATSC_C_STD_INDEX), TvContract.Channels.TYPE_ATSC_C);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATSC_T_INDEX), TvContract.Channels.TYPE_ATSC_T);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ATV_INDEX), TvContract.Channels.TYPE_PAL);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_DTMB_INDEX), TvContract.Channels.TYPE_DTMB);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_DVBC_INDEX), TvContract.Channels.TYPE_DVB_C);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_DVBS_INDEX), TvContract.Channels.TYPE_DVB_S);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_DVBT_INDEX), TvContract.Channels.TYPE_DVB_T);
+            put(TvScanConfig.TV_SEARCH_TYPE.get(TvScanConfig.TV_SEARCH_TYPE_ISDBT_INDEX), TvContract.Channels.TYPE_ISDB_T);
+        }
+    };
 
     private static final Map<Integer, TvControlManager.SourceInput_Type> DeviceIdToTvSourceType = new HashMap<Integer, TvControlManager.SourceInput_Type>();
     static {
@@ -835,9 +1062,39 @@ public class DroidLogicTvUtils
         }
         return stringBuilder.toString();
     }
+
     public static String mapToJson(Map<String, String> map) {
         return mapToJson(null, map);
     }
+
+    //add escape character "\""
+    public static String mapToJsonAdd(String name, Map<String, String> map) {
+        StringBuilder stringBuilder = new StringBuilder();
+        boolean has_member = false;
+
+        if (!map.isEmpty()) {
+            if ((name != null) && !name.isEmpty())
+                stringBuilder.append("\"").append(name).append("\":");
+
+            stringBuilder.append("{");
+            for (String key : map.keySet()) {
+                if (has_member)
+                    stringBuilder.append(",");
+
+                String value = map.get(key);
+                stringBuilder.append("\"")
+                    .append((key != null ? key : ""))
+                    .append("\":")
+                    .append("\"")
+                    .append(value != null ? value : "")
+                    .append("\"");
+                has_member = true;
+            }
+            stringBuilder.append("}");
+        }
+        return stringBuilder.toString();
+    }
+
     public static Map<String, String> jsonToMap(String jsonString) {
         if (jsonString == null || jsonString.length() == 0)
             return null;
@@ -847,7 +1104,8 @@ public class DroidLogicTvUtils
         try {
             jsonObject = new JSONObject(jsonString);
         } catch (JSONException e) {
-            throw new RuntimeException("Json parse fail: ["+jsonString+"]", e);
+            Log.e(TAG, "Json parse fail: ["+jsonString+"]" + e.getMessage());
+            return null;
         }
 
         Iterator it = jsonObject.keys();
@@ -1326,6 +1584,7 @@ public class DroidLogicTvUtils
                 continue;
 
             int isDigitalCC = c.optInt("bdig", -1);
+            int decoder_param = c.optInt("private_data", -1);
             if (isDigitalCC == 1) {
                 int serviceNumber = c.optInt("sn", -1);
                 int easyReader = c.optInt("bwasy", 0);
@@ -1334,7 +1593,7 @@ public class DroidLogicTvUtils
                     = new ChannelInfo.Subtitle(ChannelInfo.Subtitle.TYPE_DTV_CC,
                                         ChannelInfo.Subtitle.CC_CAPTION_SERVICE1 + serviceNumber - 1,
                                         ChannelInfo.Subtitle.TYPE_DTV_CC,
-                                        0,
+                                        decoder_param,
                                         (easyReader == 0 ? 0x80 : 0) | (wideAspectRatio == 0 ? 0x40 : 0),
                                         c.optString("lng", ""),
                                         count++);

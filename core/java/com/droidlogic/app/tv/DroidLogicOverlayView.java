@@ -21,6 +21,7 @@ public abstract class DroidLogicOverlayView extends FrameLayout {
     private static final String TAG = "DroidLogicOverlayView";
 
     protected ImageView mImageView;
+    protected ImageView mTuningImageView;
     protected TextView mTextView;
     protected View mSubtitleView;
     protected TextView mEasTextView;
@@ -51,6 +52,10 @@ public abstract class DroidLogicOverlayView extends FrameLayout {
 
     public void setImageVisibility(boolean visible) {
         mImageView.setVisibility(visible ? VISIBLE : GONE);
+    }
+
+    public void setTuningImageVisibility(boolean visible) {
+        mTuningImageView.setVisibility(visible ? VISIBLE : GONE);
     }
 
     public void setText(int resId) {

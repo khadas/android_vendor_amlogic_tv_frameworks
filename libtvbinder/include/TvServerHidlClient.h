@@ -37,6 +37,8 @@ using ::vendor::amlogic::hardware::tvserver::V1_0::ITvServerCallback;
 using ::vendor::amlogic::hardware::tvserver::V1_0::ConnectType;
 using ::vendor::amlogic::hardware::tvserver::V1_0::SignalInfo;
 using ::vendor::amlogic::hardware::tvserver::V1_0::TvHidlParcel;
+using ::vendor::amlogic::hardware::tvserver::V1_0::Result;
+
 
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_string;
@@ -94,6 +96,10 @@ public:
     int vdinUpdateForPQ(int32_t gameStatus, int32_t pcStatus, int32_t autoSwitchFlag);
     int setWssStatus(int status);
     int setDeviceIdForCec(int DeviceId);
+    int getTvRunStatus(void);
+    int setLcdEnable(int32_t enable);
+    int readMacAddress(char *value);
+    int saveMacAddress(const char *value);
 
 private:
     class TvServerHidlCallback : public ITvServerCallback {

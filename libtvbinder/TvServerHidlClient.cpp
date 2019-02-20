@@ -254,6 +254,40 @@ int TvServerHidlClient::setDeviceIdForCec(int DeviceId) {
     return mTvServer->setDeviceIdForCec(DeviceId);
 }
 
+int TvServerHidlClient::getTvRunStatus(void) {
+    return mTvServer->getTvRunStatus();
+}
+
+int TvServerHidlClient::setLcdEnable(int32_t enable) {
+    return mTvServer->setLcdEnable(enable);
+}
+
+int TvServerHidlClient::readMacAddress(char *value) {
+    hidl_array<int32_t, 6> result;
+    mTvServer->readMacAddress([&result](const Result &ret, const hidl_array<int32_t, 6> v) {
+        if (Result::OK == ret) {
+            for (int i=0;i<6;i++) {
+                result[i] = v[i];
+            }
+        }
+    });
+
+    for (int j=0;j<6;j++) {
+        value[j] = result[j];
+    }
+
+    return 0;
+}
+
+int TvServerHidlClient::saveMacAddress(const char *data_buf) {
+    int value[6] = {0};
+    int i = 0;
+    for (i=0;i<6;i++) {
+        value[i] = data_buf[i];
+    }
+
+    return mTvServer->saveMacAddress(value);
+}
 // callback from tv service
 Return<void> TvServerHidlClient::TvServerHidlCallback::notifyCallback(const TvHidlParcel& hidlParcel)
 {
