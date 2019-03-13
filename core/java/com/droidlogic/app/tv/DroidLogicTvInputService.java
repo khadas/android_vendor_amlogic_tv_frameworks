@@ -28,7 +28,9 @@ import android.provider.Settings;
 import android.content.Context;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.media.tv.TvInputHardwareInfo;
@@ -953,11 +955,24 @@ public class DroidLogicTvInputService extends TvInputService implements
     private static final String CMD_START_SOUND_EFFECT = "com.droidlogic.tv.settings.AudioEffectsSettingManagerService.STARTUP";
 
     private void startTvServices () {
-        if  (!isServiceRunning(SOUDND_EFFECT_SERVICE_NAME)) {
+        if  (isAppExist(SOUDND_EFFECT_PACKAGE_NAME) && !isServiceRunning(SOUDND_EFFECT_SERVICE_NAME)) {
             Intent intent = new Intent();
             intent.setComponent(new ComponentName(SOUDND_EFFECT_PACKAGE_NAME, SOUDND_EFFECT_SERVICE_NAME));
             intent.setAction(CMD_START_SOUND_EFFECT);
             startService(intent);
+        }
+    }
+
+    private boolean isAppExist (String packageName) {
+        if (TextUtils.isEmpty(packageName)) {
+            return false;
+        }
+
+        try {
+            ApplicationInfo info = this.getPackageManager().getApplicationInfo(packageName, 0);
+            return info != null;
+        } catch (NameNotFoundException e) {
+            return false;
         }
     }
 
