@@ -950,9 +950,9 @@ public class DroidLogicTvInputService extends TvInputService implements
                 mContentResolver, ACCESSIBILITY_CAPTIONING_PRESET, 0);
     }
 
-    private static final String SOUDND_EFFECT_PACKAGE_NAME ="com.droidlogic.tv.soundeffectsettings";
-    private static final String SOUDND_EFFECT_SERVICE_NAME ="com.droidlogic.tv.soundeffectsettings.AudioEffectsSettingManagerService";
-    private static final String CMD_START_SOUND_EFFECT = "com.droidlogic.tv.settings.AudioEffectsSettingManagerService.STARTUP";
+    private static final String SOUDND_EFFECT_PACKAGE_NAME ="com.droidlogic.tvinput";
+    private static final String SOUDND_EFFECT_SERVICE_NAME ="com.droidlogic.tvinput.services.AudioEffectsService";
+    private static final String CMD_START_SOUND_EFFECT = "com.droidlogic.tvinput.services.AudioEffectsService.STARTUP";
 
     private void startTvServices () {
         if  (isAppExist(SOUDND_EFFECT_PACKAGE_NAME) && !isServiceRunning(SOUDND_EFFECT_SERVICE_NAME)) {

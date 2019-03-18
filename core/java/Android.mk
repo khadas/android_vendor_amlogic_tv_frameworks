@@ -9,6 +9,7 @@ LOCAL_SRC_FILES := \
 
 LOCAL_SRC_FILES += com/droidlogic/tvinput/services/ITvScanService.aidl
 LOCAL_SRC_FILES += com/droidlogic/tvinput/services/IUpdateUiCallbackListener.aidl
+LOCAL_SRC_FILES += com/droidlogic/tvinput/services/IAudioEffectsService.aidl
 
 LOCAL_MODULE := droidlogic-tv
 LOCAL_MODULE_CLASS := JAVA_LIBRARIES
