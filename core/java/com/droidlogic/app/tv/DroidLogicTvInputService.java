@@ -170,10 +170,12 @@ public class DroidLogicTvInputService extends TvInputService implements
         super.onCreate();
         mTvInputManager = (TvInputManager)this.getSystemService(Context.TV_INPUT_SERVICE);
         mSystemControlManager = SystemControlManager.getInstance();
+        mTvControlManager = TvControlManager.getInstance();
         mAudioManager = (AudioManager)this.getSystemService (Context.AUDIO_SERVICE);
         mTvControlDataManager = TvControlDataManager.getInstance(this);
         mContentResolver = this.getContentResolver();
         mActivityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        initTvPlaySetting();
         startTvServices();
     }
 
@@ -242,8 +244,6 @@ public class DroidLogicTvInputService extends TvInputService implements
             }
         }
 
-        if (mTvControlManager == null)
-            mTvControlManager = TvControlManager.getInstance();
         mTvControlManager.SetSigInfoChangeListener(this);
         mTvControlManager.SetSourceConnectListener(this);
         mTvControlManager.setScanningFrameStableListener(this);
@@ -523,8 +523,6 @@ public class DroidLogicTvInputService extends TvInputService implements
     }
 
     public void resetScanStoreListener() {
-        if (mTvControlManager == null)
-            mTvControlManager = TvControlManager.getInstance();;
         mTvControlManager.setStorDBListener(this);
         Log.d(TAG, "resetScanStoreListener service-->mCurrentInputId:" + mCurrentInputId + ", mSourceType:"+mSourceType + ", mChildClassName =" + mChildClassName);
     }
@@ -948,6 +946,39 @@ public class DroidLogicTvInputService extends TvInputService implements
     public int getCaptionRawUserStyle() {
         return Secure.getInt(
                 mContentResolver, ACCESSIBILITY_CAPTIONING_PRESET, 0);
+    }
+
+    private static final String INPUT_ID_ADTV = "com.droidlogic.tvinput/.services.ADTVInputService/HW16";
+    private void initTvPlaySetting() {
+        //tv_current_device_id
+        if (mTvControlDataManager.getInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID, -1) == -1) {
+            mTvControlDataManager.putInt(getContentResolver(), DroidLogicTvUtils.TV_CURRENT_DEVICE_ID,
+                      DroidLogicTvUtils.DEVICE_ID_ADTV);
+        }
+
+        //tv_current_inputid
+        if (TextUtils.isEmpty(DroidLogicTvUtils.getCurrentInputId(this))) {
+            DroidLogicTvUtils.setCurrentInputId(this, INPUT_ID_ADTV);
+        }
+
+        //tv_search_inputid
+        if (TextUtils.isEmpty(DroidLogicTvUtils.getSearchInputId(this))) {
+            mTvControlDataManager.putString(getContentResolver(), DroidLogicTvUtils.TV_SEARCH_INPUTID, INPUT_ID_ADTV);
+        }
+
+        //tv_search_type
+        if (TextUtils.isEmpty(mTvControlDataManager.getString(getContentResolver(),
+                DroidLogicTvUtils.TV_SEARCH_TYPE))) {
+            String country = mTvControlManager.getTvDefaultCountry();
+            if (!TextUtils.isEmpty(country)) {
+                if (mTvControlManager.GetTvAtvSupport(country)) {
+                    mTvControlDataManager.putString(getContentResolver(), DroidLogicTvUtils.TV_SEARCH_TYPE, "ATV");
+                } else if (mTvControlManager.GetTvDtvSupport(country)) {
+                    mTvControlDataManager.putString(getContentResolver(), DroidLogicTvUtils.TV_SEARCH_TYPE,
+                            mTvControlManager.GetTvDtvSystem(country));
+                }
+            }
+        }
     }
 
     private static final String SOUDND_EFFECT_PACKAGE_NAME ="com.droidlogic.tvinput";
