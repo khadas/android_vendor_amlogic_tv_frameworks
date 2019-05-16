@@ -10,7 +10,8 @@
 package com.droidlogic.app.tv;
 
 import android.util.Log;
-import vendor.amlogic.hardware.tvserver.V1_0.TvHidlParcel;
+import com.droidlogic.app.tv.TvControlManager.TvHidlParcel;
+//import vendor.amlogic.hardware.tvserver.V1_0.TvHidlParcel;
 
 
 public class EasEvent {
@@ -80,81 +81,81 @@ public class EasEvent {
         int i, j, k, index = 0;
         index++;//skip sectionCount
 
-        tableId = p.bodyInt.get(index++);
-        extension = p.bodyInt.get(index++);
-        version = p.bodyInt.get(index++);
-        currentNext = p.bodyInt.get(index++);
-        sequenceNum = p.bodyInt.get(index++);
-        protocolVersion = p.bodyInt.get(index++);
-        easEventId = p.bodyInt.get(index++);
+        tableId = p.bodyInt[index++];
+        extension = p.bodyInt[index++];
+        version = p.bodyInt[index++];
+        currentNext = p.bodyInt[index++];
+        sequenceNum = p.bodyInt[index++];
+        protocolVersion = p.bodyInt[index++];
+        easEventId = p.bodyInt[index++];
         easOrigCode = new int[3];
         for (j=0;j<3;j++) {
-            easOrigCode[j] = p.bodyInt.get(index++);
+            easOrigCode[j] = p.bodyInt[index++];
         }
-        easEventCodeLen = p.bodyInt.get(index++);
+        easEventCodeLen = p.bodyInt[index++];
         if (easEventCodeLen != 0) {
             easEventCode = new int[easEventCodeLen];
             for (j=0;j<easEventCodeLen;j++)
-                easEventCode[j] = p.bodyInt.get(index++);
+                easEventCode[j] = p.bodyInt[index++];
         }
-        alertMessageTimeRemaining = p.bodyInt.get(index++);
-        eventStartTime = p.bodyInt.get(index++);
-        eventDuration = p.bodyInt.get(index++);
-        alertPriority = p.bodyInt.get(index++);
-        detailsOOBSourceID = p.bodyInt.get(index++);
-        detailsMajorChannelNumber = p.bodyInt.get(index++);
-        detailsMinorChannelNumber = p.bodyInt.get(index++);
-        audioOOBSourceID = p.bodyInt.get(index++);
-        locationCount = p.bodyInt.get(index++);
+        alertMessageTimeRemaining = p.bodyInt[index++];
+        eventStartTime = p.bodyInt[index++];
+        eventDuration = p.bodyInt[index++];
+        alertPriority = p.bodyInt[index++];
+        detailsOOBSourceID = p.bodyInt[index++];
+        detailsMajorChannelNumber = p.bodyInt[index++];
+        detailsMinorChannelNumber = p.bodyInt[index++];
+        audioOOBSourceID = p.bodyInt[index++];
+        locationCount = p.bodyInt[index++];
         if (locationCount != 0) {
             location = new Location[locationCount];
             for (j=0;j<locationCount;j++) {
                 location[j] = new Location();
-                location[j].stateCode = p.bodyInt.get(index++);
-                location[j].countySubdiv = p.bodyInt.get(index++);
-                location[j].countyCode = p.bodyInt.get(index++);
+                location[j].stateCode = p.bodyInt[index++];
+                location[j].countySubdiv = p.bodyInt[index++];
+                location[j].countyCode = p.bodyInt[index++];
             }
         }
-        exceptionCount = p.bodyInt.get(index++);
+        exceptionCount = p.bodyInt[index++];
         if (exceptionCount != 0) {
             exceptionList = new ExceptionList[exceptionCount];
             for (j=0;j<exceptionCount;j++) {
                 exceptionList[j] = new ExceptionList();
-                exceptionList[j].inBandRefer = p.bodyInt.get(index++);
-                exceptionList[j].exceptionMajorChannelNumber = p.bodyInt.get(index++);
-                exceptionList[j].exceptionMinorChannelNumber = p.bodyInt.get(index++);
-                exceptionList[j].exceptionOOBSourceID = p.bodyInt.get(index++);
+                exceptionList[j].inBandRefer = p.bodyInt[index++];
+                exceptionList[j].exceptionMajorChannelNumber = p.bodyInt[index++];
+                exceptionList[j].exceptionMinorChannelNumber = p.bodyInt[index++];
+                exceptionList[j].exceptionOOBSourceID = p.bodyInt[index++];
             }
         }
-        multiTextCount = p.bodyInt.get(index++);
+        multiTextCount = p.bodyInt[index++];
         if (multiTextCount != 0) {
             multiText = new MultiStr[multiTextCount];
             for (j=0;j<multiTextCount;j++) {
                 multiText[j] = new MultiStr();
                 multiText[j].lang = new int[3];
-                multiText[j].lang[0] = p.bodyInt.get(index++);
-                multiText[j].lang[1] = p.bodyInt.get(index++);
-                multiText[j].lang[2] = p.bodyInt.get(index++);
-                multiText[j].type = p.bodyInt.get(index++);
-                multiText[j].compressionType = p.bodyInt.get(index++);
-                multiText[j].mode = p.bodyInt.get(index++);
-                multiText[j].numberBytes = p.bodyInt.get(index++);
+                multiText[j].lang[0] = p.bodyInt[index++];
+                multiText[j].lang[1] = p.bodyInt[index++];
+                multiText[j].lang[2] = p.bodyInt[index++];
+                multiText[j].type = p.bodyInt[index++];
+                multiText[j].compressionType = p.bodyInt[index++];
+                multiText[j].mode = p.bodyInt[index++];
+                multiText[j].numberBytes = p.bodyInt[index++];
                 multiText[j].compressedStr = new int[multiText[j].numberBytes];
                 for (k=0;k<multiText[j].numberBytes;k++) {
-                    multiText[j].compressedStr[k] = p.bodyInt.get(index++);
+                    multiText[j].compressedStr[k] = p.bodyInt[index++];
                 }
             }
         }
-        descriptorTextCount = p.bodyInt.get(index++);
+        descriptorTextCount = p.bodyInt[index++];
         if (descriptorTextCount != 0) {
             descriptor = new Descriptor[descriptorTextCount];
             for (j=0;j<descriptorTextCount;j++) {
                 descriptor[j] = new Descriptor();
-                descriptor[j].tag = p.bodyInt.get(index++);
-                descriptor[j].length = p.bodyInt.get(index++);
+                descriptor[j].tag = p.bodyInt[index++];
+                descriptor[j].length = p.bodyInt[index++];
                 descriptor[j].data = new int[descriptor[j].length];
                 for (k=0;k<descriptor[j].length;k++) {
-                    descriptor[j].data[k] = p.bodyInt.get(index++);
+                    descriptor[j].data[k] = p.bodyInt[index++];
                 }
             }
         }

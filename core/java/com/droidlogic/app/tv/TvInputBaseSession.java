@@ -53,11 +53,13 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     private static final boolean DEBUG = true;
     private static final String TAG = "TvInputBaseSession";
 
-    private static final int MSG_DO_PRI_CMD = 9;
-    protected static final int MSG_SUBTITLE_SHOW = 10;
-    protected static final int MSG_SUBTITLE_HIDE = 11;
-    protected static final int MSG_DO_RELEASE = 12;
-    protected static final int MSG_AUDIO_MUTE = 13;
+    private static final int    MSG_DO_PRI_CMD              = 9;
+    protected static final int  MSG_SUBTITLE_SHOW           = 10;
+    protected static final int  MSG_SUBTITLE_HIDE           = 11;
+    protected static final int  MSG_DO_RELEASE              = 12;
+    protected static final int  MSG_AUDIO_MUTE              = 13;
+    protected static final int  MSG_IMAGETEXT_SET           = 14;
+
     private Context mContext;
     public int mId;
     private String mInputId;
@@ -215,10 +217,9 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     public void notifyVideoUnavailable(int reason) {
         Log.d(TAG, "notifyVideoUnavailable: "+reason);
         super.notifyVideoUnavailable(reason);
-        if (mOverlayView != null) {
-            mOverlayView.setImageVisibility(true);
-            mOverlayView.setTextVisibility(true);
-        }
+        Message msg = mSessionHandler.obtainMessage(MSG_IMAGETEXT_SET);
+        mSessionHandler.removeMessages(msg.what);
+        msg.sendToTarget();
     }
 
 
@@ -287,6 +288,12 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
                 long startTime = SystemClock.uptimeMillis();
                 setAudiodMute(msg.arg1 == 0);
                 if (DEBUG) Log.d(TAG, "setAudiodMute used " + (SystemClock.uptimeMillis() - startTime) + " ms");
+                break;
+            case MSG_IMAGETEXT_SET:
+                if (mOverlayView != null) {
+                    mOverlayView.setImageVisibility(true);
+                    mOverlayView.setTextVisibility(true);
+                }
                 break;
         }
         return false;

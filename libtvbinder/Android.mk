@@ -4,23 +4,16 @@ include $(CLEAR_VARS)
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES:= \
-    TvServerHidlClient.cpp \
-    TvClient.cpp \
-    ITv.cpp \
-    ITvClient.cpp \
-    ITvService.cpp
+    TvServerHidlClient.cpp
 
 LOCAL_SHARED_LIBRARIES := \
     vendor.amlogic.hardware.tvserver@1.0 \
     libbase \
     libhidlbase \
     libhidltransport \
-    libhidlmemory \
-    android.hidl.allocator@1.0 \
     liblog \
     libcutils \
-    libutils \
-    libbinder
+    libutils
 
 LOCAL_C_INCLUDES += \
   system/libhidl/transport/include/hidl \

@@ -26,7 +26,6 @@
 #include <utils/threads.h>
 #include <utils/RefBase.h>
 #include <utils/Mutex.h>
-#include <binder/Parcel.h>
 
 #include <vendor/amlogic/hardware/tvserver/1.0/ITvServer.h>
 
@@ -38,7 +37,9 @@ using ::vendor::amlogic::hardware::tvserver::V1_0::ConnectType;
 using ::vendor::amlogic::hardware::tvserver::V1_0::SignalInfo;
 using ::vendor::amlogic::hardware::tvserver::V1_0::TvHidlParcel;
 using ::vendor::amlogic::hardware::tvserver::V1_0::Result;
-
+using ::vendor::amlogic::hardware::tvserver::V1_0::FreqList;
+using ::vendor::amlogic::hardware::tvserver::V1_0::FormatInfo;
+using ::vendor::amlogic::hardware::tvserver::V1_0::RRTSearchInfo;
 
 using ::android::hardware::hidl_array;
 using ::android::hardware::hidl_string;
@@ -72,7 +73,7 @@ public:
 
     void reconnect();
     void disconnect();
-    status_t processCmd(const Parcel &p, Parcel *r);
+    //status_t processCmd(const Parcel &p, Parcel *r);
     void setListener(const sp<TvListener> &listener);
 
     int startTv();
@@ -84,7 +85,7 @@ public:
     std::string getSupportInputDevices();
     int getHdmiPorts(int32_t inputSrc);
 
-    void getCurSignalInfo(int &fmt, int &transFmt, int &status, int &frameRate);
+    SignalInfo getCurSignalInfo();
     int setMiscCfg(const std::string& key, const std::string& val);
     std::string getMiscCfg(const std::string& key, const std::string& def);
     int setHdmiEdidVersion(int32_t port_id, int32_t ver);
@@ -100,6 +101,60 @@ public:
     int setLcdEnable(int32_t enable);
     int readMacAddress(char *value);
     int saveMacAddress(const char *value);
+    std::string getTvSupportCountries();
+    std::string getTvDefaultCountry();
+    std::string getTvCountryName(const std::string& country_code);
+    std::string getTvSearchMode(const std::string& country_code);
+    bool getTvDtvSupport(const std::string& country_code);
+    std::string getTvDtvSystem(const std::string& country_code);
+    bool getTvAtvSupport(const std::string& country_code);
+    std::string getTvAtvColorSystem(const std::string& country_code);
+    std::string getTvAtvSoundSystem(const std::string& country_code);
+    std::string getTvAtvMinMaxFreq(const std::string& country_code);
+    bool getTvAtvStepScan(const std::string& country_code);
+    void setTvCountry(const std::string& country);
+    void setCurrentLanguage(const std::string& lang);
+    int getTvAction(void);
+    int getCurrentSourceInput();
+    int getCurrentVirtualSourceInput();
+    int setSourceInput(int inputSrc);
+    int setSourceInputExt(int inputSrc, int vInputSrc);
+    int isDviSIgnal();
+    int isVgaTimingInHdmi();
+    int setAudioOutmode(int mode);
+    int getAudioOutmode();
+    int getAudioStreamOutmode();
+    int getAtvAutoScanMode();
+    int setAmAudioPreMute(int mute);
+    int SSMInitDevice();
+    int dtvScan(int mode, int scan_mode, int beginFreq, int endFreq, int para1, int para2);
+    int atvAutoScan(int videoStd, int audioStd, int searchType, int procMode);
+    int atvManualScan(int startFreq, int endFreq, int videoStd, int audioStd);
+    int pauseScan();
+    int resumeScan();
+    int operateDeviceForScan(int type);
+    int atvdtvGetScanStatus();
+    int setDvbTextCoding(const std::string& coding);
+    int setBlackoutEnable(int status, int is_save);
+    int getBlackoutEnable();
+    int getATVMinMaxFreq(int scanMinFreq, int scanMaxFreq);
+    std::vector<FreqList> dtvGetScanFreqListMode(int mode);
+    int updateRRT(int freq, int moudle, int mode);
+    RRTSearchInfo searchRrtInfo(int rating_region_id, int dimension_id, int value_id, int program_id);
+    int dtvStopScan();
+    int dtvGetSignalStrength();
+    int dtvSetAudioChannleMod(int audioChannelIdx);
+    int DtvSwitchAudioTrack3(int audio_pid, int audio_format, int audio_param);
+    int DtvSwitchAudioTrack(int prog_id, int audio_track_id);
+    int DtvSetAudioAD(int enable, int audio_pid, int audio_format);
+    FormatInfo dtvGetVideoFormatInfo();
+    int Scan(const std::string& feparas, const std::string& scanparas);
+    int tvSetFrontEnd(const std::string& feparas, int force);
+    int tvSetFrontendParms(int feType, int freq, int vStd, int aStd, int vfmt, int soundsys, int p1, int p2);
+    int sendRecordingCmd(int cmd, const std::string& id, const std::string& param);
+    int sendPlayCmd(int32_t cmd, const std::string& id, const std::string& param);
+    int getIwattRegs();
+    int FactoryCleanAllTableForProgram();
 
 private:
     class TvServerHidlCallback : public ITvServerCallback {

@@ -22,15 +22,9 @@
 #define LOG_TAG "TvServerHidlClient"
 #include <utils/Log.h>
 
-#include <android/hidl/allocator/1.0/IAllocator.h>
-#include <android/hidl/memory/1.0/IMemory.h>
-#include <hidlmemory/mapping.h>
 #include "include/TvServerHidlClient.h"
 
 namespace android {
-
-using ::android::hidl::allocator::V1_0::IAllocator;
-using ::android::hidl::memory::V1_0::IMemory;
 
 Mutex TvServerHidlClient::mLock;
 
@@ -112,6 +106,7 @@ void TvServerHidlClient::disconnect()
     ALOGD("disconnect");
 }
 
+/*
 status_t TvServerHidlClient::processCmd(const Parcel &p, Parcel *r __unused)
 {
     int cmd = p.readInt32();
@@ -151,7 +146,7 @@ status_t TvServerHidlClient::processCmd(const Parcel &p, Parcel *r __unused)
     }
     return ret;
 #endif
-}
+}*/
 
 void TvServerHidlClient::setListener(const sp<TvListener> &listener)
 {
@@ -196,13 +191,15 @@ int TvServerHidlClient::getHdmiPorts(int32_t inputSrc) {
     return mTvServer->getHdmiPorts(inputSrc);
 }
 
-void TvServerHidlClient::getCurSignalInfo(int &fmt, int &transFmt, int &status, int &frameRate) {
+SignalInfo TvServerHidlClient::getCurSignalInfo() {
+    SignalInfo signalInfo;
     mTvServer->getCurSignalInfo([&](const SignalInfo& info) {
-        fmt = info.fmt;
-        transFmt = info.transFmt;
-        status = info.status;
-        frameRate = info.frameRate;
+        signalInfo.fmt = info.fmt;
+        signalInfo.transFmt = info.transFmt;
+        signalInfo.status = info.status;
+        signalInfo.frameRate = info.frameRate;
     });
+    return signalInfo;
 }
 
 int TvServerHidlClient::setMiscCfg(const std::string& key, const std::string& val) {
@@ -288,6 +285,279 @@ int TvServerHidlClient::saveMacAddress(const char *data_buf) {
 
     return mTvServer->saveMacAddress(value);
 }
+
+std::string TvServerHidlClient::getTvSupportCountries() {
+    std::string tvCountries;
+    mTvServer->getTvSupportCountries([&](const ::android::hardware::hidl_string& Countries) {
+        tvCountries = Countries;
+    });
+    return tvCountries;
+}
+
+std::string TvServerHidlClient::getTvDefaultCountry() {
+    std::string Country;
+    mTvServer->getTvDefaultCountry([&](const ::android::hardware::hidl_string& CountryName){
+        Country = CountryName;
+    });
+    return Country;
+}
+
+std::string TvServerHidlClient::getTvCountryName(const std::string& country_code) {
+    std::string Country;
+    mTvServer->getTvCountryName(country_code, [&](const ::android::hardware::hidl_string& CountryName){
+        Country = CountryName;
+    });
+    return Country;
+}
+
+std::string TvServerHidlClient::getTvSearchMode(const std::string& country_code) {
+    std::string mode;
+    mTvServer->getTvSearchMode(country_code, [&](const ::android::hardware::hidl_string& strMode){
+        mode = strMode;
+    });
+    return mode;
+}
+
+bool TvServerHidlClient::getTvDtvSupport(const std::string& country_code) {
+    return mTvServer->getTvDtvSupport(country_code);
+}
+
+std::string TvServerHidlClient::getTvDtvSystem(const std::string& country_code) {
+    std::string strSystem;
+    mTvServer->getTvDtvSystem(country_code, [&](const ::android::hardware::hidl_string& str){
+        strSystem = str;
+    });
+    return strSystem;
+}
+
+bool TvServerHidlClient::getTvAtvSupport(const std::string& country_code) {
+    return mTvServer->getTvAtvSupport(country_code);
+}
+
+std::string TvServerHidlClient::getTvAtvColorSystem(const std::string& country_code) {
+    std::string ColorSystem;
+    mTvServer->getTvAtvColorSystem(country_code, [&](const ::android::hardware::hidl_string& TmpColorSystem){
+        ColorSystem = TmpColorSystem;
+    });
+    return ColorSystem;
+}
+std::string TvServerHidlClient::getTvAtvSoundSystem(const std::string& country_code) {
+    std::string SoundSystem;
+    mTvServer->getTvAtvSoundSystem(country_code, [&](const ::android::hardware::hidl_string& TmpSoundSystem){
+        SoundSystem = TmpSoundSystem;
+    });
+    return SoundSystem;
+}
+
+std::string TvServerHidlClient::getTvAtvMinMaxFreq(const std::string& country_code) {
+    std::string MinMaxFreq;
+    mTvServer->getTvAtvMinMaxFreq(country_code, [&](const ::android::hardware::hidl_string& TmpMinMaxFreq){
+        MinMaxFreq = TmpMinMaxFreq;
+    });
+    return MinMaxFreq;
+}
+
+bool TvServerHidlClient::getTvAtvStepScan(const std::string& country_code) {
+    return mTvServer->getTvAtvStepScan(country_code);
+}
+
+void TvServerHidlClient::setTvCountry(const std::string& country) {
+    mTvServer->setTvCountry(country);
+}
+
+void TvServerHidlClient::setCurrentLanguage(const std::string& lang) {
+    mTvServer->setCurrentLanguage(lang);
+}
+
+int TvServerHidlClient::getTvAction(void) {
+    return mTvServer->getTvAction();
+}
+
+int TvServerHidlClient::getCurrentSourceInput() {
+    return mTvServer->getCurrentSourceInput();
+}
+
+int TvServerHidlClient::getCurrentVirtualSourceInput() {
+    return mTvServer->getCurrentVirtualSourceInput();
+}
+
+int TvServerHidlClient::setSourceInput(int inputSrc) {
+    return mTvServer->setSourceInput(inputSrc);
+}
+
+int TvServerHidlClient::setSourceInputExt(int inputSrc, int vInputSrc) {
+    return mTvServer->setSourceInputExt(inputSrc, vInputSrc);
+}
+
+int TvServerHidlClient::isDviSIgnal() {
+     return mTvServer->isDviSIgnal();
+}
+
+int TvServerHidlClient::isVgaTimingInHdmi() {
+    return mTvServer->isVgaTimingInHdmi();
+}
+
+int TvServerHidlClient::setAudioOutmode(int mode) {
+    return mTvServer->setAudioOutmode(mode);
+}
+
+int TvServerHidlClient::getAudioOutmode() {
+    return mTvServer->getAudioOutmode();
+}
+
+int TvServerHidlClient::getAudioStreamOutmode() {
+    return mTvServer->getAudioStreamOutmode();
+}
+
+int TvServerHidlClient::getAtvAutoScanMode() {
+    return mTvServer->getAtvAutoScanMode();
+}
+
+int TvServerHidlClient::setAmAudioPreMute(int mute) {
+    return mTvServer->setAmAudioPreMute(mute);
+}
+
+int TvServerHidlClient::SSMInitDevice() {
+    return mTvServer->SSMInitDevice();
+}
+
+int TvServerHidlClient::dtvScan(int mode, int scan_mode, int beginFreq, int endFreq, int para1, int para2) {
+    return mTvServer->dtvScan(mode, scan_mode, beginFreq, endFreq, para1, para2);
+}
+
+int TvServerHidlClient::atvAutoScan(int videoStd, int audioStd, int searchType, int procMode) {
+    return mTvServer->atvAutoScan(videoStd, audioStd, searchType, procMode);
+}
+
+int TvServerHidlClient::atvManualScan(int startFreq, int endFreq, int videoStd, int audioStd) {
+    return mTvServer->atvMunualScan(startFreq, endFreq, videoStd, audioStd);
+}
+
+int TvServerHidlClient::pauseScan() {
+    return mTvServer->pauseScan();
+}
+
+int TvServerHidlClient::resumeScan() {
+    return mTvServer->resumeScan();
+}
+
+int TvServerHidlClient::operateDeviceForScan(int type) {
+    return mTvServer->operateDeviceForScan(type);
+}
+
+int TvServerHidlClient::atvdtvGetScanStatus() {
+    return mTvServer->atvdtvGetScanStatus();
+}
+
+int TvServerHidlClient::setDvbTextCoding(const std::string& coding) {
+    return mTvServer->setDvbTextCoding(coding);
+}
+
+int TvServerHidlClient::setBlackoutEnable(int status, int is_save) {
+    return mTvServer->setBlackoutEnable(status, is_save);
+}
+
+int TvServerHidlClient::getBlackoutEnable() {
+    return mTvServer->getBlackoutEnable();
+}
+
+int TvServerHidlClient::getATVMinMaxFreq(int scanMinFreq, int scanMaxFreq) {
+    int ret =-1;
+    mTvServer->getATVMinMaxFreq([&](int retT, int scanMinFreqT, int scanMaxFreqT){
+        scanMinFreq = scanMinFreqT;
+        scanMaxFreq = scanMaxFreqT;
+        ret = retT;
+    });
+    return ret;
+}
+
+std::vector<FreqList> TvServerHidlClient::dtvGetScanFreqListMode(int mode) {
+    std::vector<FreqList> freqlist;
+    mTvServer->dtvGetScanFreqListMode(mode, [&](const hidl_vec<FreqList>& freqlistT){
+        freqlist = freqlistT;
+    });
+    return freqlist;
+}
+
+int TvServerHidlClient::updateRRT(int freq, int moudle, int mode) {
+    return mTvServer->updateRRT(freq, moudle, mode);
+}
+
+RRTSearchInfo TvServerHidlClient::searchRrtInfo(int rating_region_id, int dimension_id, int value_id, int program_id) {
+    RRTSearchInfo info;
+    mTvServer->searchRrtInfo(rating_region_id, dimension_id, value_id, program_id, [&](const RRTSearchInfo searchInfo){
+        info.RatingRegionName = searchInfo.RatingRegionName;
+        info.DimensionsName   = searchInfo.DimensionsName;
+        info.RatingValueText  = searchInfo.RatingValueText;
+        info.status           = searchInfo.status;
+    });
+    return info;
+}
+
+int TvServerHidlClient::dtvStopScan() {
+    return mTvServer->dtvStopScan();
+}
+
+int TvServerHidlClient::dtvGetSignalStrength() {
+    return mTvServer->dtvGetSignalStrength();
+}
+
+int TvServerHidlClient::dtvSetAudioChannleMod(int audioChannelIdx) {
+    return mTvServer->dtvSetAudioChannleMod(audioChannelIdx);
+}
+
+int TvServerHidlClient::DtvSwitchAudioTrack3(int audio_pid, int audio_format, int audio_param) {
+    return mTvServer->DtvSwitchAudioTrack3(audio_pid, audio_format,audio_param);
+}
+
+int TvServerHidlClient::DtvSwitchAudioTrack(int prog_id, int audio_track_id) {
+    return mTvServer->DtvSwitchAudioTrack(prog_id, audio_track_id);
+}
+
+int TvServerHidlClient::DtvSetAudioAD(int enable, int audio_pid, int audio_format) {
+
+    return mTvServer->DtvSetAudioAD(enable, audio_pid, audio_format);
+}
+
+FormatInfo TvServerHidlClient::dtvGetVideoFormatInfo() {
+    FormatInfo info;
+    mTvServer->dtvGetVideoFormatInfo([&](const FormatInfo formatInfo){
+        info.width     = formatInfo.width;
+        info.height    = formatInfo.height;
+        info.fps       = formatInfo.fps;
+        info.interlace = formatInfo.interlace;
+    });
+    return info;
+}
+
+int TvServerHidlClient::Scan(const std::string& feparas, const std::string& scanparas) {
+    return mTvServer->Scan(feparas, scanparas);
+}
+
+int TvServerHidlClient::tvSetFrontEnd(const std::string& feparas, int force) {
+    return mTvServer->tvSetFrontEnd(feparas, force);
+}
+
+int TvServerHidlClient::tvSetFrontendParms(int feType, int freq, int vStd, int aStd, int vfmt, int soundsys, int p1, int p2) {
+    return mTvServer->tvSetFrontendParms(feType, freq, vStd, aStd, vfmt, soundsys, p1, p2);
+}
+
+int TvServerHidlClient::sendRecordingCmd(int cmd, const std::string& id, const std::string& param) {
+    return mTvServer->sendRecordingCmd(cmd, id, param);
+}
+
+int TvServerHidlClient::sendPlayCmd(int32_t cmd, const std::string& id, const std::string& param) {
+    return mTvServer->sendPlayCmd(cmd, id, param);
+}
+
+int TvServerHidlClient::getIwattRegs() {
+    return mTvServer->getIwattRegs();
+}
+
+int TvServerHidlClient::FactoryCleanAllTableForProgram() {
+    return mTvServer->FactoryCleanAllTableForProgram();
+}
+
 // callback from tv service
 Return<void> TvServerHidlClient::TvServerHidlCallback::notifyCallback(const TvHidlParcel& hidlParcel)
 {
