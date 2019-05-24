@@ -265,8 +265,8 @@ public class ChannelInfo {
                     //youtube iptv database in this column is blob. Add it for the future.
                     byte[] data = cursor.getBlob(index);
                     //Log.d(TAG,"cursor is blob, return null");
-                    if (DEBUG) Log.i(TAG,"cursor is blob, set value to null");
-                    value = null;//return null;
+                    value = DroidLogicTvUtils.deserializeInternalProviderData(data);
+                    if (DEBUG) Log.i(TAG,"cursor is blob, set value = " + value);
                 } else if (type == Cursor.FIELD_TYPE_STRING)
                     value = cursor.getString(index);
                 else
@@ -275,7 +275,12 @@ public class ChannelInfo {
                 if (DEBUG) Log.d(TAG,"SQLiteException:"+e);
                 return null;
             }
-            Map<String, String> parsedMap = DroidLogicTvUtils.jsonToMap(value);
+            Map<String, String> parsedMap = null;
+            if (type == Cursor.FIELD_TYPE_BLOB) {
+                parsedMap = DroidLogicTvUtils.multiJsonToMap(value);
+            } else {
+                parsedMap = DroidLogicTvUtils.jsonToMap(value);
+            }
             if (parsedMap != null && parsedMap.size() > 0 && parsedMap.get(KEY_AUDIO_PIDS) != null) {
                 String[] str_audioPids = parsedMap.get(KEY_AUDIO_PIDS).replace("[", "").replace("]", "").split(",");
                 String[] str_audioFormats = parsedMap.get(KEY_AUDIO_FORMATS).replace("[", "").replace("]", "").split(",");
@@ -401,7 +406,7 @@ public class ChannelInfo {
             if (parsedMap != null && parsedMap.get(KEY_ACCESS_CONTROL) != null)
                 builder.setAccessControled(Integer.parseInt(parsedMap.get(KEY_ACCESS_CONTROL)));
             if (parsedMap != null && parsedMap.get(KEY_HIDDEN) != null)
-                builder.setHidden(Integer.parseInt(parsedMap.get(KEY_HIDDEN)));
+                builder.setHidden("true".equals(parsedMap.get(KEY_HIDDEN)) ? 1 : 0);
             if (parsedMap != null && parsedMap.get(KEY_HIDE_GUIDE) != null)
                 builder.setHideGuide(Integer.parseInt(parsedMap.get(KEY_HIDE_GUIDE)));
             if (parsedMap != null && parsedMap.get(KEY_VCT) != null)

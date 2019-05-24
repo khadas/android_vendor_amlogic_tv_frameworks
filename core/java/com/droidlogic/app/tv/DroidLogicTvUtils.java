@@ -30,6 +30,11 @@ import java.util.Arrays;
 import java.net.URLEncoder;
 import java.net.URLDecoder;
 import java.io.UnsupportedEncodingException;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 import org.json.JSONObject;
 import org.json.JSONArray;
@@ -1107,7 +1112,6 @@ public class DroidLogicTvUtils
             Log.e(TAG, "Json parse fail: ["+jsonString+"]" + e.getMessage());
             return null;
         }
-
         Iterator it = jsonObject.keys();
         while (it.hasNext()) {
             String k = (String)it.next();
@@ -1115,6 +1119,40 @@ public class DroidLogicTvUtils
             try {
                 map.put(k, jsonObject.get(k).toString());
             } catch (JSONException e) {
+                Log.e(TAG, "Json get fail: ["+ k +"]" + e.getMessage());
+            }
+        }
+        return map;
+    }
+
+    public static Map<String, String> multiJsonToMap(String jsonString) {
+        if (jsonString == null || jsonString.length() == 0)
+            return null;
+        Map<String, String> map = new HashMap<String, String>();
+
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(jsonString);
+        } catch (JSONException e) {
+            Log.e(TAG, "multiJsonToMap parse fail: ["+jsonString+"]" + e.getMessage());
+            return null;
+        }
+        Iterator it = jsonObject.keys();
+        while (it.hasNext()) {
+            String k = (String)it.next();
+            String v;
+            try {
+                String childStr = jsonObject.get(k).toString();
+                map.put(k, childStr);
+                JSONObject childJsonObject = new JSONObject(childStr);
+                if (childJsonObject != null) {
+                    Map<String, String> childMap = multiJsonToMap(childJsonObject.toString());
+                    if (childMap != null) {
+                        map.putAll(childMap);
+                    }
+                }
+            } catch (JSONException e) {
+                //Log.e(TAG, "multiJsonToMap get fail: ["+ k +"]" + e.getMessage());
             }
         }
         return map;
@@ -1666,5 +1704,31 @@ public class DroidLogicTvUtils
         Log.d(TAG, objName+":"+nObj.toString());
 
         return nObj.optInt(valueName, defaultValue);
+    }
+
+    public static byte[] serializeInternalProviderData(String data) {
+        if (data == null) {
+            return null;
+        }
+        byte[] result = null;
+        try {
+            result = data.getBytes();
+        } catch (Exception e) {
+            Log.e(TAG, "serializeInternalProviderData Exception = " + e.getMessage());
+        }
+        return result;
+    }
+
+    public static String deserializeInternalProviderData(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        String result = null;
+        try {
+            result = new String(bytes);
+        } catch (Exception e) {
+            Log.e(TAG, "deserializeInternalProviderData Exception = " + e.getMessage());
+        }
+        return result;
     }
 }

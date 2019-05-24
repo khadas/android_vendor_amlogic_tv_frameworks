@@ -504,7 +504,7 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_MINOR_NUM, String.valueOf(channel.getMinorChannelNumber()));
         map.put(ChannelInfo.KEY_SOURCE_ID, String.valueOf(channel.getSourceId()));
         map.put(ChannelInfo.KEY_ACCESS_CONTROL, String.valueOf(channel.getAccessControled()));
-        map.put(ChannelInfo.KEY_HIDDEN, String.valueOf(channel.getHidden()));
+        map.put(ChannelInfo.KEY_HIDDEN, (channel.getHidden() > 0 ? "true" : "false"));
         map.put(ChannelInfo.KEY_HIDE_GUIDE, String.valueOf(channel.getHideGuide()));
         map.put(ChannelInfo.KEY_CONTENT_RATINGS, DroidLogicTvUtils.TvString.toString(channel.getContentRatings()));
         map.put(ChannelInfo.KEY_SIGNAL_TYPE, DroidLogicTvUtils.TvString.toString(channel.getSignalType()));
@@ -561,7 +561,7 @@ public class TvDataBaseManager {
         map.put(ChannelInfo.KEY_MINOR_NUM, String.valueOf(channel.getMinorChannelNumber()));
         map.put(ChannelInfo.KEY_SOURCE_ID, String.valueOf(channel.getSourceId()));
         map.put(ChannelInfo.KEY_ACCESS_CONTROL, String.valueOf(channel.getAccessControled()));
-        map.put(ChannelInfo.KEY_HIDDEN, String.valueOf(channel.getHidden()));
+        map.put(ChannelInfo.KEY_HIDDEN, (channel.getHidden() > 0 ? "true" : "false"));
         map.put(ChannelInfo.KEY_HIDE_GUIDE, String.valueOf(channel.getHideGuide()));
         map.put(ChannelInfo.KEY_AUDIO_PIDS, Arrays.toString(channel.getAudioPids()));
         map.put(ChannelInfo.KEY_AUDIO_FORMATS, Arrays.toString(channel.getAudioFormats()));
@@ -1053,6 +1053,66 @@ public class TvDataBaseManager {
                     } else {
                         boolean browserable = cursor.getInt(cursor.getColumnIndex(Channels.COLUMN_BROWSABLE)) == 1 ? true : false;
                         if (browserable) {
+                            channelList.add(channelInfo);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.d(TAG,"getChannelList Exception");
+            // TODO: handle exception
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        if (channelList.size() > 0 && channelList.get(0).getType().contains("DTMB"))
+            Collections.sort(channelList, new SortNumberComparator());
+        else if (channelList.size() > 0 && channelList.get(0).isAnalogChannel()) {
+            if (channelList.get(0).getSignalType().equals(TvContract.Channels.TYPE_ATSC_C) ||
+                channelList.get(0).getSignalType().equals(TvContract.Channels.TYPE_ATSC_T)) {
+                /* For ATSC analog search, sort by channel number */
+                Collections.sort(channelList, new SortNumberComparator());
+            } else {
+                /* For other analog search, sort by freq */
+                Collections.sort(channelList, new SortFreqComparator());
+            }
+        } else
+            Collections.sort(channelList, new SortComparator());
+        if (DEBUG)
+            printList(channelList);
+        return channelList;
+    }
+
+    public ArrayList<ChannelInfo> getChannelList(String curInputId, String srvType, boolean need_browserable, boolean needHiddenChannel) {
+        ArrayList<ChannelInfo> channelList = new ArrayList<ChannelInfo>();
+        Uri channelsUri = TvContract.buildChannelsUriForInput(curInputId);
+
+        Cursor cursor = null;
+        try {
+            cursor = mContentResolver.query(channelsUri, ChannelInfo.COMMON_PROJECTION, null, null, null);
+            ChannelInfo channelInfo = null;
+            while (cursor != null && cursor.moveToNext()) {
+                int index = cursor.getColumnIndex(Channels.COLUMN_SERVICE_TYPE);
+                Log.d(TAG,"add hide index:"+index+","+ cursor.getString(index)+",srvType:"+srvType);
+                if (srvType.equals(cursor.getString(index))) {
+                    channelInfo = ChannelInfo.fromCommonCursor(cursor);
+                    if (channelInfo == null )
+                        continue;
+                    boolean hidden = channelInfo.getHidden() > 0 ? true : false;
+                    boolean browserable = channelInfo.isBrowsable();
+                    if (!need_browserable) {
+                        if (!needHiddenChannel && hidden) {
+                            continue;
+                        }
+                        channelList.add(channelInfo);
+                    } else {
+                        if (browserable) {
+                            if (!needHiddenChannel && hidden) {
+                                continue;
+                            }
                             channelList.add(channelInfo);
                         }
                     }
