@@ -1828,7 +1828,8 @@ public class TvDataBaseManager {
         List<Program> programs = new ArrayList<>();
         try {
             // TvProvider returns programs chronological order by default.
-            cursor = mContentResolver.query(uri, null, null, null, null);
+            String ascSort = TvContract.Programs.COLUMN_START_TIME_UTC_MILLIS + " ASC";
+            cursor = mContentResolver.query(uri, null, null, null, ascSort);
             if (cursor == null || cursor.getCount() == 0) {
                 return programs;
             }
