@@ -987,10 +987,31 @@ public class DroidLogicTvUtils
     static {
         PI_TO_VIDEO_FORMAT_MAP.put("interlace", "I");
         PI_TO_VIDEO_FORMAT_MAP.put("progressive", "P");
+        PI_TO_VIDEO_FORMAT_MAP.put("interlace-top", "I");
+        PI_TO_VIDEO_FORMAT_MAP.put("interlace-bottom", "I");
+        PI_TO_VIDEO_FORMAT_MAP.put("Compressed", "P");
     }
 
     public static String convertVideoFormat(String height, String pi) {
-        return HEIGHT_TO_VIDEO_FORMAT_MAP.get(height) + PI_TO_VIDEO_FORMAT_MAP.get(pi);
+        String result = "";
+        if (!TextUtils.isEmpty(height) && !"NA".equals(height) && !TextUtils.isEmpty(pi) && !"null".equals(pi) && !"NA".equals(pi)) {
+            height = HEIGHT_TO_VIDEO_FORMAT_MAP.get(height);
+            if (pi.startsWith("interlace")) {
+                result = height + PI_TO_VIDEO_FORMAT_MAP.get("interlace");
+            } else if (pi.startsWith("progressive")) {
+                result = height + PI_TO_VIDEO_FORMAT_MAP.get("progressive");
+            } else if (pi.startsWith("Compressed")) {
+                result = height + PI_TO_VIDEO_FORMAT_MAP.get("progressive");//Compressed may exist with progressive or interlace
+            } else {
+                result = height + PI_TO_VIDEO_FORMAT_MAP.get("progressive");
+            }
+        } else if ("NA".equals(height) && "NA".equals(pi)) {
+            result = "";
+        } else {
+            height = HEIGHT_TO_VIDEO_FORMAT_MAP.get(height);
+            result = height + PI_TO_VIDEO_FORMAT_MAP.get("progressive");
+        }
+        return result;
     }
 
     public static boolean isHardwareExisted(Context context, int deviceId) {
