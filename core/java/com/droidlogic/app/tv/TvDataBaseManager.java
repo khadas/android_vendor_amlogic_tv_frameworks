@@ -42,6 +42,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Iterator;
+
+import org.json.JSONObject;
 
 import com.droidlogic.app.tv.DroidLogicTvUtils.*;
 
@@ -154,6 +157,133 @@ public class TvDataBaseManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean updateSingleChannelInternalProviderData(long id, String key, String value) {
+        boolean ret = false;
+        if (id == -1 && TextUtils.isEmpty(key)) {
+            return ret;
+        }
+
+        String[] projection = {Channels.COLUMN_INTERNAL_PROVIDER_DATA};
+        Uri channelsUri = TvContract.buildChannelUri(id);
+        Cursor cursor = null;
+        String setValue = null;
+        String queryValue = null;
+        int type = Cursor.FIELD_TYPE_STRING;
+        try {
+            cursor = mContentResolver.query(channelsUri, projection, Channels._ID + "=?", new String[]{String.valueOf(id)}, null);
+            while (cursor != null && cursor.moveToNext()) {
+                type = cursor.getType(0);
+                if (type == Cursor.FIELD_TYPE_BLOB) {
+                    byte[] data = cursor.getBlob(0);
+                    queryValue = DroidLogicTvUtils.deserializeInternalProviderData(data);
+                } else if (type == Cursor.FIELD_TYPE_STRING)
+                    queryValue = cursor.getString(0);
+                else {
+                    Log.i(TAG, "updateChannelInternalProviderData unkown data type");
+                    return ret;
+                }
+            }
+            JSONObject jsonObject = new JSONObject(queryValue);
+            if (jsonObject != null && jsonObject.length() > 0) {
+                if (DEBUG) {
+                    Log.d(TAG, "updateSingleChannelInternalProviderData before = " + jsonObject.toString());
+                }
+                String flagKey = getFavOrHiddenSetFlagKey(key);
+                if (jsonObject.has(key)) {
+                    if (flagKey != null) {
+                        jsonObject.put(flagKey, String.valueOf(1));
+                    }
+                    jsonObject.put(key, value);
+                    ret = true;
+                } else {
+                    Iterator it = jsonObject.keys();
+                    while (it.hasNext()) {
+                        String k = (String)it.next();
+                        String v;
+                        //String childStr = jsonObject.get(k).toString();
+                        //JSONObject childJsonObject = new JSONObject(childStr);
+                        JSONObject childJsonObject = jsonObject.getJSONObject(k);
+                        if (childJsonObject != null && childJsonObject.length() > 0 && childJsonObject.has(key)) {
+                            if (flagKey != null) {
+                                childJsonObject.put(flagKey, String.valueOf(1));
+                            }
+                            childJsonObject.put(key, value);
+                            jsonObject.put(k, childJsonObject);
+                            ret = true;
+                            break;
+                        }
+                    }
+                }
+                if (!ret) {
+                    JSONObject customObj = jsonObject.getJSONObject(ChannelInfo.KEY_OTHER_CUSTOM);
+                    if (customObj != null) {//add for other type channel
+                        if (flagKey != null) {
+                            customObj.put(flagKey, String.valueOf(1));
+                        }
+                        customObj.put(key, value);
+                        jsonObject.put(ChannelInfo.KEY_OTHER_CUSTOM, customObj);
+                    } else {
+                        JSONObject creatObj = new JSONObject();
+                        if (flagKey != null) {
+                            creatObj.put(flagKey, String.valueOf(1));
+                        }
+                        creatObj.put(key, value);
+                        jsonObject.put(ChannelInfo.KEY_OTHER_CUSTOM, creatObj);
+                    }
+                }
+                if (DEBUG) {
+                    Log.d(TAG, "updateSingleChannelInternalProviderData after = " + jsonObject.toString());
+                }
+                Object result = null;
+                if (ret) {
+                    if (type == Cursor.FIELD_TYPE_BLOB) {
+                        result = DroidLogicTvUtils.serializeInternalProviderData(jsonObject.toString());
+                    } else if (type == Cursor.FIELD_TYPE_STRING) {
+                        result = jsonObject.toString();
+                    }
+                    if (result != null) {
+                        mContentResolver.update(channelsUri, buildSingleChannelInternalProviderData(result), null, null);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.i(TAG, "updateSingleChannelInternalProviderData Exception = " + e.getMessage());
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        if (DEBUG)
+            Log.d(TAG, "updateSingleChannelInternalProviderData " + (ret ? "found" : "notfound")
+                    + " _id:" + id + " key:" + key + " value:" + value);
+        return ret;
+    }
+
+    private ContentValues buildSingleChannelInternalProviderData(Object obj){
+        ContentValues values = new ContentValues();
+        if (obj instanceof String) {
+            values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, (String)obj);
+        } else if (obj instanceof byte[]) {
+            values.put(TvContract.Channels.COLUMN_INTERNAL_PROVIDER_DATA, (byte[])obj);
+        } else {
+            Log.i(TAG, "buildSingleChannelInternalProviderData unkown obj type");
+        }
+
+        return values;
+    }
+
+    private String getFavOrHiddenSetFlagKey(String key) {
+        String result = null;
+        if (ChannelInfo.KEY_HIDDEN.equals(key)) {
+            result = ChannelInfo.KEY_SET_HIDDEN;
+        } else if (ChannelInfo.KEY_IS_FAVOURITE.equals(key)) {
+            result = ChannelInfo.KEY_SET_FAVOURITE;
+        }
+        return result;
     }
 
     private int updateDtvChannel(ChannelInfo channel) {

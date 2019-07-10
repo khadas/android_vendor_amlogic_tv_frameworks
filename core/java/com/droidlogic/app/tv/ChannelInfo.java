@@ -105,12 +105,14 @@ public class ChannelInfo {
     public static final String KEY_FE_PARAS = "fe";
     public static final String KEY_FINE_TUNE = "fine_tune";
     public static final String KEY_IS_FAVOURITE = "is_favourite";
+    public static final String KEY_SET_FAVOURITE = "set_favourite";
 
     public static final String KEY_MAJOR_NUM = "majorNum";
     public static final String KEY_MINOR_NUM = "minorNum";
     public static final String KEY_SOURCE_ID = "srcId";
     public static final String KEY_ACCESS_CONTROL = "access";
     public static final String KEY_HIDDEN = "hidden";
+    public static final String KEY_SET_HIDDEN = "set_hidden";
     public static final String KEY_HIDE_GUIDE = "hideGuide";
     public static final String KEY_VCT = "vct";
     public static final String KEY_EITV = "eitv";
@@ -120,6 +122,8 @@ public class ChannelInfo {
     public static final String EXTRA_CHANNEL_INFO = "extra_channel_info";
     public static final String KEY_CONTENT_RATINGS = "content_ratings";
     public static final String KEY_SIGNAL_TYPE = "signal_type";
+
+    public static final String KEY_OTHER_CUSTOM = "custom";//for other type channel
 
     public static final String LABEL_ATV = "ATV";
     public static final String LABEL_DTV = "DTV";
@@ -1407,6 +1411,10 @@ public class ChannelInfo {
 
     public boolean isNtscChannel() {
         return mType.equals(TvContract.Channels.TYPE_NTSC);
+    }
+
+    public boolean isOtherChannel() {
+        return mType.equals(TvContract.Channels.TYPE_OTHER);
     }
 
     public boolean isAVChannel() {
