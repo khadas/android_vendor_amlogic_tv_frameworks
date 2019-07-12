@@ -751,7 +751,9 @@ public class ChannelInfo {
     }
 
     public void setDisplayNameLocal(String name) {
-        mDisplayNameMulti = mDisplayNameMulti.replace(getDisplayNameLocal(), name);
+        if (mDisplayNameMulti != null) {
+            mDisplayNameMulti = mDisplayNameMulti.replace(getDisplayNameLocal(), name);
+        }
     }
 
     public void setDisplayNameMulti(String name) {
