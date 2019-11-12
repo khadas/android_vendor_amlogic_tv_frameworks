@@ -57,16 +57,6 @@ import java.lang.reflect.Method;
 import static com.droidlogic.app.tv.TvControlCommand.*;
 import com.droidlogic.app.tv.EasEvent;
 
-//import android.hidl.manager.V1_0.IServiceManager;
-//import android.hidl.manager.V1_0.IServiceNotification;
-//import vendor.amlogic.hardware.tvserver.V1_0.ITvServer;
-//import vendor.amlogic.hardware.tvserver.V1_0.ITvServerCallback;
-//import vendor.amlogic.hardware.tvserver.V1_0.SignalInfo;
-//import vendor.amlogic.hardware.tvserver.V1_0.FormatInfo;
-//import vendor.amlogic.hardware.tvserver.V1_0.TvHidlParcel;
-//import vendor.amlogic.hardware.tvserver.V1_0.ConnectType;
-//import vendor.amlogic.hardware.tvserver.V1_0.Result;
-
 public class TvControlManager {
     private static final String TAG = "TvControlManager";
     private static final String OPEN_TV_LOG_FLG = "open.libtv.log.flg";
@@ -84,8 +74,9 @@ public class TvControlManager {
     public static final int ATV_AUDIO_STD_BG            = 2;
     public static final int ATV_AUDIO_STD_M             = 3;
     public static final int ATV_AUDIO_STD_L             = 4;
-    public static final int ATV_AUDIO_STD_AUTO          = 5;
-    public static final int ATV_AUDIO_STD_MUTE          = 6;
+    public static final int ATV_AUDIO_STD_LC            = 5;
+    public static final int ATV_AUDIO_STD_AUTO          = 6;
+    public static final int ATV_AUDIO_STD_MUTE          = 7;
 
     public static final int ATV_VIDEO_STD_AUTO          = 0;
     public static final int ATV_VIDEO_STD_PAL           = 1;
@@ -137,6 +128,11 @@ public class TvControlManager {
     public static final int AUDIO_STANDARD_NICAM_BG     = 0x08;
     public static final int AUDIO_STANDARD_NICAM_L      = 0x09;
     public static final int AUDIO_STANDARD_NICAM_DK     = 0x0A;
+    public static final int AUDIO_STANDARD_MONO_BG      = 0x12;
+    public static final int AUDIO_STANDARD_MONO_DK      = 0x13;
+    public static final int AUDIO_STANDARD_MONO_I       = 0x14;
+    public static final int AUDIO_STANDARD_MONO_M       = 0x15;
+    public static final int AUDIO_STANDARD_MONO_L       = 0x16;
 
     //A2 auido mode
     public static final int AUDIO_OUTMODE_A2_MONO       = 0;
@@ -739,6 +735,9 @@ public class TvControlManager {
     private native int native_GetIwattRegs();
     private native int native_SetSameSourceEnable(int enable);
     private native int native_FactoryCleanAllTableForProgram();
+    private native int native_SetPreviewWindow(int x1, int y1, int x2, int y2);
+    private native int native_SetPreviewWindowMode(int enable);
+    private native int native_GetCecWakePort();
 
     private TvControlManager() {
         Looper looper = Looper.myLooper();
@@ -772,54 +771,11 @@ public class TvControlManager {
     }
 
     private static final int TVSERVER_DEATH_COOKIE = 1000;
-
-    // Callback when the UsbPort status is changed by the kernel.
-    // Mostly due a command sent by the remote Usb device.
-    //private HALCallback mHALCallback = null;
-
-    // Notification object used to listen to the start of the tvserver daemon.
-    //private final ServiceNotification mServiceNotification = new ServiceNotification();
-
-//    private ITvServer mProxy = null;
     // Mutex for all mutable shared state.
     private final Object mLock = new Object();
 
-/*
-    private void connectToProxy() {
-        synchronized (mLock) {
-            if (mProxy != null) {
-                return;
-            }
-
-            try {
-                mProxy = ITvServer.getService();
-                mProxy.linkToDeath(new DeathRecipient(), TVSERVER_DEATH_COOKIE);
-            } catch (NoSuchElementException e) {
-                Log.e(TAG, "connectToProxy: tvserver HIDL service not found."
-                        + " Did the service fail to start?", e);
-            } catch (RemoteException e) {
-                Log.e(TAG, "connectToProxy: tvserver HIDL service not responding", e);
-            }
-        }
-
-        Log.i(TAG, "connect to tvserve HIDL service success");
-    }
-
-    private void initHalCallback () {
-        try {
-            mHALCallback = new HALCallback(this);
-            mProxy.setCallback(mHALCallback, ConnectType.TYPE_EXTEND);
-        } catch (NoSuchElementException e) {
-            Log.e(TAG, "connectToProxy: tvserver HIDL service not found."
-                        + " Did the service fail to start?", e);
-        } catch (RemoteException e) {
-            Log.e(TAG, "connectToProxy: tvserver HIDL service not responding", e);
-        }
-    }
-*/
     public void DisConnectTvServer() {
     synchronized (mLock) {
-        //Mutable<String> resultVal = new Mutable<>();
         try {
             native_DisConnectTvServer();
         } catch (Exception e) {
@@ -829,7 +785,6 @@ public class TvControlManager {
     }
     public String getSupportInputDevices() {
         synchronized (mLock) {
-            //Mutable<String> resultVal = new Mutable<>();
             try {
                 return native_GetSupportInputDevices();
             } catch (Exception e) {
@@ -984,6 +939,12 @@ public class TvControlManager {
         return -1;
     }
 
+    public int getCecWakePort() {
+        int port = native_GetCecWakePort();
+        Log.d(TAG, "getCecWakePort " + port);
+        return port;
+    }
+
 
     public class SignalInfo {
         public int fmt;
@@ -1062,55 +1023,13 @@ public class TvControlManager {
         }
     }
 
-/*
-    private static class HALCallback extends ITvServerCallback.Stub {
-        TvControlManager tvCtrlMgr;
-        HALCallback(TvControlManager tcm) {
-            tvCtrlMgr = tcm;
-        }
-
-        public void notifyCallback(TvHidlParcel parcel) {
-            Log.i(TAG, "notifyCallback msg type:" + parcel.msgType);
-
-            if (tvCtrlMgr.mEventHandler != null) {
-                Message msg = tvCtrlMgr.mEventHandler.obtainMessage(parcel.msgType, 0, 0, parcel);
-                tvCtrlMgr.mEventHandler.sendMessage(msg);
-            }
-        }
-    }
-
-    final class DeathRecipient implements HwBinder.DeathRecipient {
-        DeathRecipient() {
-        }
-
-        @Override
-        public void serviceDied(long cookie) {
-            if (TVSERVER_DEATH_COOKIE == cookie) {
-                Log.e(TAG, "tvserver HIDL service died cookie: " + cookie);
-                synchronized (mLock) {
-                    mProxy = null;
-                }
-            }
-        }
-    }
-
-    final class ServiceNotification extends IServiceNotification.Stub {
-        @Override
-        public void onRegistration(String fqName, String name, boolean preexisting) {
-            Log.i(TAG, "tvserver HIDL service started " + fqName + " " + name);
-            connectToProxy();
-        }
-    }
-*/
 
     protected void finalize() {
-        //native_release();
     }
 
     // when app exit, need release manual
     public final void release() {
         libtv_log_open();
-        //native_release();
     }
 
     // Deprecated, use Channels TYPE_XXXX from TvContract
@@ -1444,8 +1363,14 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int SetPreviewWindow(int x1, int y1, int x2, int y2) {
-        int val[] = new int[]{x1, y1, x2, y2};
-        return sendCmdIntArray(SET_PREVIEW_WINDOW, val);
+        synchronized (mLock) {
+            try {
+                return native_SetPreviewWindow(x1, y1, x2, y2);
+            } catch (Exception e) {
+                Log.e(TAG, "SetPreviewWindow:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -1454,15 +1379,14 @@ public class TvControlManager {
      * of course, the mode need revert when exiting from preview window.
      */
     public int SetPreviewWindowMode(boolean enable) {
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        cmd.writeInt(SET_PREVIEW_WINDOW_MODE);
-        cmd.writeInt(enable ? 1 : 0);
-        sendCmdToTv(cmd, r);
-        int ret = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return ret;
+        synchronized (mLock) {
+            try {
+                return native_SetPreviewWindowMode(enable ? 1 : 0);
+            } catch (Exception e) {
+                Log.e(TAG, "SetPreviewWindow:" + e);
+            }
+        }
+        return -1;
     }
 
     /**
@@ -4201,27 +4125,11 @@ public class TvControlManager {
     }
 
     public void startAutoBacklight() {
-        /*synchronized (mLock) {
-            try {
-                mProxy.startAutoBacklight();
-            } catch (RemoteException e) {
-                Log.e(TAG, "startAutoBacklight:" + e);
-            }
-        }*/
-        Log.d(TAG, "interface removed!");
-        //sendCmd(START_AUTO_BACKLIGHT);
+        Log.i(TAG, "interface removed");
     }
 
     public void stopAutoBacklight() {
-        /*synchronized (mLock) {
-            try {
-                mProxy.stopAutoBacklight();
-            } catch (RemoteException e) {
-                Log.e(TAG, "stopAutoBacklight:" + e);
-            }
-        }*/
-        Log.d(TAG, "interface removed!");
-        //sendCmd(STOP_AUTO_BACKLIGHT);
+        Log.i(TAG, "interface removed");
     }
 
     /**
@@ -4485,17 +4393,11 @@ public class TvControlManager {
     //scanner
     public void setScannerListener(ScannerEventListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-         //   initHalCallback();
-        //}
         mScannerListener = l;
     }
 
     public void setStorDBListener(StorDBEventListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mStorDBListener = l;
         if (l == null)
             Log.i(TAG,"setStorDBListener null");
@@ -4503,9 +4405,6 @@ public class TvControlManager {
 
     public void setScanningFrameStableListener(ScanningFrameStableListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mScanningFrameStableListener = l;
     }
 
@@ -4682,9 +4581,6 @@ public class TvControlManager {
     //epg
     public void setEpgListener(EpgEventListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mEpgListener = l;
     }
 
@@ -4705,10 +4601,7 @@ public class TvControlManager {
 
     //rrt
     public void SetRRT5SourceUpdateListener(RRT5SourceUpdateListener l) {
-        //if (mHALCallback == null) {
-       //     initHalCallback();
-       // }
-        //mRrtListener = l;
+        mRrtListener = l;
     }
 
     public interface RRT5SourceUpdateListener {
@@ -4762,9 +4655,6 @@ public class TvControlManager {
     }
 
     public void setEasListener(EasEventListener l) {
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mEasListener = l;
     }
     public interface EasEventListener {
@@ -4784,9 +4674,6 @@ public class TvControlManager {
 
     public void setGetVframBMPListener(VframBMPEventListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-         //   initHalCallback();
-        //}
         mVframBMPListener = l;
     }
 
@@ -5009,13 +4896,7 @@ public class TvControlManager {
 
     public VideoFormatInfo DtvGetVideoFormatInfo() {
         synchronized (mLock) {
-            //VideoFormatInfo pVideoFormatInfo = new VideoFormatInfo();
             try {
-                //FormatInfo  formatInfo= mProxy.dtvGetVideoFormatInfo();
-                //pVideoFormatInfo.width = formatInfo.width;
-                //pVideoFormatInfo.height= formatInfo.height;
-                //pVideoFormatInfo.fps= formatInfo.fps;
-                //pVideoFormatInfo.interlace= formatInfo.interlace;
                 return native_DtvGetVideoFormatInfo();
             } catch (Exception e) {
                 Log.e(TAG, "DtvGetVideoFormatInfo:" + e);
@@ -5194,7 +5075,7 @@ public class TvControlManager {
         }
 
         public String toString(String name) {
-            return DroidLogicTvUtils.mapToJsonAdd(name, mParas);
+            return DroidLogicTvUtils.mapToJson(name, mParas);
         }
         public String toString() {
             return toString(null);
@@ -5215,7 +5096,6 @@ public class TvControlManager {
         public static final String K_AFC = "afc";
         public static final String K_VFMT = "vfmt";
         public static final String K_SOUNDSYS = "soundsys";
-        public static final String K_LANGUAGE = "language";
 
         public FEParas() { super(); }
         public FEParas(String paras) { super(paras); }
@@ -5262,9 +5142,6 @@ public class TvControlManager {
         }
         public int getAudioOutPutMode() {
             return getInt(K_SOUNDSYS, -1);
-        }
-        public String getLanguage() {
-            return getString(K_LANGUAGE);
         }
         public FEParas setMode(TvMode mode) {
             set(K_MODE, mode.getMode());
@@ -5316,10 +5193,6 @@ public class TvControlManager {
         }
         public FEParas setAudioOutPutMode(int mode) {
             set(K_SOUNDSYS, mode);
-            return this;
-        }
-        public FEParas setLanguage(String language) {
-            set(K_LANGUAGE, language);
             return this;
         }
     }
@@ -5822,19 +5695,7 @@ public class TvControlManager {
      * @Return: 0 success, -1 fail
      */
     public int StartUpgradeFBC(String file_name, int mode, int upgrade_blk_size) {
-        libtv_log_open();
-        Parcel cmd = Parcel.obtain();
-        Parcel r = Parcel.obtain();
-        int tmpRet;
-        cmd.writeInt(FACTORY_FBC_UPGRADE);
-        cmd.writeString(file_name);
-        cmd.writeInt(mode);
-        cmd.writeInt(upgrade_blk_size);
-        sendCmdToTv(cmd, r);
-        tmpRet = r.readInt();
-        cmd.recycle();
-        r.recycle();
-        return tmpRet;
+        return 0;
     }
 
     /**
@@ -6304,9 +6165,6 @@ public class TvControlManager {
 
     public void SetAudioEventListener (AudioEventListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        ////    initHalCallback();
-        //}
         mAudioListener  = l;
     }
 
@@ -6316,9 +6174,6 @@ public class TvControlManager {
 
     public void SetAVPlaybackListener(AVPlaybackListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-         //   initHalCallback();
-        //}
         mAVPlaybackListener = l;
     }
 
@@ -6332,9 +6187,6 @@ public class TvControlManager {
 
     public void SetSigChannelSearchListener(TvInSignalInfo.SigChannelSearchListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mSigChanSearchListener = l;
     }
 
@@ -6348,9 +6200,6 @@ public class TvControlManager {
 
     public void SetSourceConnectListener(StatusSourceConnectListener l) {
         libtv_log_open();
-       // if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mSourceConnectChangeListener = l;
     }
 
@@ -6360,9 +6209,6 @@ public class TvControlManager {
 
     public void SetHDMIRxCECListener(HDMIRxCECListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mHDMIRxCECListener = l;
     }
 
@@ -6372,17 +6218,11 @@ public class TvControlManager {
 
     public void SetUpgradeFBCListener(UpgradeFBCListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-         //   initHalCallback();
-        //}
         mUpgradeFBCListener = l;
     }
 
     public void SetStatus3DChangeListener(Status3DChangeListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mStatus3DChangeListener = l;
     }
 
@@ -6392,9 +6232,6 @@ public class TvControlManager {
 
     public void SetAdcCalibrationListener(AdcCalibrationListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mAdcCalibrationListener = l;
     }
 
@@ -6404,9 +6241,6 @@ public class TvControlManager {
 
     public void SetSourceSwitchListener(SourceSwitchListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-       // }
         mSourceSwitchListener = l;
     }
 
@@ -6416,9 +6250,6 @@ public class TvControlManager {
 
     public void SetChannelSelectListener(ChannelSelectListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mChannelSelectListener = l;
     }
 
@@ -6429,9 +6260,6 @@ public class TvControlManager {
 
     public void SetSerialCommunicationListener(SerialCommunicationListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mSerialCommunicationListener = l;
     }
 
@@ -6441,9 +6269,6 @@ public class TvControlManager {
 
     public void SetCloseCaptionListener(CloseCaptionListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mCloseCaptionListener = l;
     }
 
@@ -6681,9 +6506,6 @@ public class TvControlManager {
     private RecorderEventListener mRecorderEventListener = null;
     public void SetRecorderEventListener(RecorderEventListener l) {
         libtv_log_open();
-        //if (mHALCallback == null) {
-        //    initHalCallback();
-        //}
         mRecorderEventListener = l;
     }
 

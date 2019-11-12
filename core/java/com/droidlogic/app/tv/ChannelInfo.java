@@ -24,6 +24,10 @@ import java.net.URLDecoder;
 import java.util.HashMap;
 import java.io.UnsupportedEncodingException;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class ChannelInfo {
     private static final String TAG = "ChannelInfo";
     private static final boolean DEBUG = false;
@@ -106,6 +110,17 @@ public class ChannelInfo {
     public static final String KEY_FINE_TUNE = "fine_tune";
     public static final String KEY_IS_FAVOURITE = "is_favourite";
     public static final String KEY_SET_FAVOURITE = "set_favourite";
+    public static final String KEY_SET_DISPLAYNAME = "set_displayname";
+    public static final String KEY_SET_DISPLAYNUMBER = "set_displaynumber";
+    public static final String KEY_FAVOURITE_INFO = "favourite_info";
+    public static final String KEY_SATELLITE_INFO = "satellite_info";
+    public static final String KEY_SATELLITE_INFO_NAME = "satellite_info_name";
+    public static final String KEY_TRANSPONDER_INFO = "transponder_info";
+    public static final String KEY_TRANSPONDER_INFO_DISPLAY_NAME = "transponder_info_display_name";
+    public static final String KEY_TRANSPONDER_INFO_SATELLITE_NAME = "transponder_info_satellite_name";
+    public static final String KEY_TRANSPONDER_INFO_TRANSPONDER_FREQUENCY = "transponder_info_frequency";
+    public static final String KEY_TRANSPONDER_INFO_TRANSPONDER_POLARITY = "transponder_info_polarity";
+    public static final String KEY_TRANSPONDER_INFO_TRANSPONDER_SYMBOL = "transponder_info_symbol";
 
     public static final String KEY_MAJOR_NUM = "majorNum";
     public static final String KEY_MINOR_NUM = "minorNum";
@@ -188,6 +203,9 @@ public class ChannelInfo {
     private boolean mIsFavourite;
     private boolean mLocked;
     private boolean mIsPassthrough;
+    private String mSatelliteInfo;
+    private String mTransponderInfo;
+    private String mFavInfo;
 
     private String mDisplayNameMulti;//multi-language
 
@@ -346,6 +364,12 @@ public class ChannelInfo {
                 builder.setAudioChannel(Integer.parseInt(parsedMap.get(KEY_AUDIO_CHANNEL)));
             if (parsedMap != null && parsedMap.get(KEY_IS_FAVOURITE) != null)
                 builder.setIsFavourite(parsedMap.get(KEY_IS_FAVOURITE).equals("1") ? true : false);
+            if (parsedMap != null && parsedMap.get(KEY_FAVOURITE_INFO) != null)
+                builder.setFavouriteInfo(parsedMap.get(KEY_FAVOURITE_INFO));
+            if (parsedMap != null && parsedMap.get(KEY_TRANSPONDER_INFO) != null)
+                builder.setTransponderInfo(parsedMap.get(KEY_TRANSPONDER_INFO));
+            if (parsedMap != null && parsedMap.get(KEY_SATELLITE_INFO) != null)
+                builder.setSatelliteInfo(parsedMap.get(KEY_SATELLITE_INFO));
             if (parsedMap != null && parsedMap.get(KEY_VIDEO_STD) != null)
                 builder.setVideoStd(Integer.parseInt(parsedMap.get(KEY_VIDEO_STD)));
             if (parsedMap != null && parsedMap.get(KEY_AUDIO_STD) != null)
@@ -718,6 +742,68 @@ public class ChannelInfo {
         return mIsFavourite;
     }
 
+    public boolean hasSetFavourite() {
+        boolean result = false;
+        if (mSatelliteInfo == null) {
+            return result;
+        }
+        try {
+            JSONObject obj = new JSONObject(mFavInfo);
+            if (obj != null && obj.length() > 0) {
+                result = true;
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "hasSetFavourite Exception = " + e.getMessage());
+        }
+        return result;
+    }
+
+    public String getFavouriteInfo() {
+        return mFavInfo;
+    }
+
+    public String getSatelliteInfo() {
+        return mSatelliteInfo;
+    }
+
+    public String getSatelliteName() {
+        String result = null;
+        if (mSatelliteInfo == null) {
+            return result;
+        }
+        try {
+            JSONObject obj = new JSONObject(mSatelliteInfo);
+            if (obj != null && obj.length() > 0) {
+                result = obj.getString(KEY_SATELLITE_INFO_NAME);
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "getSatelliteName Exception = " + e.getMessage());
+        }
+        return result;
+    }
+
+    public String getTransponderInfo() {
+        return mTransponderInfo;
+    }
+
+    public String getTransponderDisplay() {
+        String result = null;
+        if (mTransponderInfo == null) {
+            return result;
+        }
+        try {
+            JSONObject obj = new JSONObject(mTransponderInfo);
+            if (obj != null && obj.length() > 0) {
+                result = obj.getString(KEY_TRANSPONDER_INFO_TRANSPONDER_FREQUENCY);
+                result += "/" + obj.getString(KEY_TRANSPONDER_INFO_TRANSPONDER_POLARITY);
+                result += "/" + obj.getString(KEY_TRANSPONDER_INFO_TRANSPONDER_SYMBOL);
+            }
+        } catch (Exception e) {
+            Log.i(TAG, "getTransponderDisplay Exception = " + e.getMessage());
+        }
+        return result;
+    }
+
     public boolean isPassthrough() {
         return mIsPassthrough;
     }
@@ -826,6 +912,18 @@ public class ChannelInfo {
 
     public void setFavourite(boolean enable) {
         mIsFavourite = enable;
+    }
+
+    public void setFavouriteInfo(String value) {
+        mFavInfo = value;
+    }
+
+    public void setSatelliteInfo(String value) {
+        mSatelliteInfo = value;
+    }
+
+    public void setTransponderInfo(String value) {
+        mTransponderInfo = value;
     }
 
     public void setSubtitleTypes(int[] types) {
@@ -964,6 +1062,9 @@ public class ChannelInfo {
             mChannel.mIsFavourite = false;
             mChannel.mLocked = false;
             mChannel.mIsPassthrough = false;
+            mChannel.mFavInfo = null;
+            mChannel.mSatelliteInfo = null;
+            mChannel.mTransponderInfo = null;;
 
             mChannel.mSubtitlePids = null;
             mChannel.mSubtitleTypes = null;
@@ -1177,6 +1278,21 @@ public class ChannelInfo {
 
         public Builder setIsFavourite(boolean fav) {
             mChannel.mIsFavourite = fav;
+            return this;
+        }
+
+        public Builder setFavouriteInfo(String value) {
+            mChannel.mFavInfo = value;
+            return this;
+        }
+
+        public Builder setSatelliteInfo(String value) {
+            mChannel.mSatelliteInfo = value;
+            return this;
+        }
+
+        public Builder setTransponderInfo(String value) {
+            mChannel.mTransponderInfo = value;
             return this;
         }
 
@@ -1470,6 +1586,9 @@ public class ChannelInfo {
                 "\n mFEPara = " + mFEParas +
                 "\n Browsable = " + mBrowsable +
                 "\n IsFavourite = " + mIsFavourite +
+                "\n mFavInfo = " + mFavInfo +
+                "\n mSatelliteInfo = " + mSatelliteInfo +
+                "\n mTransponderInfo = " + mTransponderInfo +
                 "\n IsPassthrough = " + mIsPassthrough +
                 "\n mLocked = " + mLocked +
                 "\n SubtitlePids = " + Arrays.toString(mSubtitlePids) +
@@ -1505,6 +1624,7 @@ public class ChannelInfo {
         public static final int TYPE_ATV_CC = 5;
         public static final int TYPE_DTV_TELETEXT_IMG = 6;
         public static final int TYPE_ISDB_SUB = 7;
+        public static final int TYPE_SCTE27_SUB = 8;
 
         public static final int CC_CAPTION_DEFAULT = 0;
         /*NTSC CC channels*/

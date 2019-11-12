@@ -49,8 +49,13 @@ public final class Program implements Comparable<Program> {
     private TvContentRating[] mContentRatings;
     private String mInternalProviderData;
     private boolean mIsAppointed;
+	private int mScheduledRecordStatus;
     private String mVersion;
     private String mEitExt;
+
+	public static final int RECORD_STATUS_NOT_STARTED = 0;
+	public static final int RECORD_STATUS_APPOINTED = 1;
+	public static final int RECORD_STATUS_IN_PROGRESS = 2;
 
     private Program() {
         mId = INVALID_LONG_VALUE;
@@ -63,6 +68,7 @@ public final class Program implements Comparable<Program> {
         mVideoWidth = INVALID_INT_VALUE;
         mVideoHeight = INVALID_INT_VALUE;
         mIsAppointed = false;
+		mScheduledRecordStatus = 0;
         mVersion = null;
         mEitExt = null;
     }
@@ -152,9 +158,17 @@ public final class Program implements Comparable<Program> {
         return mIsAppointed;
     }
 
+	public int getScheduledRecordStatus() {
+		return mScheduledRecordStatus;
+	}
+
     public void setIsAppointed(boolean isAppointed) {
         mIsAppointed = isAppointed;
     }
+
+	public void setScheduledRecordStatus(int scheduledStatus) {
+		mScheduledRecordStatus = scheduledStatus;
+	}
 
     public String getVersion() {
         return mVersion;
@@ -249,6 +263,7 @@ public final class Program implements Comparable<Program> {
                 .append(", contentRatings=").append(mContentRatings)
                 .append(", genres=").append(mCanonicalGenres)
                 .append(", isAppointed=").append(mIsAppointed)
+				.append(", scheduledRecordStatus=").append(mScheduledRecordStatus)
                 .append(", ext=").append(mVersion).append(":"+mEitExt);
         return builder.append("}").toString();
     }
@@ -275,6 +290,7 @@ public final class Program implements Comparable<Program> {
         mCanonicalGenres = other.mCanonicalGenres;
         mContentRatings = other.mContentRatings;
         mIsAppointed = other.mIsAppointed;
+		mScheduledRecordStatus = other.mScheduledRecordStatus;
         mVersion = other.mVersion;
         mEitExt = other.mEitExt;
     }
@@ -354,12 +370,13 @@ public final class Program implements Comparable<Program> {
             values.putNull(TvContract.Programs.COLUMN_VIDEO_HEIGHT);
         }
         if (!TextUtils.isEmpty(mInternalProviderData)) {
-            values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA, mInternalProviderData);
+            values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA, mInternalProviderData.getBytes());
         } else {
             values.putNull(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_DATA);
         }
         values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG1, mIsAppointed ? 1 : 0);
         values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG2, mProgramId);
+		values.put(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG4, mScheduledRecordStatus);
         if (!TextUtils.isEmpty(mVersion)) {
             values.put(TvContract.Programs.COLUMN_VERSION_NUMBER, mVersion);
         } else {
@@ -470,6 +487,10 @@ public final class Program implements Comparable<Program> {
         if (index >= 0) {
             builder.setProgramId(cursor.getInt(index));
         }
+		index = cursor.getColumnIndex(TvContract.Programs.COLUMN_INTERNAL_PROVIDER_FLAG4);
+		if (index >= 0) {
+			builder.setScheduledRecordStatus(cursor.getInt(index));
+		}
         index = cursor.getColumnIndex(TvContract.Programs.COLUMN_VERSION_NUMBER);
         if (index >= 0 && !cursor.isNull(index)) {
             builder.setVersion(cursor.getString(index));
@@ -587,6 +608,11 @@ public final class Program implements Comparable<Program> {
             mProgram.mIsAppointed = isAppointed;
             return this;
         }
+        
+		public Builder setScheduledRecordStatus(int recordStatus) {
+			mProgram.mScheduledRecordStatus = recordStatus;
+			return this;
+		}
 
         public Builder setVersion(String version) {
             mProgram.mVersion = version;

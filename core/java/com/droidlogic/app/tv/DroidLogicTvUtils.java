@@ -217,10 +217,25 @@ public class DroidLogicTvUtils
 
     public static final String ACTION_PROGRAM_APPOINTED = "droidlogic.intent.action.tv_appointed_program";
     public static final String ACTION_LIVETV_PROGRAM_APPOINTED = "droidlogic.intent.action.livetv_appointed_program";
+    public static final String ACTION_DROID_PROGRAM_WATCH_APPOINTED = "droidlogic.intent.action.droid_appointed_program";
+    public static final String ACTION_DROID_PROGRAM_RECORD_APPOINTED = "droidlogic.intent.action.droid_appointed_record_program";
+    public static final String ACTION_DROID_PROGRAM_RECORD_OPERATION = "droidlogic.intent.action.droid_appointed_record_operation";
+    public static final String ACTION_DROID_PROGRAM_RECORD_STATUS = "droidlogic.intent.action.REQUEST_RECORD_STATUS";
+    public static final String ACTION_DROID_PROGRAM_RECORD_STATUS_JSON = "droidlogic.intent.action.REQUEST_RECORD_STATUS_JSON";
     public static final String KEY_LIVETV_PROGRAM_APPOINTED = "livetv_appointed_program";
     public static final String KEY_ENABLE_NOSIGNAL_TIMEOUT = "enable_nosignal_timeout";
     public static final String PROP_DISABLE_NOSIGNAL_TIMEOUT_FUNCTION = "persist.tv.disable.nosig.timeout";
     public static final String KEY_ENABLE_SUSPEND_TIMEOUT = "enable_suspend_timeout";
+    public static final String ACTION_STOP_EPG_ACTIVITY = "droidlogic.intent.action.stop_epg_activity";
+    public static final String ACTION_REMOVE_ALL_DVR_RECORDS = "droidlogic.intent.action.remove_all_dvr_records";
+    public static final String ACTION_DVR_RESPONSE = "droidlogic.intent.action.dvr_response";
+    public static final String KEY_DVR_DELETE_RESULT_LIST = "dvr_delete_result_list";
+    public static final String KEY_DTVKIT_SEARCH_TYPE = "dtvkit_search_type";//auto or manual
+    public static final String KEY_DTVKIT_SEARCH_TYPE_AUTO = "dtvkit_auto_search";//auto
+    public static final String KEY_DTVKIT_SEARCH_TYPE_MANUAL = "dtvkit_manual_search_type";//manual
+    public static final String KEY_LIVETV_PVR_STATUS = "livetv_pvr_status";//manual
+    public static final String VALUE_LIVETV_PVR_SCHEDULE_AVAILABLE = "livetv_pvr_schedule";
+    public static final String VALUE_LIVETV_PVR_RECORD_PROGRAM_AVAILABLE = "livetv_pvr_program";
 
     public static final String ACTION_ATV_AUTO_SCAN = "atv_auto_scan";
     public static final String ACTION_DTV_AUTO_SCAN = "dtv_auto_scan";
@@ -358,6 +373,7 @@ public class DroidLogicTvUtils
     public static final String ATV_CHANNEL_INDEX = "atv_channel_index";
     public static final String DTV_CHANNEL_INDEX = "dtv_channel_index";
     public static final String TV_INPUT_ID = "tv_input_id";
+    public static final String DB_ID_TV_SOURCE_TYPE = "db_id_tv_source_type";
     public static final String TV_SEARCH_ATSC_CLIST = "atsc_c_list_mode";
     public static final String TV_NUMBER_SEARCH_MODE = "number_search_mode";
     public static final String TV_NUMBER_SEARCH_NUMBER = "number_search_number";
@@ -468,7 +484,7 @@ public class DroidLogicTvUtils
                         break;
                     }
                 }
-                // ATSC need be shown first
+                // ATSC need be show first
                 if (i <= TvScanConfig.TV_SEARCH_TYPE_ATSC_T_INDEX) {
                     type = TvScanConfig.TV_SEARCH_TYPE.get(i);
                 } else {
@@ -536,7 +552,7 @@ public class DroidLogicTvUtils
 
     public static String getTvSearchTypeSys(Context mContext) {
         String colorSys = TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), ATSC_TV_SEARCH_SYS);
-        if (TextUtils.isEmpty(colorSys) || !TvScanConfig.TV_SOUND_SYS.contains(colorSys)) {
+        if (TextUtils.isEmpty(colorSys) || !TvScanConfig.TV_COLOR_SYS.contains(colorSys)) {
             ArrayList<String> clrSysList = TvScanConfig.GetTvAtvColorSystemList(getCountry(mContext));
             colorSys = clrSysList.get(0);
             Log.i(TAG, "getTvSearchTypeSys null, set default color system:" + colorSys);
@@ -672,6 +688,15 @@ public class DroidLogicTvUtils
 
     public static String getInputId(Context mContext) {
         return TvControlDataManager.getInstance(mContext).getString(mContext.getContentResolver(), DroidLogicTvUtils.TV_INPUT_ID);
+    }
+
+
+    public static void setTvSourceType(Context mContext, int sourceType) {
+        TvControlDataManager.getInstance(mContext).putInt(mContext.getContentResolver(), DB_ID_TV_SOURCE_TYPE, sourceType);
+    }
+
+    public static int getTvSourceType(Context mContext) {
+        return TvControlDataManager.getInstance(mContext).getInt(mContext.getContentResolver(), DB_ID_TV_SOURCE_TYPE, DEVICE_ID_ADTV);
     }
 
     public static String getCurrentSignalType(Context context) {
@@ -978,6 +1003,7 @@ public class DroidLogicTvUtils
         HEIGHT_TO_VIDEO_FORMAT_MAP.put("576", "VIDEO_FORMAT_576");
         HEIGHT_TO_VIDEO_FORMAT_MAP.put("720", "VIDEO_FORMAT_720");
         HEIGHT_TO_VIDEO_FORMAT_MAP.put("1080", "VIDEO_FORMAT_1080");
+        HEIGHT_TO_VIDEO_FORMAT_MAP.put("1088", "VIDEO_FORMAT_1080");
         HEIGHT_TO_VIDEO_FORMAT_MAP.put("2160", "VIDEO_FORMAT_2160");
         HEIGHT_TO_VIDEO_FORMAT_MAP.put("4320", "VIDEO_FORMAT_4320");
     }
@@ -1088,39 +1114,9 @@ public class DroidLogicTvUtils
         }
         return stringBuilder.toString();
     }
-
     public static String mapToJson(Map<String, String> map) {
         return mapToJson(null, map);
     }
-
-    //add escape character "\""
-    public static String mapToJsonAdd(String name, Map<String, String> map) {
-        StringBuilder stringBuilder = new StringBuilder();
-        boolean has_member = false;
-
-        if (!map.isEmpty()) {
-            if ((name != null) && !name.isEmpty())
-                stringBuilder.append("\"").append(name).append("\":");
-
-            stringBuilder.append("{");
-            for (String key : map.keySet()) {
-                if (has_member)
-                    stringBuilder.append(",");
-
-                String value = map.get(key);
-                stringBuilder.append("\"")
-                    .append((key != null ? key : ""))
-                    .append("\":")
-                    .append("\"")
-                    .append(value != null ? value : "")
-                    .append("\"");
-                has_member = true;
-            }
-            stringBuilder.append("}");
-        }
-        return stringBuilder.toString();
-    }
-
     public static Map<String, String> jsonToMap(String jsonString) {
         if (jsonString == null || jsonString.length() == 0)
             return null;
@@ -1165,7 +1161,11 @@ public class DroidLogicTvUtils
             try {
                 String childStr = jsonObject.get(k).toString();
                 map.put(k, childStr);
-                JSONObject childJsonObject = new JSONObject(childStr);
+                JSONObject childJsonObject = null;
+                Object childObject = jsonObject.get(k);
+                if (childObject instanceof JSONObject) {
+                    childJsonObject = (JSONObject)childObject;
+                }
                 if (childJsonObject != null) {
                     Map<String, String> childMap = multiJsonToMap(childJsonObject.toString());
                     if (childMap != null) {
