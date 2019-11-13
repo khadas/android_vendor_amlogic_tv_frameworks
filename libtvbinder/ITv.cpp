@@ -39,7 +39,9 @@ public:
     {
         Parcel data, reply;
         data.writeInterfaceToken(ITv::getInterfaceDescriptor());
-        remote()->transact(DISCONNECT, data, &reply);
+        if (remote()->transact(DISCONNECT, data, &reply) != NO_ERROR) {
+            ALOGV("%s failed!\n", __FUNCTION__);
+        }
     }
 
     status_t processCmd(const Parcel &p, Parcel *r)
@@ -47,9 +49,12 @@ public:
         Parcel data, reply;
         data.writeInterfaceToken(ITv::getInterfaceDescriptor());
         data.write(p.data(), p.dataSize());
-        remote()->transact(TV_CMD, data, &reply);
-        r->write(reply.data(), reply.dataSize());
-        r->setDataPosition(0);
+        if (remote()->transact(TV_CMD, data, &reply) == NO_ERROR) {
+            r->write(reply.data(), reply.dataSize());
+            r->setDataPosition(0);
+        } else {
+            ALOGV("%s failed!\n", __FUNCTION__);
+        }
         return 0;
     }
 
@@ -60,8 +65,12 @@ public:
         data.writeStrongBinder(IInterface::asBinder(share_mem));
         data.writeInt32(iSourceMode);
         data.writeInt32(iCapVideoLayerOnly);
-        remote()->transact(TV_CREATE_VIDEO_FRAME, data, &reply);
-        return reply.readInt32();
+        if (remote()->transact(TV_CREATE_VIDEO_FRAME, data, &reply) == NO_ERROR) {
+            return reply.readInt32();
+        } else {
+            ALOGV("%s failed!\n", __FUNCTION__);
+            return 0;
+        }
     }
 
     virtual status_t createSubtitle(const sp<IMemory> &share_mem)
@@ -69,16 +78,24 @@ public:
         Parcel data, reply;
         data.writeInterfaceToken(ITv::getInterfaceDescriptor());
         data.writeStrongBinder(IInterface::asBinder(share_mem));
-        remote()->transact(TV_CREATE_SUBTITLE, data, &reply);
-        return reply.readInt32();
+        if (remote()->transact(TV_CREATE_SUBTITLE, data, &reply) == NO_ERROR) {
+            return reply.readInt32();
+        } else {
+            ALOGV("%s failed!\n", __FUNCTION__);
+            return 0;
+        }
     }
     virtual status_t connect(const sp<ITvClient> &tvClient)
     {
         Parcel data, reply;
         data.writeInterfaceToken(ITv::getInterfaceDescriptor());
         data.writeStrongBinder(IInterface::asBinder(tvClient));
-        remote()->transact(CONNECT, data, &reply);
-        return reply.readInt32();
+        if (remote()->transact(CONNECT, data, &reply) == NO_ERROR) {
+            return reply.readInt32();
+        } else {
+            ALOGV("%s failed!\n", __FUNCTION__);
+            return 0;
+        }
     }
     virtual status_t lock()
     {

@@ -78,8 +78,10 @@ sp<ITvServer> TvServerHidlClient::getTvService()
 TvServerHidlClient::TvServerHidlClient(tv_connect_type_t type): mType(type)
 {
     mTvServer = getTvService();
-    mTvServerHidlCallback = new TvServerHidlCallback(this);
-    mTvServer->setCallback(mTvServerHidlCallback, static_cast<ConnectType>(type));
+    if (mTvServer != nullptr) {
+        mTvServerHidlCallback = new TvServerHidlCallback(this);
+        mTvServer->setCallback(mTvServerHidlCallback, static_cast<ConnectType>(type));
+    }
 }
 
 TvServerHidlClient::~TvServerHidlClient()
@@ -98,7 +100,8 @@ void TvServerHidlClient::reconnect()
     mTvServer.clear();
     //reconnect to server
     mTvServer = getTvService();
-    mTvServer->setCallback(mTvServerHidlCallback, static_cast<ConnectType>(mType));
+    if (mTvServer != nullptr)
+        mTvServer->setCallback(mTvServerHidlCallback, static_cast<ConnectType>(mType));
 }
 
 void TvServerHidlClient::disconnect()
@@ -284,6 +287,10 @@ int TvServerHidlClient::saveMacAddress(const char *data_buf) {
     }
 
     return mTvServer->saveMacAddress(value);
+}
+
+int TvServerHidlClient::setSameSourceEnable(int isEnable) {
+    return mTvServer->setSameSourceEnable(isEnable);
 }
 
 std::string TvServerHidlClient::getTvSupportCountries() {
@@ -556,6 +563,14 @@ int TvServerHidlClient::getIwattRegs() {
 
 int TvServerHidlClient::FactoryCleanAllTableForProgram() {
     return mTvServer->FactoryCleanAllTableForProgram();
+}
+
+int TvServerHidlClient::setPreviewWindow(int32_t x1, int32_t y1, int32_t x2, int32_t y2) {
+    return mTvServer->setPreviewWindow(x1, y1, x2, y2);
+}
+
+int TvServerHidlClient::setPreviewWindowMode(int32_t enable) {
+    return mTvServer->setPreviewWindowMode(enable);
 }
 
 // callback from tv service

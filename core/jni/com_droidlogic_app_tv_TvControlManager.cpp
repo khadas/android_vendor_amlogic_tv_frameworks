@@ -15,6 +15,8 @@
  */
 #define LOG_TAG "tv-jni"
 #include "com_droidlogic_app_tv_TvControlManager.h"
+#include <vendor/amlogic/hardware/hdmicec/1.0/IDroidHdmiCEC.h>
+
 static sp<TvServerHidlClient> spTv = NULL;
 sp<EventCallback> spEventCB;
 static jobject TvObject;
@@ -351,7 +353,7 @@ void EventCallback::notify (const tv_parcel_t &parcel) {
         env->SetObjectField(hidlParcel, jbodyString, jbodyStringArray);
         env->CallVoidMethod(TvObject, notifyCallback, hidlParcel);
     } else {
-        ALOGE("[%s] env, TvObject or notifyClazzis NULL", __FUNCTION__);
+        ALOGE("[%s] env, TvObject or notifyClazz is NULL", __FUNCTION__);
     }
 
     if (needDetach) {
@@ -494,7 +496,7 @@ static jstring GetTvAtvMinMaxFreq(JNIEnv *env, jclass clazz __unused, jstring jc
     const sp<TvServerHidlClient>& Tv = getTvClient();
     if (Tv != NULL) {
         const char *country_code = env->GetStringUTFChars(jcountry_code, nullptr);
-        Tv->getTvAtvMinMaxFreq(country_code);
+        MinMaxFreq = Tv->getTvAtvMinMaxFreq(country_code);
         env->ReleaseStringUTFChars(jcountry_code, country_code);
     }
     return env->NewStringUTF(MinMaxFreq.c_str());
@@ -1104,6 +1106,14 @@ static jint GetIwattRegs(JNIEnv *env __unused, jclass clazz __unused) {
     return result;
 }
 
+static jint SetSameSourceEnable(JNIEnv *env __unused, jclass clazz __unused, jint isEnable) {
+    const sp<TvServerHidlClient>& Tv = getTvClient();
+    jint result = -1;
+    if (Tv != NULL)
+        result = Tv->setSameSourceEnable(isEnable);
+    return result;
+}
+
 static jint FactoryCleanAllTableForProgram(JNIEnv *env __unused, jclass clazz __unused) {
     const sp<TvServerHidlClient>& Tv = getTvClient();
     jint result = -1;
@@ -1112,6 +1122,38 @@ static jint FactoryCleanAllTableForProgram(JNIEnv *env __unused, jclass clazz __
     return result;
 }
 
+static jint SetPreviewWindow(JNIEnv *env __unused, jclass clazz __unused, jint x1, jint y1, jint x2, jint y2) {
+    const sp<TvServerHidlClient>& Tv = getTvClient();
+    jint result = -1;
+    if (Tv != NULL)
+        result = Tv->setPreviewWindow(x1, y1, x2, y2);
+    return result;
+}
+
+static jint SetPreviewWindowMode(JNIEnv *env __unused, jclass clazz __unused, jint enable) {
+    const sp<TvServerHidlClient>& Tv = getTvClient();
+    jint result = -1;
+    if (Tv != NULL)
+        result = Tv->setPreviewWindowMode(enable);
+    return result;
+}
+
+static jint GetCecWakePort(JNIEnv *env __unused, jclass clazz __unused) {
+    using ::vendor::amlogic::hardware::hdmicec::V1_0::IDroidHdmiCEC;
+    ALOGD("GetCecWakePort");
+    jint result = -1;
+    sp<IDroidHdmiCEC> hdmicec = IDroidHdmiCEC::tryGetService();
+    while (hdmicec == nullptr) {
+         usleep(200*1000);//sleep 200ms
+         hdmicec = IDroidHdmiCEC::tryGetService();
+         ALOGE("tryGet hdmicecd daemon Service");
+    };
+    if (hdmicec != nullptr) {
+        result = hdmicec->getCecWakePort();
+        ALOGD("GetCecWakePort %d", result);
+    }
+    return result;
+}
 
 static JNINativeMethod Tv_Methods[] = {
 {"native_ConnectTvServer", "(Lcom/droidlogic/app/tv/TvControlManager;)V", (void *) ConnectTvServer },
@@ -1184,10 +1226,15 @@ static JNINativeMethod Tv_Methods[] = {
 {"native_SendPlayCmd", "(ILjava/lang/String;Ljava/lang/String;)I", (void *) SendPlayCmd },
 {"native_SetDeviceIdForCec", "(I)I", (void *) SetDeviceIdForCec },
 {"native_GetIwattRegs", "()I", (void *) GetIwattRegs },
+{"native_SetSameSourceEnable", "(I)I", (void *) SetSameSourceEnable },
 {"native_FactoryCleanAllTableForProgram", "()I", (void *) FactoryCleanAllTableForProgram },
 {"native_DtvGetVideoFormatInfo", "()Lcom/droidlogic/app/tv/TvControlManager$VideoFormatInfo;", (void *) DtvGetVideoFormatInfo },
 {"native_SearchRrtInfo", "(IIII)Lcom/droidlogic/app/tv/TvControlManager$RrtSearchInfo;", (void *) SearchRrtInfo },
 {"native_DtvGetScanFreqListMode", "(I)[Lcom/droidlogic/app/tv/TvControlManager$FreqList;", (void *) DtvGetScanFreqListMode },
+{"native_SetPreviewWindow", "(IIII)I", (void *) SetPreviewWindow },
+{"native_SetPreviewWindowMode", "(I)I", (void *) SetPreviewWindowMode },
+{"native_GetCecWakePort", "()I", (void *) GetCecWakePort },
+
 };
 
 #define FIND_CLASS(var, className) \
@@ -1223,6 +1270,7 @@ int register_com_droidlogic_app_tv_TvControlManager(JNIEnv *env)
 
 jint JNI_OnLoad(JavaVM *vm, void *reserved __unused)
 {
+    ALOGD("bbb");
     JNIEnv *env = NULL;
     jint result = -1;
 
@@ -1251,3 +1299,5 @@ jint JNI_OnLoad(JavaVM *vm, void *reserved __unused)
 bail:
     return result;
 }
+
+

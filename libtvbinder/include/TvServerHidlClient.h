@@ -101,6 +101,7 @@ public:
     int setLcdEnable(int32_t enable);
     int readMacAddress(char *value);
     int saveMacAddress(const char *value);
+    int setSameSourceEnable(int isEnable);
     std::string getTvSupportCountries();
     std::string getTvDefaultCountry();
     std::string getTvCountryName(const std::string& country_code);
@@ -155,6 +156,8 @@ public:
     int sendPlayCmd(int32_t cmd, const std::string& id, const std::string& param);
     int getIwattRegs();
     int FactoryCleanAllTableForProgram();
+    int setPreviewWindow(int32_t x1, int32_t y1, int32_t x2, int32_t y2);
+    int setPreviewWindowMode(int32_t enable);
 
 private:
     class TvServerHidlCallback : public ITvServerCallback {

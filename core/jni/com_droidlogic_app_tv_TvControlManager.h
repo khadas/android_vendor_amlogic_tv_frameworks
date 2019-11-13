@@ -17,8 +17,6 @@
 #ifndef __COM_DROIDLOGIC_APP_SYSTEMCTRL_H__
 #define __COM_DROIDLOGIC_APP_SYSTEMCTRL_H__
 #include <jni.h>
-//#include <JNIHelp.h>
-//#include <android_runtime/AndroidRuntime.h>
 #include <utils/Log.h>
 #include "TvServerHidlClient.h"
 
