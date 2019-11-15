@@ -28,7 +28,7 @@ public class TvTime{
     private final static String PROP_SET_SYSTIME_ENABLED = "persist.tv.getdtvtime.isneed";
     private TvControlDataManager mTvControlDataManager = null;
     private SystemControlManager mSystemControlManager = null;
-    private final static String TV_STREAM_TIME = "tv.stream.realtime";//to fit for dtvkit
+    private final static String TV_STREAM_TIME = "vendor.sys.tv.stream.realtime";//to fit for dtvkit
 
     public TvTime(Context context){
         mContext = context;
