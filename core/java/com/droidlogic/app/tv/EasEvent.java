@@ -11,8 +11,6 @@ package com.droidlogic.app.tv;
 
 import android.util.Log;
 import com.droidlogic.app.tv.TvControlManager.TvHidlParcel;
-//import vendor.amlogic.hardware.tvserver.V1_0.TvHidlParcel;
-
 
 public class EasEvent {
     private static final String TAG = "EasEvent";

@@ -71,6 +71,8 @@ public class TvScanConfig {
     public static final int TV_SOUND_SYS_L_INDEX        = 5;
     public static final ArrayList<String> TV_SOUND_SYS = new ArrayList<String>(){{add("AUTO"); add("DK"); add("I"); add("BG"); add("M"); add("L");}};
 
+    public static final ArrayList<String> TV_MIN_MAX_FREQ = new ArrayList<String>(){{add("44250000"); add("868250000");}};
+
     public static final int TV_ATV_AUTO_FREQ_LIST        = 0; /* 0: freq table list sacn mode */
     public static final int TV_ATV_AUTO_ALL_BAND         = 1;  /* 1: all band sacn mode */
 
@@ -147,16 +149,16 @@ public class TvScanConfig {
     }
 
     public static int GetTvAtvMinMaxFreq(String countryId, int param[]) {
-        ArrayList<String> defaultFreq = new ArrayList<String>(){{add("44250000"); add("868250000");}};
-        ArrayList<String> getCurMinMaxFreq = stringToWordsList(TvControlManager.getInstance().GetTvAtvMinMaxFreq(countryId), defaultFreq);
-
-        if (getCurMinMaxFreq.size() != 2) {
-            Log.e(TAG, "get atv search freq param length= " + getCurMinMaxFreq.size() + "error, use default freq [44250000, 868250000]");
-            getCurMinMaxFreq = defaultFreq;
-            return -1;
+        String strings = TvControlManager.getInstance().GetTvAtvMinMaxFreq(countryId);
+        String[] supportList = strings.split(",");
+        if (supportList.length != 2) {
+            Log.e(TAG, "get atv search freq param length= " + supportList.length + "error, use default freq [" + TV_MIN_MAX_FREQ.get(0) + ", " + TV_MIN_MAX_FREQ.get(1) + "]");
+            param[0] = Integer.parseInt(TV_MIN_MAX_FREQ.get(0));
+            param[1] = Integer.parseInt(TV_MIN_MAX_FREQ.get(1));
+        } else {
+            param[0] = Integer.parseInt(supportList[0]);
+            param[1] = Integer.parseInt(supportList[1]);
         }
-        param[0] = Integer.parseInt(getCurMinMaxFreq.get(0));
-        param[1] = Integer.parseInt(getCurMinMaxFreq.get(1));
         return 0;
     }
 

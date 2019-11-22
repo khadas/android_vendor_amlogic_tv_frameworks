@@ -27,73 +27,78 @@ public class AudioEffectManager {
 
     private boolean mDebug = true;
     private int RETRY_MAX = 10;
-    //soundmode set by eq or dap module, first use dap if exist
-    public static final  int DAP_MODULE             = 0;
-    public static final  int EQ_MODULE              = 1;
-    /* Modes of sound effects */
-    public static final int MODE_STANDARD           = 0;
-    public static final int MODE_MUSIC              = 1;
-    public static final int MODE_NEWS               = 2;
-    public static final int MODE_THEATER            = 3;
-    public static final int MODE_GAME               = 4;
-    public static final int MODE_CUSTOM             = 5;
 
-    /* Modes of sound effects */
-    public static final int EXTEND_MODE_STANDARD    = 0;
-    public static final int EXTEND_MODE_MUSIC       = 1;
-    public static final int EXTEND_MODE_NEWS        = 2;
-    public static final int EXTEND_MODE_THEATER     = 3;
-    public static final int EXTEND_MODE_GAME        = 4;
-    public static final int EXTEND_MODE_CUSTOM      = 5;
+    /* [getSoundModule] soundmode set by eq or dap module, first use dap if exist */
+    public static final  int DAP_MODULE                                 = 0;
+    public static final  int EQ_MODULE                                  = 1;
 
-    //surround value definition
-    public static final int SURROUND_ON             = 0;
-    public static final int SURROUND_OFF            = 1;
-    //bass boost value definition
-    public static final int BASS_BOOST_ON           = 0;
-    public static final int BASS_BOOST_OFF          = 1;
-    //amlogic add
-    public static final int SPDIF_OFF               = 0;
-    public static final int SPDIF_PCM               = 1;
-    public static final int SPDIF_RAW               = 2;
-    public static final int SPDIF_AUTO              = 3;
+    /* [setSoundMode] EQ sound mode type */
+    public static final int EQ_SOUND_MODE_STANDARD                      = 0;
+    public static final int EQ_SOUND_MODE_MUSIC                         = 1;
+    public static final int EQ_SOUND_MODE_NEWS                          = 2;
+    public static final int EQ_SOUND_MODE_THEATER                       = 3;
+    public static final int EQ_SOUND_MODE_GAME                          = 4;
+    public static final int EQ_SOUND_MODE_CUSTOM                        = 5;
 
-    public static final int SOUND_SPEAKER_OUT       = 0;
-    public static final int SOUND_SPDIF_OUT         = 1;
-    public static final int SOUND_ARC_OUT           = 2;
+    /* [setUserSoundModeParam] custom sound mode EQ band type */
+    public static final int EQ_SOUND_MODE_EFFECT_BAND1                  = 0;
+    public static final int EQ_SOUND_MODE_EFFECT_BAND2                  = 1;
+    public static final int EQ_SOUND_MODE_EFFECT_BAND3                  = 2;
+    public static final int EQ_SOUND_MODE_EFFECT_BAND4                  = 3;
+    public static final int EQ_SOUND_MODE_EFFECT_BAND5                  = 4;
 
-    private static final String AUDIO_SOUND_MODE            = "audio_sound_mode";
-    private static final String AUDIO_TREBLE_LEVEL          = "audio_treble_level";
-    private static final String AUDIO_BASS_LEVEL            = "audio_bass_level";
-    private static final String AUDIO_BALANCE_LEVEL         = "audio_balance_level";
-    private static final String AUDIO_SURROUND_MODE         = "audio_suround_mode";
-    private static final String AUDIO_DIALOG_CLARITY_MODE   = "audio_dialog_charity_mode";
-    private static final String AUDIO_BASS_BOOST_MODE       = "audio_bass_boost_mode";
-    private static final String AUDIO_SOUND_EFFECT_BAND1    = "audio_sound_effect_band1";
-    private static final String AUDIO_SOUND_EFFECT_BAND2    = "audio_sound_effect_band2";
-    private static final String AUDIO_SOUND_EFFECT_BAND3    = "audio_sound_effect_band3";
-    private static final String AUDIO_SOUND_EFFECT_BAND4    = "audio_sound_effect_band4";
-    private static final String AUDIO_SOUND_EFFECT_BAND5    = "audio_sound_effect_band5";
+    /* [setDialogClarityMode] Modes of dialog clarity */
+    public static final int DIALOG_CLARITY_MODE_OFF                     = 0;
+    public static final int DIALOG_CLARITY_MODE_LOW                     = 1;
+    public static final int DIALOG_CLARITY_MODE_HIGH                    = 2;
 
-    //set id
-    public static final int SET_BASS                = 0;
-    public static final int SET_TREBLE              = 1;
-    public static final int SET_BALANCE             = 2;
-    public static final int SET_DIALOG_CLARITY      = 3;
-    public static final int SET_SURROUND            = 4;
-    public static final int SET_BASS_BOOST          = 5;
-    public static final int SET_SOUND_MODE          = 6;
-    public static final int SET_EFFECT_BAND1        = 7;
-    public static final int SET_EFFECT_BAND2        = 8;
-    public static final int SET_EFFECT_BAND3        = 9;
-    public static final int SET_EFFECT_BAND4        = 10;
-    public static final int SET_EFFECT_BAND5        = 11;
-    public static final int SET_AGC_ENABLE          = 12;
-    public static final int SET_AGC_MAX_LEVEL       = 13;
-    public static final int SET_AGC_ATTRACK_TIME    = 14;
-    public static final int SET_AGC_RELEASE_TIME    = 15;
-    public static final int SET_AGC_SOURCE_ID       = 16;
-    public static final int SET_VIRTUAL_URROUND     = 17;
+    /* [setDbxAdvancedModeParam] DBX sound mode param type */
+    public static final int DBX_ADVANCED_MODE_PRARM_TYPE_SONICS         = 0;
+    public static final int DBX_ADVANCED_MODE_PRARM_TYPE_VOLUME         = 1;
+    public static final int DBX_ADVANCED_MODE_PRARM_TYPE_SURROUND       = 2;
+
+    /* [setDbxSoundMode] DBX sound mode */
+    public static final int DBX_SOUND_MODE_STANDARD                     = 0;
+    public static final int DBX_SOUND_MODE_MUSIC                        = 1;
+    public static final int DBX_SOUND_MODE_MOVIE                        = 2;
+    public static final int DBX_SOUND_MODE_THEATER                      = 3;
+    public static final int DBX_SOUND_MODE_ADVANCED                     = 4;
+
+    /* [setDtsVirtualXMode] VirtualX effect mode */
+    public static final int SOUND_EFFECT_VIRTUALX_MODE_OFF              = 0;
+    public static final int SOUND_EFFECT_VIRTUALX_MODE_BASS             = 1;
+    public static final int SOUND_EFFECT_VIRTUALX_MODE_FULL             = 2;
+
+    /* [setAudioOutputSpeakerDelay / setAudioOutputSpdifDelay / setAudioPrescale] output delay source define */
+    public static final int AUDIO_OUTPUT_DELAY_SOURCE_ATV               = 0;
+    public static final int AUDIO_OUTPUT_DELAY_SOURCE_DTV               = 1;
+    public static final int AUDIO_OUTPUT_DELAY_SOURCE_AV                = 2;
+    public static final int AUDIO_OUTPUT_DELAY_SOURCE_HDMI              = 3;
+    public static final int AUDIO_OUTPUT_DELAY_SOURCE_MEDIA             = 4;
+    public static final int AUDIO_OUTPUT_DELAY_SOURCE_MAX               = 5;
+    public static final String PROP_AUDIO_DELAY_ENABLED                 = "persist.tv.audio.delay.enabled";
+
+    /* init value for first boot */
+    public static final int EFFECT_BASS_DEFAULT                         = 50;   // 0 - 100
+    public static final int EFFECT_TREBLE_DEFAULT                       = 50;   // 0 - 100
+    public static final int EFFECT_BALANCE_DEFAULT                      = 50;   // 0 - 100
+
+    public static final int SOUND_EFFECT_SURROUND_ENABLE_DEFAULT        = 0;        // OFF
+    public static final int SOUND_EFFECT_DIALOG_CLARITY_ENABLE_DEFAULT  = 0;        // OFF
+    public static final int SOUND_EFFECT_TRUBASS_ENABLE_DEFAULT         = 0;        // OFF
+    public static final int SOUND_EFFECT_VIRTUALX_MODE_DEFAULT          = SOUND_EFFECT_VIRTUALX_MODE_OFF;
+    public static final int SOUND_EFFECT_TRUVOLUME_HD_ENABLE_DEFAULT    = 0;        // OFF
+    public static final int SOUND_EFFECT_DBX_ENABLE_DEFAULT             = 0;        // OFF
+    public static final int SOUND_EFFECT_DBX_SOUND_MODE_DEFAULT         = DBX_SOUND_MODE_STANDARD;
+
+    // DBX sound mode default param [sonics, volume, surround]
+    public static final byte[][] SOUND_EFFECT_DBX_SOUND_MODE_ARRAY_DEFAULT = {
+            {4, 2, 2},  // standard mode
+            {0, 2, 2},  // music mode
+            {0, 2, 0},  // movie mode
+            {0, 1, 2},  // theater mode
+            {4, 2, 2},  // advance mode default db value
+    };
 
     private static AudioEffectManager mInstance;
 
@@ -154,6 +159,57 @@ public class AudioEffectManager {
         mContext.unbindService(serConn);
     }
 
+    public void createAudioEffects() {
+        try {
+            mAudioEffectService.createAudioEffects();
+        } catch (RemoteException e) {
+            Log.e(TAG, "createAudioEffects failed:" + e);
+        }
+    }
+
+    public boolean isSupportVirtualX() {
+        try {
+            return mAudioEffectService.isSupportVirtualX();
+        } catch (RemoteException e) {
+            Log.e(TAG, "isSupportVirtualX failed:" + e);
+        }
+        return false;
+    }
+
+    public void setDtsVirtualXMode(int virtalXMode) {
+        try {
+            mAudioEffectService.setDtsVirtualXMode(virtalXMode);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setDtsVirtualXMode failed:" + e);
+        }
+    }
+
+    public int getDtsVirtualXMode() {
+        try {
+            return mAudioEffectService.getDtsVirtualXMode();
+        } catch (RemoteException e) {
+            Log.e(TAG, "getDtsVirtualXMode failed:" + e);
+        }
+        return -1;
+    }
+
+    public void setDtsTruVolumeHdEnable(boolean enable) {
+        try {
+            mAudioEffectService.setDtsTruVolumeHdEnable(enable);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setDtsTruVolumeHdEnable failed:" + e);
+        }
+    }
+
+    public boolean getDtsTruVolumeHdEnable() {
+        try {
+            return mAudioEffectService.getDtsTruVolumeHdEnable();
+        } catch (RemoteException e) {
+            Log.e(TAG, "getDtsTruVolumeHdEnable failed:" + e);
+        }
+        return false;
+    }
+
     public int getSoundModeStatus() {
         try {
             return mAudioEffectService.getSoundModeStatus();
@@ -194,33 +250,6 @@ public class AudioEffectManager {
             return mAudioEffectService.getBalanceStatus();
         } catch (RemoteException e) {
             Log.e(TAG, "getBalanceStatus failed:" + e);
-        }
-        return -1;
-    }
-
-    public int getSurroundStatus() {
-        try {
-            return mAudioEffectService.getSurroundStatus();
-        } catch (RemoteException e) {
-            Log.e(TAG, "getSurroundStatus failed:" + e);
-        }
-        return -1;
-    }
-
-    public int getDialogClarityStatus() {
-        try {
-            return mAudioEffectService.getDialogClarityStatus();
-        } catch (RemoteException e) {
-            Log.e(TAG, "getDialogClarityStatus failed:" + e);
-        }
-        return -1;
-    }
-
-    public int getBassBoostStatus() {
-        try {
-            return mAudioEffectService.getBassBoostStatus();
-        } catch (RemoteException e) {
-            Log.e(TAG, "getBassBoostStatus failed:" + e);
         }
         return -1;
     }
@@ -287,7 +316,6 @@ public class AudioEffectManager {
         }
     }
 
-
     public void setSoundModeByObserver(int mode) {
         try {
             mAudioEffectService.setSoundModeByObserver(mode);
@@ -296,12 +324,21 @@ public class AudioEffectManager {
         }
     }
 
-    public void setDifferentBandEffects(int bandNumber, int value, boolean bNeedSave) {
+    public void setUserSoundModeParam(int bandNumber, int value) {
         try {
-            mAudioEffectService.setDifferentBandEffects(bandNumber, value, bNeedSave);
+            mAudioEffectService.setUserSoundModeParam(bandNumber, value);
         } catch (RemoteException e) {
-            Log.e(TAG, "setDifferentBandEffects failed:" + e);
+            Log.e(TAG, "setUserSoundModeParam failed:" + e);
         }
+    }
+
+    public int getUserSoundModeParam(int bandNumber) {
+        try {
+            return mAudioEffectService.getUserSoundModeParam(bandNumber);
+        } catch (RemoteException e) {
+            Log.e(TAG, "getUserSoundModeParam failed:" + e);
+        }
+        return -1;
     }
 
     public void setTreble(int step) {
@@ -328,59 +365,86 @@ public class AudioEffectManager {
         }
     }
 
-    public void setSurround(int mode) {
+    public void setSurroundEnable(boolean enable) {
         try {
-            mAudioEffectService.setSurround(mode);
+            mAudioEffectService.setSurroundEnable(enable);
         } catch (RemoteException e) {
-            Log.e(TAG, "setSurround failed:" + e);
+            Log.e(TAG, "setSurroundEnable failed:" + e);
         }
     }
 
-    public void setDialogClarity(int mode) {
+    public boolean getSurroundEnable() {
         try {
-            mAudioEffectService.setDialogClarity(mode);
+            return mAudioEffectService.getSurroundEnable();
         } catch (RemoteException e) {
-            Log.e(TAG, "setDialogClarity failed:" + e);
+            Log.e(TAG, "getSurroundEnable failed:" + e);
+        }
+        return false;
+    }
+
+    public void setDialogClarityMode(int mode) {
+        try {
+            mAudioEffectService.setDialogClarityMode(mode);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setDialogClarityEnable failed:" + e);
         }
     }
 
-    public void setBassBoost(int mode) {
+    public int getDialogClarityMode() {
         try {
-            mAudioEffectService.setBassBoost(mode);
+            return mAudioEffectService.getDialogClarityMode();
         } catch (RemoteException e) {
-            Log.e(TAG, "setBassBoost failed:" + e);
+            Log.e(TAG, "getDialogClarityEnable failed:" + e);
+        }
+        return -1;
+    }
+
+    public void setTruBassEnable(boolean enable) {
+        try {
+            mAudioEffectService.setTruBassEnable(enable);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setTruBassEnable failed:" + e);
         }
     }
 
-    public void setAgsEnable(int mode) {
+    public boolean getTruBassEnable() {
         try {
-            mAudioEffectService.setAgsEnable(mode);
+            return mAudioEffectService.getTruBassEnable();
         } catch (RemoteException e) {
-            Log.e(TAG, "setAgsEnable failed:" + e);
+            Log.e(TAG, "getTruBassEnable failed:" + e);
+        }
+        return false;
+    }
+
+    public void setAgcEnable(boolean enable) {
+        try {
+            mAudioEffectService.setAgcEnable(enable);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setAgcEnable failed:" + e);
         }
     }
 
-    public void setAgsMaxLevel(int step) {
+    public void setAgcMaxLevel(int step) {
         try {
-            mAudioEffectService.setAgsMaxLevel(step);
+            mAudioEffectService.setAgcMaxLevel(step);
         } catch (RemoteException e) {
-            Log.e(TAG, "setAgsMaxLevel failed:" + e);
+            Log.e(TAG, "setAgcMaxLevel failed:" + e);
         }
     }
 
-    public void setAgsAttrackTime(int step) {
+    public void setAgcAttrackTime(int step) {
         try {
-            mAudioEffectService.setAgsAttrackTime(step);
+            mAudioEffectService.setAgcAttrackTime(step);
         } catch (RemoteException e) {
-            Log.e(TAG, "setAgsAttrackTime failed:" + e);
+            Log.e(TAG, "setAgcAttrackTime failed:" + e);
         }
     }
 
-    public void setAgsReleaseTime(int step) {
+    public void setAgcReleaseTime(int step) {
         try {
-            mAudioEffectService.setAgsReleaseTime(step);
+            mAudioEffectService.setAgcReleaseTime(step);
         } catch (RemoteException e) {
-            Log.e(TAG, "setAgsReleaseTime failed:" + e);
+            Log.e(TAG, "setAgcReleaseTime failed:" + e);
         }
     }
 
@@ -400,23 +464,106 @@ public class AudioEffectManager {
         }
     }
 
-    public void setParameters(int order, int value) {
+    public void setDbxEnable(boolean enable) {
         try {
-            mAudioEffectService.setParameters(order, value);
+            mAudioEffectService.setDbxEnable(enable);
         } catch (RemoteException e) {
-            Log.e(TAG, "setParameters failed:" + e);
+            Log.e(TAG, "setDbxEnable failed:" + e);
         }
     }
 
-    public int getParameters(int order) {
+    public boolean getDbxEnable() {
         try {
-            return mAudioEffectService.getParameters(order);
+            return mAudioEffectService.getDbxEnable();
         } catch (RemoteException e) {
-            Log.e(TAG, "getParameters failed:" + e);
+            Log.e(TAG, "getDbxEnable failed:" + e);
+        }
+        return false;
+    }
+
+    public void setDbxSoundMode(int dbxMode) {
+        try {
+            mAudioEffectService.setDbxSoundMode(dbxMode);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setDbxSoundMode failed:" + e);
+        }
+    }
+
+    public int getDbxSoundMode() {
+        try {
+            return mAudioEffectService.getDbxSoundMode();
+        } catch (RemoteException e) {
+            Log.e(TAG, "getDbxSoundMode failed:" + e);
         }
         return -1;
     }
 
+    public void setDbxAdvancedModeParam(int paramType, int value) {
+        try {
+            mAudioEffectService.setDbxAdvancedModeParam(paramType, value);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setDbxAdvancedModeParam failed:" + e);
+        }
+    }
+
+    public int getDbxAdvancedModeParam(int paramType) {
+        try {
+            return mAudioEffectService.getDbxAdvancedModeParam(paramType);
+        } catch (RemoteException e) {
+            Log.e(TAG, "getDbxAdvancedModeParam failed:" + e);
+        }
+        return -1;
+    }
+
+    public void setAudioOutputSpeakerDelay(int source, int delayMs) {
+        try {
+            mAudioEffectService.setAudioOutputSpeakerDelay(source, delayMs);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setAudioOutputSpeakerDelay failed:" + e);
+        }
+    }
+    public int getAudioOutputSpeakerDelay(int source) {
+        try {
+            return mAudioEffectService.getAudioOutputSpeakerDelay(source);
+        } catch (RemoteException e) {
+            Log.e(TAG, "getAudioOutputSpeakerDelay failed:" + e);
+        }
+        return -1;
+    }
+
+    public void setAudioOutputSpdifDelay(int source, int delayMs) {
+        try {
+            mAudioEffectService.setAudioOutputSpdifDelay(source, delayMs);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setAudioOutputSpdifDelay failed:" + e);
+        }
+    }
+
+    public int getAudioOutputSpdifDelay(int source) {
+        try {
+            return mAudioEffectService.getAudioOutputSpdifDelay(source);
+        } catch (RemoteException e) {
+            Log.e(TAG, "getAudioOutputSpdifDelay failed:" + e);
+        }
+        return -1;
+    }
+
+    public void setAudioPrescale(int source, int value) {
+        try {
+            mAudioEffectService.setAudioPrescale(source, value);
+        } catch (RemoteException e) {
+            Log.e(TAG, "setAudioPrescale failed:" + e);
+        }
+    }
+
+    public int getAudioPrescale(int source) {
+        try {
+            return mAudioEffectService.getAudioPrescale(source);
+        } catch (RemoteException e) {
+            Log.e(TAG, "getDbxAdvancedModeParam failed:" + e);
+        }
+        return -1;
+    }
     public void cleanupAudioEffects() {
         try {
             mAudioEffectService.cleanupAudioEffects();

@@ -749,19 +749,7 @@ public class TvControlManager {
             mEventHandler = null;
             Log.e(TAG, "looper is null, so can not do anything");
         }
-        //native_setup(new WeakReference<TvControlManager>(this));
-        /*
-        try {
-            boolean ret = IServiceManager.getService()
-                    .registerForNotifications("vendor.amlogic.hardware.tvserver@1.0::ITvServer", "", mServiceNotification);
-            if (!ret) {
-                Log.e(TAG, "Failed to register service start notification");
-            }
-        } catch (RemoteException e) {
-            Log.e(TAG, "Failed to register service start notification", e);
-        }
-        connectToProxy();
-        */
+
         String LogFlg = TvMiscConfigGet(OPEN_TV_LOG_FLG, "");
         if ("log_open".equals(LogFlg))
             tvLogFlg =true;

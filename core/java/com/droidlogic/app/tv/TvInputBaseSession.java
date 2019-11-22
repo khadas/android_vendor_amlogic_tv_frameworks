@@ -53,6 +53,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     private static final boolean DEBUG = true;
     private static final String TAG = "TvInputBaseSession";
 
+    private static final int    MSG_REGISTER_BROADCAST = 8;
     private static final int    MSG_DO_PRI_CMD              = 9;
     protected static final int  MSG_SUBTITLE_SHOW           = 10;
     protected static final int  MSG_SUBTITLE_HIDE           = 11;
@@ -60,6 +61,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     protected static final int  MSG_AUDIO_MUTE              = 13;
     protected static final int  MSG_IMAGETEXT_SET           = 14;
 
+    protected static final int TVINPUT_BASE_DELAY_SEND_MSG  = 10; // Filter message within 10ms, only the last message is processed
     private Context mContext;
     public int mId;
     private String mInputId;
@@ -75,6 +77,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     protected boolean isUnlockCurrent_NR = false;
     DroidLogicHdmiCecManager mDroidLogicHdmiCecManager = null;
     private int mKeyCodeMediaPlayPauseCount = 0;
+    private boolean isSurfaceAlive = true;
 
     public TvInputBaseSession(Context context, String inputId, int deviceId) {
         super(context);
@@ -86,16 +89,8 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         mTvControlDataManager = TvControlDataManager.getInstance(mContext);
         mSessionHandler = new Handler(context.getMainLooper(), this);
         mTvInputManager = (TvInputManager)mContext.getSystemService(Context.TV_INPUT_SERVICE);
-        int block_norating = mTvControlDataManager.getInt(mContext.getContentResolver(), DroidLogicTvUtils.BLOCK_NORATING, 0);
-        isBlockNoRatingEnable = block_norating == 0 ? false : true;
-        if (DEBUG)
-            Log.d(TAG, "isBlockNoRatingEnable = " + isBlockNoRatingEnable);
-         Log.d(TAG, "TvInputBaseSession,inputId:" + inputId+", devieId:"+deviceId);
         mDroidLogicHdmiCecManager = DroidLogicHdmiCecManager.getInstance(mContext);
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
-        intentFilter.addAction(Intent.ACTION_SCREEN_ON);
-        mContext.registerReceiver(mBroadcastReceiver, intentFilter);
+        sendSessionMessage(MSG_REGISTER_BROADCAST);
     }
 
     public void setSessionId(int id) {
@@ -114,16 +109,14 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         return mDeviceId;
     }
 
+    public void sendSessionMessage(int cmd) {
+        Message msg = mSessionHandler.obtainMessage(cmd);
+        mSessionHandler.removeMessages(msg.what);
+        msg.sendToTarget();
+    }
     public void doRelease() {
         Log.d(TAG, "doRelease,session:"+this);
-        setOverlayViewEnabled(false);
         mContext.unregisterReceiver(mBroadcastReceiver);
-
-        if (mOverlayView != null) {
-            mOverlayView.releaseResource();
-            mOverlayView = null;
-        }
-        //doAppPrivateCmd(DroidLogicTvUtils.ACTION_STOP_TV, null);
     }
 
     public void doAppPrivateCmd(String action, Bundle bundle) {}
@@ -141,10 +134,14 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         }
         if (DEBUG)
             Log.d(TAG, "onSetStreamVolume volume = " + volume);
-
         Message msg = mSessionHandler.obtainMessage(MSG_AUDIO_MUTE);
-        msg.arg1= (int)volume;
-        msg.sendToTarget();
+        if (0.0 == volume) {
+            msg.arg1 = 0;
+        } else {
+            msg.arg1 = 1;
+        }
+        mSessionHandler.removeMessages(msg.what);
+        mSessionHandler.sendMessageDelayed(msg, TVINPUT_BASE_DELAY_SEND_MSG);
     }
 
     @Override
@@ -155,6 +152,7 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         if (mSessionHandler == null)
             return;
         Message msg = mSessionHandler.obtainMessage(MSG_DO_PRI_CMD);
+        mSessionHandler.removeMessages(msg.what);
         msg.setData(data);
         msg.obj = action;
         msg.sendToTarget();
@@ -222,12 +220,31 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
         msg.sendToTarget();
     }
 
+    @Override
+     public boolean onSetSurface(Surface surface) {
+        if (surface == null) {
+            mSessionHandler.removeCallbacksAndMessages(null);
+            isSurfaceAlive = false;
+
+            setOverlayViewEnabled(false);
+            if (mOverlayView != null) {
+                mOverlayView.releaseResource();
+                mOverlayView = null;
+            }
+        } else {
+            isSurfaceAlive = true;
+        }
+
+        return false;
+     }
 
     @Override
     public void onRelease() {
+        mSessionHandler.removeCallbacksAndMessages(null);
         if (mSessionHandler == null)
             return;
         Message msg = mSessionHandler.obtainMessage(MSG_DO_RELEASE);
+        mSessionHandler.removeMessages(msg.what);
         msg.sendToTarget();
     }
 
@@ -263,11 +280,21 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
     @Override
     public boolean handleMessage(Message msg) {
         if (DEBUG)
-            Log.d(TAG, "handleMessage, msg.what=" + msg.what);
+            Log.d(TAG, "handleMessage, msg.what=" + msg.what + " isSurfaceAlive=" + isSurfaceAlive);
 
-        mSessionHandler.removeMessages(msg.what);
+        if (!isSurfaceAlive) {
+            if (msg.what != MSG_DO_RELEASE && msg.what != MSG_AUDIO_MUTE) {
+                return false;
+            }
+        }
 
         switch (msg.what) {
+            case MSG_REGISTER_BROADCAST:
+                    IntentFilter intentFilter = new IntentFilter();
+                    intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
+                    intentFilter.addAction(Intent.ACTION_SCREEN_ON);
+                    mContext.registerReceiver(mBroadcastReceiver, intentFilter);
+                break;
             case MSG_DO_PRI_CMD:
                 doAppPrivateCmd((String)msg.obj, msg.getData());
                 break;
@@ -308,7 +335,6 @@ public abstract class TvInputBaseSession extends TvInputService.Session implemen
                 Log.d(TAG, "onSetMain, mDeviceId: " + mDeviceId + " not correct!");
             } else {
                 mDroidLogicHdmiCecManager.connectHdmiCec(mDeviceId);
-                mDroidLogicHdmiCecManager.setDeviceIdForCec(mDeviceId);
             }
         } else {
             if (info == null) {
