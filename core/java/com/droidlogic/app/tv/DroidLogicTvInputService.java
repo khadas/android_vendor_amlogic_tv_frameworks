@@ -106,7 +106,9 @@ public class DroidLogicTvInputService extends TvInputService implements
     private TvStoreManager mTvStoreManager;
     private PendingTuneEvent mPendingTune = new PendingTuneEvent();
     private ContentResolver mContentResolver;
-    private MediaCodec mMediaCodec;
+    private MediaCodec mMediaCodec1;
+    private MediaCodec mMediaCodec2;
+    private MediaCodec mMediaCodec3;
     private AudioManager mAudioManager;
     private AudioEffectManager mAudioEffectManager;
     private static int mCurrentUserId = 0;//UserHandle.USER_SYSTEM
@@ -607,36 +609,86 @@ public class DroidLogicTvInputService extends TvInputService implements
     private boolean createDecoder() {
         String str = "OMX.amlogic.avc.decoder.awesome.secure";
         try {
-            mMediaCodec = MediaCodec.createByCodecName(str);
-        } catch (Exception exception) {
-            Log.e(TAG, "Exception during decoder creation", exception);
+            mMediaCodec1 = MediaCodec.createByCodecName(str);
+            } catch (Exception exception) {
+            Log.d(TAG, "Exception during decoder1 creation", exception);
             decoderRelease();
             return false;
         }
-        Log.e(TAG, "createDecoder done");
+        try {
+            mMediaCodec2 = MediaCodec.createByCodecName(str);
+            } catch (Exception exception) {
+            Log.d(TAG, "Exception during decoder2 creation", exception);
+            decoderRelease();
+            return false;
+        }
+        try {
+            mMediaCodec3 = MediaCodec.createByCodecName(str);
+            } catch (Exception exception) {
+            Log.d(TAG, "Exception during decoder3 creation", exception);
+            decoderRelease();
+            return false;
+        }
+
+        Log.d(TAG, "createDecoder done");
         return true;
     }
 
     private void decoderRelease() {
-        if (mMediaCodec == null) {
-            return;
-        }
-        try {
-            mMediaCodec.stop();
-            } catch (IllegalStateException exception) {
-            mMediaCodec.reset();
-            // IllegalStateException happens when decoder fail to start.
-            Log.e(TAG, "IllegalStateException during decoder stop", exception);
-        } finally {
+        if (mMediaCodec1 != null) {
             try {
-                mMediaCodec.release();
+                mMediaCodec1.stop();
                 } catch (IllegalStateException exception) {
-                Log.e(TAG, "IllegalStateException during decoder release", exception);
-                }
-                mMediaCodec = null;
+                mMediaCodec1.reset();
+                // IllegalStateException happens when decoder fail to start.
+                Log.d(TAG, "IllegalStateException during decoder1 stop", exception);
+                } finally {
+                    try {
+                        mMediaCodec1.release();
+                    } catch (IllegalStateException exception) {
+                        Log.d(TAG, "IllegalStateException during decoder1 release", exception);
+                    }
+                    mMediaCodec1 = null;
+            }
         }
-        Log.e(TAG, "decoderRelease done");
+
+        if (mMediaCodec2 != null) {
+            try {
+                mMediaCodec2.stop();
+                } catch (IllegalStateException exception) {
+                mMediaCodec2.reset();
+                // IllegalStateException happens when decoder fail to start.
+                Log.d(TAG, "IllegalStateException during decoder2 stop", exception);
+                } finally {
+                    try {
+                        mMediaCodec2.release();
+                    } catch (IllegalStateException exception) {
+                        Log.d(TAG, "IllegalStateException during decoder2 release", exception);
+                    }
+                    mMediaCodec2 = null;
+            }
+        }
+
+        if (mMediaCodec3 != null) {
+            try {
+                mMediaCodec3.stop();
+                } catch (IllegalStateException exception) {
+                mMediaCodec3.reset();
+                // IllegalStateException happens when decoder fail to start.
+                Log.d(TAG, "IllegalStateException during decoder3 stop", exception);
+                } finally {
+                    try {
+                        mMediaCodec3.release();
+                    } catch (IllegalStateException exception) {
+                        Log.d(TAG, "IllegalStateException during decoder3 release", exception);
+                    }
+                    mMediaCodec3 = null;
+            }
+        }
+
+        Log.d(TAG, "decoderRelease done");
     }
+
 
     private void doSetSurface(Surface surface, TvInputBaseSession session) {
         Log.d(TAG, "doSetSurface inputId=" + mCurrentInputId + " number=" + session.mId + " surface=" + surface);
