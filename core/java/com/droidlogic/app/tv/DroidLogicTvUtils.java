@@ -218,6 +218,9 @@ public class DroidLogicTvUtils
     public static final String ACTION_PROGRAM_APPOINTED = "droidlogic.intent.action.tv_appointed_program";
     public static final String ACTION_LIVETV_PROGRAM_APPOINTED = "droidlogic.intent.action.livetv_appointed_program";
     public static final String ACTION_DROID_PROGRAM_WATCH_APPOINTED = "droidlogic.intent.action.droid_appointed_program";
+    public static final String EXTRA_APPOINTED_DELAY = "droidlogic.intent.action.droid_appointed_delay";
+    public static final String EXTRA_APPOINTED_SETTING = "droidlogic.intent.action.droid_appointed_setting";
+    public static final String EXTRA_APPOINTED_ACTION = "droidlogic.intent.action.droid_appointed_action";
     public static final String ACTION_DROID_PROGRAM_RECORD_APPOINTED = "droidlogic.intent.action.droid_appointed_record_program";
     public static final String ACTION_DROID_PROGRAM_RECORD_OPERATION = "droidlogic.intent.action.droid_appointed_record_operation";
     public static final String ACTION_DROID_PROGRAM_RECORD_STATUS = "droidlogic.intent.action.REQUEST_RECORD_STATUS";
