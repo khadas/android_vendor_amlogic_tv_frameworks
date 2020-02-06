@@ -121,6 +121,7 @@ public class ChannelInfo {
     public static final String KEY_TRANSPONDER_INFO_TRANSPONDER_FREQUENCY = "transponder_info_frequency";
     public static final String KEY_TRANSPONDER_INFO_TRANSPONDER_POLARITY = "transponder_info_polarity";
     public static final String KEY_TRANSPONDER_INFO_TRANSPONDER_SYMBOL = "transponder_info_symbol";
+    public static final String KEY_CHANNEL_SIGNAL_TYPE = "channel_signal_type";
 
     public static final String KEY_MAJOR_NUM = "majorNum";
     public static final String KEY_MINOR_NUM = "minorNum";
@@ -206,6 +207,7 @@ public class ChannelInfo {
     private String mSatelliteInfo;
     private String mTransponderInfo;
     private String mFavInfo;
+    private String mChannelSignalType;
 
     private String mDisplayNameMulti;//multi-language
 
@@ -370,6 +372,8 @@ public class ChannelInfo {
                 builder.setTransponderInfo(parsedMap.get(KEY_TRANSPONDER_INFO));
             if (parsedMap != null && parsedMap.get(KEY_SATELLITE_INFO) != null)
                 builder.setSatelliteInfo(parsedMap.get(KEY_SATELLITE_INFO));
+            if (parsedMap != null && parsedMap.get(KEY_CHANNEL_SIGNAL_TYPE) != null)
+                builder.setChannelSignalType(parsedMap.get(KEY_CHANNEL_SIGNAL_TYPE));
             if (parsedMap != null && parsedMap.get(KEY_VIDEO_STD) != null)
                 builder.setVideoStd(Integer.parseInt(parsedMap.get(KEY_VIDEO_STD)));
             if (parsedMap != null && parsedMap.get(KEY_AUDIO_STD) != null)
@@ -804,6 +808,10 @@ public class ChannelInfo {
         return result;
     }
 
+    public String getChannelSignalType() {
+        return mChannelSignalType;
+    }
+
     public boolean isPassthrough() {
         return mIsPassthrough;
     }
@@ -924,6 +932,10 @@ public class ChannelInfo {
 
     public void setTransponderInfo(String value) {
         mTransponderInfo = value;
+    }
+
+    public void setChannelSignalType(String value) {
+        mChannelSignalType = value;
     }
 
     public void setSubtitleTypes(int[] types) {
@@ -1064,7 +1076,8 @@ public class ChannelInfo {
             mChannel.mIsPassthrough = false;
             mChannel.mFavInfo = null;
             mChannel.mSatelliteInfo = null;
-            mChannel.mTransponderInfo = null;;
+            mChannel.mTransponderInfo = null;
+            mChannel.mChannelSignalType = null;
 
             mChannel.mSubtitlePids = null;
             mChannel.mSubtitleTypes = null;
@@ -1293,6 +1306,11 @@ public class ChannelInfo {
 
         public Builder setTransponderInfo(String value) {
             mChannel.mTransponderInfo = value;
+            return this;
+        }
+
+        public Builder setChannelSignalType(String value) {
+            mChannel.mChannelSignalType = value;
             return this;
         }
 
@@ -1589,6 +1607,7 @@ public class ChannelInfo {
                 "\n mFavInfo = " + mFavInfo +
                 "\n mSatelliteInfo = " + mSatelliteInfo +
                 "\n mTransponderInfo = " + mTransponderInfo +
+                "\n mChannelSignalType = " + mChannelSignalType +
                 "\n IsPassthrough = " + mIsPassthrough +
                 "\n mLocked = " + mLocked +
                 "\n SubtitlePids = " + Arrays.toString(mSubtitlePids) +
