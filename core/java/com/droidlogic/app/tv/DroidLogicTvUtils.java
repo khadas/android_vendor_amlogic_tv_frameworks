@@ -351,8 +351,8 @@ public class DroidLogicTvUtils
     public static final String TV_DTV_CHANNEL_INDEX  = "tv_dtv_channel_index";
     public static final String TV_CURRENT_CHANNEL_IS_RADIO = "tv_current_channel_is_radio";
     public static final String BLOCK_NORATING = "block_norating";
-    public static final String TV_CURRENT_BLOCK_STATUS = "tv.current.channel.blocked";
-    public static final String TV_CURRENT_CHANNELBLOCK_STATUS = "persist.tv.current.channelblock.blocked";
+    public static final String TV_CURRENT_BLOCK_STATUS = "tv_current_channel_blocked";
+    public static final String TV_CURRENT_CHANNELBLOCK_STATUS = "tv_current_channelblock_blocked";
 
     public static final String TV_KEY_DTV_NUMBER_MODE = "tv_dtv_number_mode";
     public static final String TV_KEY_DTV_TYPE = "tv_dtv_type";
