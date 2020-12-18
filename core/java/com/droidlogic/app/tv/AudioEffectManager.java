@@ -90,6 +90,9 @@ public class AudioEffectManager {
     public static final int SOUND_EFFECT_TRUVOLUME_HD_ENABLE_DEFAULT    = 0;        // OFF
     public static final int SOUND_EFFECT_DBX_ENABLE_DEFAULT             = 0;        // OFF
     public static final int SOUND_EFFECT_DBX_SOUND_MODE_DEFAULT         = DBX_SOUND_MODE_STANDARD;
+    public static final int SOUND_EFFECT_VIRTUALBASS_ENABLE_DEFAULT        = 0;        // OFF
+    public static final int SOUND_EFFECT_VIRTUALBASS_MAX_LEVEL        = 5;
+	
 
     // DBX sound mode default param [sonics, volume, surround]
     public static final byte[][] SOUND_EFFECT_DBX_SOUND_MODE_ARRAY_DEFAULT = {
