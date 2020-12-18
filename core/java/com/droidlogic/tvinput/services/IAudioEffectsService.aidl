@@ -68,4 +68,7 @@ interface IAudioEffectsService{
     void cleanupAudioEffects();
     void initSoundEffectSettings();
     void resetSoundEffectSettings();
+    boolean getVirtualBassEnableStatus();
+    void setVirtualBassEnable(boolean enable);
+    void setVirtualBassMaxLevel(int step);
 }
