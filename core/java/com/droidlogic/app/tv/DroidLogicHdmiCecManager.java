@@ -169,7 +169,7 @@ public class DroidLogicHdmiCecManager {
             + ", mSelectLogicAddr = " + mSelectLogicAddr
             + ", mSelectPhyAddr = " + mSelectPhyAddr);
 
-        boolean cecOption = (Global.getInt(mContext.getContentResolver(), HDMI_CONTROL_ENABLED, 1) == 1);
+        boolean cecOption = (Global.getInt(mContext.getContentResolver(), HDMI_CONTROL_ENABLED, 0) == 1);
         if (!cecOption || mTvClient == null || mHdmiControlManager == null) {
             synchronized (mLock) {
                 mSelectLogicAddr = 0;
@@ -299,7 +299,7 @@ public class DroidLogicHdmiCecManager {
             + ", mSelectLogicAddr = " + mSelectLogicAddr
             + ", mSelectPhyAddr = " + mSelectPhyAddr);
 
-        boolean cecOption = (Global.getInt(mContext.getContentResolver(), HDMI_CONTROL_ENABLED, 1) == 1);
+        boolean cecOption = (Global.getInt(mContext.getContentResolver(), HDMI_CONTROL_ENABLED, 0) == 1);
         if (!cecOption || mTvClient == null || mHdmiControlManager == null) {
             Log.d(TAG, "mTvClient or mHdmiControlManager maybe null,or cec not enable, return");
             return false;
